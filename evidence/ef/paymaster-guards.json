@@ -1,0 +1,56 @@
+{
+  "savedAt": "2026-11-05T15:58:50.345Z",
+  "paymaster": "0x98cd804aE58Ea5FC9fA4Fb403f6D0D88acDd0ac8",
+  "usdc": "0xe65147390d3ea7157Ea22c36BF9406626E373BB4",
+  "fee": "1000000",
+  "cases": [
+    {
+      "name": "control: repay fee, then sweep",
+      "paymasterApproved": true,
+      "failedFrameIndex": null,
+      "haltReason": null,
+      "frames": [
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "repays less than the fee",
+      "paymasterApproved": false,
+      "failedFrameIndex": 1,
+      "haltReason": "revert",
+      "frames": []
+    },
+    {
+      "name": "repays someone else",
+      "paymasterApproved": false,
+      "failedFrameIndex": 1,
+      "haltReason": "revert",
+      "frames": []
+    },
+    {
+      "name": "repay frame batched with a later frame (could be undone)",
+      "paymasterApproved": false,
+      "failedFrameIndex": 1,
+      "haltReason": "revert",
+      "frames": []
+    },
+    {
+      "name": "no repay frame: sweeps first",
+      "paymasterApproved": false,
+      "failedFrameIndex": 1,
+      "haltReason": "revert",
+      "frames": []
+    },
+    {
+      "name": "unregistered sender",
+      "paymasterApproved": false,
+      "failedFrameIndex": 1,
+      "haltReason": "revert",
+      "frames": []
+    }
+  ],
+  "allAsExpected": true
+}

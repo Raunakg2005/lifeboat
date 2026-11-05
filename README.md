@@ -19,13 +19,28 @@ A LifeboatAccount verifies a **WOTS+C hash-based signature** (no ECDSA anywhere)
 | Signature (witness) | 2,336 bytes, ARBITRARY scheme entry |
 | Raw evidence | [`evidence/ef/`](evidence/ef/) |
 
+Design, gas and trade-offs: [docs/pq-account.md](docs/pq-account.md).
+
+## Live result: a token-only wallet escapes with no ETH (why the alt mempool is needed)
+
+An exposed wallet with **0 ETH and 100 mUSDC** swept its tokens into the PQ account. A staked **rescue paymaster** paid the gas and was repaid 1 mUSDC inside the same frame transaction. The paymaster's VERIFY reads shared state (its registry of exposed accounts, and the token balance through an upgradeable proxy), which only the alt mempool allows, and only for a staked sponsor:
+
+| Route | Result |
+|---|---|
+| Canonical mempool | ❌ `StorageReadNonSender` |
+| Alt mempool, paymaster unstaked | ❌ `unstaked payer accessed payer slot …` |
+| Alt mempool, paymaster staked (0.012 ETH) | ✅ [included in block 404,050](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
+
+The paymaster also enforces its own repayment: it refused all five attack dry-runs (underpaying, paying someone else, an undoable batched repayment, sweeping first, an unregistered sender). Details: [docs/rescue-paymaster.md](docs/rescue-paymaster.md).
+
 ## Parts
 
 | Part | Folder | Status |
 |---|---|---|
 | WOTS+C post-quantum signatures (TypeScript) | `packages/pq` | done: 13 tests |
-| PQ account on EIP-8141 frame transactions (Yul) | `contracts` | done: 9 Foundry tests against TypeScript vectors |
-| Devnet scripts (deploy, sign, dry-run, submit, capture evidence) | `scripts` | done |
+| PQ account on EIP-8141 frame transactions (Yul) | `contracts/yul` | done: 9 Foundry tests against TypeScript vectors |
+| Rescue paymaster (Yul) + mock USDC behind an EIP-1967 proxy | `contracts` | done: 6 Foundry tests + 6 devnet guard dry-runs |
+| Devnet scripts (deploy, sign, dry-run, submit, sponsor, capture evidence) | `scripts` | done |
 
 ## How it works (short)
 
@@ -41,6 +56,8 @@ pnpm --filter @lifeboat/pq test
 node tools/gen-yul.mjs && node tools/build-yul.mjs && (cd contracts && forge test -vv)
 pnpm --filter @lifeboat/scripts deploy-account --label demo
 pnpm --filter @lifeboat/scripts send-frame --label demo --verify-gas 60000 --send
+pnpm --filter @lifeboat/scripts rescue-setup && pnpm --filter @lifeboat/scripts rescue
+pnpm --filter @lifeboat/scripts paymaster-guards
 ```
 
 Scripts read `.env` (see `.env.example`). The WOTS+C secret seed lives in `secrets/` (gitignored).
