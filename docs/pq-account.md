@@ -38,6 +38,26 @@ What Lifeboat does about it:
 2. **On-chain leaf floor.** Every landed transaction raises `slot 2` past its leaf, and VERIFY rejects any leaf below the floor. So even if an old leaf *was* signed twice somewhere, a forgery with it can't pass VERIFY after the next transaction lands. Checked on-chain after the first transaction: the floor moved from 1 to 3.
 3. "Leaf = nonce" is wrong: a fee bump with a new leaf would then look like a second transaction, not a replacement. The nonce stays the replacement key.
 
+### The forgery, live on chain 1337 ([`scripts/src/forgery-demo.ts`](../scripts/src/forgery-demo.ts), [`evidence/ef/forgery.json`](../evidence/ef/forgery.json))
+A **naive** LifeboatAccount (`0xd297B4D1577bf338342C59f7DB3eA022d95702b3`, its own key) wants to pay a friend 0.001 ETH. It re-signs the payment 12 times as fee bumps (tips 1–12 gwei), **reusing leaf 0 every time**. Each bump is a valid, broadcastable frame transaction. An attacker who sees only those 12 public signatures, plus the public key:
+1. takes, per chain, the lowest position any of them revealed;
+2. grinds a counter for **its own** transaction ("send 0.01416 ETH to the attacker") until every digest digit is at or above those positions and the digits still sum to 560 (**8,716 tries, under 0.1 s**);
+3. hashes forward to a valid signature, then submits it through the alt mempool.
+
+The account's VERIFY frame accepts it (52,396 gas): it *is* a valid signature. It was **included in block 405,633** ([`0x8dc6c9fb…6d890`](https://explorer.altmempool.wtf/tx/0x8dc6c9fbbadd0e4345557d938f4333a35c726ebbb753493c5edc1726fee6d890?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc)), and the attacker received 0.01416 ETH. The leaf floor couldn't help: none of the honest bumps had landed. Every sighting of leaf 0 was then published to the Arkiv leaf ledger, which now shows it signing 16 different messages: "signed twice".
+
+**Forgery cost at our parameters (S = 560), estimated by sampling** (`estimateTriesLog2` in [`packages/pq/src/forge.ts`](../packages/pq/src/forge.ts)):
+
+| Reuses of one leaf | 1 | 2 | 3 | 5 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|
+| Tries to forge | impossible (fixed digit sum) | ~2^64 | ~2^47 | ~2^32 | ~2^23 | ~2^18 | ~2^14 |
+
+A high target sum makes each signature reveal *high* chain positions, so reuse leaks less than with a low S. That's a side benefit of S = 560, but no reuse is safe: 5 reuses is already GPU range.
+
+Two dry-run lessons from the devnet:
+- Paying a **brand-new** address creates an account, which costs roughly 180k execution gas here, so the attacker raised its SENDER limit.
+- The account pays its own max cost up front, so the value it sends must leave room for that.
+
 ## Gas (measured)
 
 | What | Gas | Source |

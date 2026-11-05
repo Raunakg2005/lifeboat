@@ -16,6 +16,9 @@ ETHGlobal asks every team to say where and how AI tools were used. This file is 
 | WOTS+C library (`packages/pq`) | Written with AI assistance | Unit tests: sign/verify round trips, tampering, fixed digit sum, Merkle paths, cross-checked against the Yul verifier with shared test vectors |
 | Yul PQ account (`contracts`) | Written with AI assistance | Foundry tests through a harness with the same verification code; dry-runs on the live devnet; gas measured |
 | Devnet scripts (`scripts`) | Written with AI assistance | Every claim backed by a transaction hash or an admission report in `evidence/` |
+| Rescue paymaster, forgery demo, Safe deep scan (`contracts`, `scripts`, `packages/core`) | Written with AI assistance | Live dry-runs and transactions on the devnet and mainnet reads; every number in the docs comes from saved evidence |
+| Web app (`app`) | Written with AI assistance; the design follows the team's own pre-event look | Verified in the browser at desktop and phone widths, locally and on the live site |
+| ESP32 firmware (`firmware/esp32`) | Written with AI assistance | The crypto core is compiled on the host and checked byte for byte against the TypeScript signer (`tools/firmware-check.mjs`) |
 | Docs | Drafted with AI, edited by the team | Numbers come only from our own runs or cited sources |
 
 ## Commit history
