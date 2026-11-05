@@ -7,7 +7,7 @@ import { LuggageTag, Pill } from "./ui";
 type Info = { next: number; pubSeed: string; root: string } | null;
 // minimal Web Serial typing (not in every TS DOM lib)
 type SerialPortLike = {
-  open(o: { baudRate: number }): Promise<void>;
+  open(o: { baudRate: number; bufferSize?: number }): Promise<void>;
   setSignals?(s: { dataTerminalReady?: boolean; requestToSend?: boolean }): Promise<void>;
   readable: ReadableStream<Uint8Array>;
   writable: WritableStream<Uint8Array>;
@@ -63,7 +63,7 @@ export default function HardwareSigner() {
   const connect = async () => {
     try {
       const port = (await (navigator as unknown as { serial: { requestPort(): Promise<SerialPortLike> } }).serial.requestPort()) as SerialPortLike;
-      await port.open({ baudRate: 115200 });
+      await port.open({ baudRate: 115200, bufferSize: 1 << 16 }); // the cached tree arrives in a ~20 KB burst; the 255-byte default drops lines
       await port.setSignals?.({ dataTerminalReady: false, requestToSend: false }); // don't auto-reset the ESP32
       writer.current = port.writable.getWriter();
       const reader = port.readable.pipeThrough(new TextDecoderStream() as unknown as ReadableWritablePair<string, Uint8Array>).getReader();
@@ -106,17 +106,22 @@ export default function HardwareSigner() {
       if (l.startsWith("WOTS|LH|")) {
         const [, , i, h] = l.split("|");
         hashes[Number(i)] = fromHex(h!);
-        setProgress(Number(i) + 1);
+        if (Number(i) % 16 === 15) setProgress(Number(i) + 1); // don't re-render on every line
       }
       return l.startsWith("WOTS|ROOT|") || l.startsWith("WOTS|ERR|");
     }, 10 * 60_000);
     await send(cmd);
     const end = await done;
     if (end.startsWith("WOTS|ERR|")) throw new Error(end);
+    const missing = Array.from({ length: LEAVES }, (_, i) => i).filter((i) => !hashes[i]);
+    if (missing.length) throw new Error(`missed ${missing.length} of 256 leaf lines (first: ${missing[0]}): click "re-read public tree"`);
+    setProgress(LEAVES);
     const deviceRoot = "0x" + end.split("|")[2];
     const levels = buildLevels(fromHex(info?.pubSeed ?? "0x" + "00".repeat(32)), hashes);
     return { hashes, deviceRoot, levels };
   };
+
+  const guard = (fn: () => Promise<void>) => () => fn().catch((e) => setStatus(`error: ${(e as Error).message}`));
 
   const keygen = async () => {
     const entropy = crypto.getRandomValues(new Uint8Array(32));
@@ -178,10 +183,10 @@ export default function HardwareSigner() {
       ) : (
         <div className="examples" style={{ marginTop: 0 }}>
           <button onClick={connect}>1 · connect</button>
-          <button onClick={keygen} disabled={!writer.current || !!info}>
+          <button onClick={guard(keygen)} disabled={!writer.current || !!info}>
             2 · generate key
           </button>
-          <button onClick={fetchTree} disabled={!info}>
+          <button onClick={guard(fetchTree)} disabled={!info}>
             re-read public tree
           </button>
           <button onClick={() => signTest(`Lifeboat test ${new Date().toISOString()}`)} disabled={!info || !leafHashes.current.length}>

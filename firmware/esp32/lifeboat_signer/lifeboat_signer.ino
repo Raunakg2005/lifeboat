@@ -75,6 +75,11 @@ static void show(const char* l1, const char* l2 = "", const char* l3 = "", const
   oled.println(l4);
 }
 static uint32_t next_leaf() { return prefs.getUInt("next", 0); }
+static void show_idle() {
+  char l3[24];
+  snprintf(l3, sizeof l3, have_key ? "next leaf %lu/256" : "no key yet", (unsigned long)next_leaf());
+  show("LIFEBOAT", "post-quantum signer", l3, have_key ? "BOOT = approve" : "");
+}
 
 static void random_bytes(uint8_t* out, size_t n) {
 #ifdef LB_HAVE_BOOTLOADER_RANDOM
@@ -121,6 +126,7 @@ static uint32_t compute_leaves(const char* title) {
   }
   xSemaphoreTake(helper_done, portMAX_DELAY);
   vSemaphoreDelete(helper_done);
+  show(title, "leaf 256/256", "done");
   return millis() - t0;
 }
 
@@ -257,7 +263,7 @@ static void cmd_bench() {
   Serial.print(single_est);
   Serial.print("|dual_core_ms|");
   Serial.println(dual);
-  show("BENCH", "done");
+  show_idle();
 }
 
 static void cmd_efuse() {
@@ -311,7 +317,10 @@ void loop() {
     }
   } else if (cmd == "KEYGEN") cmd_keygen(rest);
   else if (cmd == "LEAVES") {
-    if (have_key) stream_leaves_and_root(false);
+    if (have_key) {
+      stream_leaves_and_root(false);
+      show_idle();
+    }
     else Serial.println("WOTS|ERR|no-key");
   } else if (cmd == "SIGN") {
     int a = rest.indexOf('|');
