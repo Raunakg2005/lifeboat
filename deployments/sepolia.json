@@ -1,0 +1,24 @@
+{
+  "chainId": 11155111,
+  "txs": {
+    "deploy WOTS+C verifier (Yul core)": "0xf5d8fd8976f89f8acad58e2b01a1544df7143c8c00de94c0a230cc4e7f4d189d",
+    "deploy LifeboatPQWallet": "0xeef9623034b339a9fbf5dbb5a1163e8a675ebb64d7c2d4a44cd0503cd05082a8",
+    "fund delegate": "0xe23041ac747d672d65eafdc77c86fd238a35b63271ed3bfdaf636db12905ee31",
+    "delegate first tx (public key now on-chain)": "0xbe958c5d8ba94dc412714cf14fea629dccb679d1ad7ff46d14485222bad5823a",
+    "fund operator": "0xf4767dfbc7ed498eda9f60a41b9767cc6aba4ef53cec2f1014a80548edb28015",
+    "operator first tx (public key now on-chain)": "0x48435ce3b125049d68676872012fd5789505cb295215da55408fe8f433719e51",
+    "deploy old resolver (dev wallet holds ALL_ROLES)": "0xc55d58e83ec53a3b195d77e81b6c618f7f238f75458599081160cf23f7732010",
+    "mint 613701 mock USDC (6 dp) for the fee": "0x87ed0488becc346d0412a5fc9962d7f6e6d1885f4d133d47b8b6359823b8cd8f",
+    "approve the registrar": "0x1742e4eab351bf1955fc9076ea436c5a822dc87d2407fa6bf44b23c6e91a3faf",
+    "commit": "0xf8a5822f664379e7ea2131268b2de0e08cceb2e36d47a4c18a97b73b0519dd4e",
+    "register lifeboatpq.eth (28 days)": "0xd6eedecc982fc3d296d450e3553caff8b66fab6609ceae06b9ea008d56840234",
+    "grant SET_RESOLVER to an extra delegate": "0xf7a2f3747029a31249aa9a8ec9e3d93b49d091af86a07ebeb9820cbe6c97b62e",
+    "approve an operator for all names": "0x603ba4b94e1f7acb6817439e55ae7b0d711e7dcb955d6ab8e05489267ba51fab"
+  },
+  "verifier": "0x98cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac8",
+  "pqWallet": "0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f",
+  "delegate": "0xE8Af54d7bCFcFB7Ae380FD3Be1DAbcD6453642F6",
+  "operator": "0xBE6512BBE9f0884f1f1A2f1A2881949A8fE1e630",
+  "oldResolver": "0xEBa5278f7272d3BD0655af17DD45D78A7Fed4260",
+  "name": "lifeboatpq.eth"
+}

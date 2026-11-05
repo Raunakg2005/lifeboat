@@ -9,7 +9,10 @@
     "send-frame": "tsx --env-file=../.env src/send-frame.ts",
     "rescue-setup": "tsx --env-file=../.env src/rescue-setup.ts",
     "rescue": "tsx --env-file=../.env src/rescue.ts",
-    "paymaster-guards": "tsx --env-file=../.env src/paymaster-guards.ts"
+    "paymaster-guards": "tsx --env-file=../.env src/paymaster-guards.ts",
+    "ens-setup": "tsx --env-file=../.env src/ens-setup.ts",
+    "helm": "tsx --env-file=../.env src/helm.ts",
+    "ens-handover": "tsx --env-file=../.env src/ens-handover.ts"
   },
   "dependencies": {
     "@forshtat/hegota-support": "0.0.1",

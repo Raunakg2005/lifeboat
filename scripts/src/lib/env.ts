@@ -18,3 +18,9 @@ export function argValue(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
+
+/** For non-secret settings (RPC URLs) that have a sensible public default. */
+export function envOr(name: string, fallback: string): string {
+  const v = process.env[name]?.trim();
+  return v ? v : fallback;
+}
