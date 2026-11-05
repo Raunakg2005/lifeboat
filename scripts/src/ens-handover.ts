@@ -14,7 +14,7 @@ import { decodeErrorResult, encodeFunctionData, keccak256, toHex, type Address, 
 import { fromHex, sign, toHex as pqHex } from "@lifeboat/pq";
 import { repoPath } from "./lib/env.js";
 import { ALL_ROLES, ENS, REGISTRY_ROLES, dnsEncode, factoryAbi, mainnetClient, registryAbi, resolverAbi, sepoliaClient, sepoliaDevWallet, sepoliaLogsClient, withStaleRetry } from "./lib/ens.js";
-import { helmCheck, printReport, type HelmReport } from "./lib/helm.js";
+import { helmCheck, printReport, type HelmReport } from "@lifeboat/core";
 import { loadOrCreateKey, reserveLeaf } from "./lib/pqkey.js";
 import { pqWalletAbi, walletDigest, type Call } from "./lib/pqwallet.js";
 

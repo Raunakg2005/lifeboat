@@ -3,7 +3,7 @@ import { existsSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import type { Address } from "viem";
 import { hasFlag, repoPath } from "./lib/env.js";
 import { mainnetClient, sepoliaClient, sepoliaLogsClient } from "./lib/ens.js";
-import { helmCheck, printReport } from "./lib/helm.js";
+import { helmCheck, printReport } from "@lifeboat/core";
 
 const name = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "lifeboatpq.eth";
 const dep = repoPath("deployments", "sepolia.json");

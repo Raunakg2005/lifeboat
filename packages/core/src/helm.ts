@@ -15,10 +15,10 @@ import { ENS, ENS_V2_FROM_BLOCK, REGISTRY_ROLES, RESOLVER_ROLES, dnsEncode, help
 const EAC_ROLES_CHANGED = parseAbiItem("event EACRolesChanged(uint256 indexed resource, address indexed account, uint256 oldRoleBitmap, uint256 newRoleBitmap)");
 const APPROVAL_FOR_ALL = parseAbiItem("event ApprovalForAll(address indexed account, address indexed operator, bool approved)");
 
-export type Exposure = "exposed" | "not-seen" | "pq-wallet" | "contract";
+export type ExposureStatus = "exposed" | "not-seen" | "pq-wallet" | "contract";
 export interface Controller {
   address: Address;
-  exposure: Exposure;
+  exposure: ExposureStatus;
   detail: string; // e.g. "EOA, 3 txs on Sepolia" / "LifeboatPQWallet (WOTS+C)"
 }
 export interface PathEntry {
@@ -170,7 +170,7 @@ export async function helmCheck(client: PublicClient, logs: PublicClient, others
 }
 
 export function printReport(r: HelmReport) {
-  const icon = (e: Exposure) => ({ exposed: "🔴 exposed", "not-seen": "🟡 not seen", "pq-wallet": "🟢 PQ", contract: "⚪ contract" })[e];
+  const icon = (e: ExposureStatus) => ({ exposed: "🔴 exposed", "not-seen": "🟡 not seen", "pq-wallet": "🟢 PQ", contract: "⚪ contract" })[e];
   console.log(`\nHelm check: ${r.name}  (Sepolia block ${r.block})`);
   console.log(`owner ${r.owner}, resolver ${r.resolver}`);
   const titles = ["", "1 owner", "2 delegates", "3 operators", "4 resolver", "5 parents"];

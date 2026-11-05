@@ -19,6 +19,7 @@
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
     "@forshtat/hegota-support": "0.0.1",
+    "@lifeboat/core": "workspace:^",
     "@lifeboat/pq": "workspace:^",
     "viem": "^2.57.16"
   }

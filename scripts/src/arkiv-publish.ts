@@ -7,7 +7,7 @@ import { formatEther, getAddress, parseAbi, type Address, type Hex, type PublicC
 import { hasFlag, repoPath } from "./lib/env.js";
 import { publicClient as devnetClient } from "./lib/devnet.js";
 import { mainnetClient, sepoliaClient, sepoliaLogsClient } from "./lib/ens.js";
-import { helmCheck } from "./lib/helm.js";
+import { helmCheck } from "@lifeboat/core";
 import { Aboard, CHECKER, EXPIRY, Exposure, Leaf, NameCheck, arkivPublic, arkivWallet } from "./lib/arkiv.js";
 import { loadOrCreateKey } from "./lib/pqkey.js";
 

@@ -21,6 +21,15 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@types/node@22.20.5)(vite@8.3.6(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15))
 
+  packages/core:
+    dependencies:
+      '@arkiv-network/sdk':
+        specifier: 1.0.1
+        version: 1.0.1(typescript@5.9.3)(viem@2.57.16(typescript@5.9.3))
+      viem:
+        specifier: ^2.57.16
+        version: 2.57.16(typescript@5.9.3)
+
   packages/pq:
     dependencies:
       '@noble/hashes':
@@ -35,6 +44,9 @@ importers:
       '@forshtat/hegota-support':
         specifier: 0.0.1
         version: 0.0.1(viem@2.57.16(typescript@5.9.3))
+      '@lifeboat/core':
+        specifier: workspace:^
+        version: link:../packages/core
       '@lifeboat/pq':
         specifier: workspace:^
         version: link:../packages/pq
