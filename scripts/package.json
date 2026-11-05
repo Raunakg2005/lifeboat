@@ -19,7 +19,8 @@
     "swarm-publish": "tsx --env-file=../.env src/swarm-publish.ts",
     "council-scan": "tsx --env-file=../.env src/council-scan.ts",
     "hw-frame": "tsx --env-file=../.env src/hw-frame.ts",
-    "discovery-publish": "tsx --env-file=../.env src/discovery-publish.ts"
+    "discovery-publish": "tsx --env-file=../.env src/discovery-publish.ts",
+    "refresh": "pnpm arkiv-publish --skip-names && pnpm swarm-publish && pnpm discovery-publish"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",

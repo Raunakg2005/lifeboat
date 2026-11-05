@@ -70,7 +70,7 @@ creates.push({
   expiration: EXPIRY.aboard(),
   flags: { readonly: true, permissionlessExtension: true },
 });
-creates.push({ schema: NameCheck, values: { name, chainId: u64(11155111n), verdict: report.verdict, owner: addr(report.owner), paths: report.hijackablePaths.join(",") || "-", checkedBlock: u64(report.block) }, expiration: EXPIRY.name() });
+if (!hasFlag("--skip-names")) creates.push({ schema: NameCheck, values: { name, chainId: u64(11155111n), verdict: report.verdict, owner: addr(report.owner), paths: report.hijackablePaths.join(",") || "-", checkedBlock: u64(report.block) }, expiration: EXPIRY.name() });
 
 // ---- exposure attestations for every address in the demo ----
 async function exposure(c: PublicClient, chainId: bigint, a: Address, knownPq: boolean) {
@@ -91,10 +91,23 @@ if (hasFlag("--dry")) process.exit(0);
 const { account: writer, client } = arkivWallet();
 const pub = arkivPublic();
 console.log(`writer ${writer.address}: ${formatEther(await pub.getBalance({ address: writer.address }))} tGLM`);
-const res = await client.executeBatch({ creates });
+// Idempotent: the readonly audit trail (leaf uses, aboard records) is written once; re-runs only refresh readings.
+const val = (x: any) => String(x && typeof x === "object" && "value" in x ? x.value : x).toLowerCase();
+const [haveLeaves, haveAboard] = await Promise.all([
+  pub.select({ root: true, leaf: true, digest: true }).from(Leaf).ownedBy(writer.address).limit(100).fetch(),
+  pub.select({ txHash: true }).from(Aboard).ownedBy(writer.address).limit(100).fetch(),
+]);
+const seenLeaf = new Set(haveLeaves.entities.map((e) => `${e.root.value}:${e.leaf.value}:${e.digest.value}`.toLowerCase()));
+const seenAboard = new Set(haveAboard.entities.map((e) => e.txHash.value.toLowerCase()));
+const before = creates.length;
+const fresh = creates.filter((c) =>
+  c.schema === Leaf ? !seenLeaf.has(`${val(c.values.root)}:${val(c.values.leaf)}:${val(c.values.digest)}`) : c.schema === Aboard ? !seenAboard.has(val(c.values.txHash)) : true,
+);
+console.log(`${before - fresh.length} audit-trail entries already on Arkiv: skipped`);
+const res = await client.executeBatch({ creates: fresh });
 console.log(`batch tx ${res.txHash}: ${res.createdEntities.length} entities created`);
 const out = { writer: writer.address, txHash: res.txHash, entities: res.createdEntities, checks, publishedAt: new Date().toISOString() };
 const { writeFileSync, mkdirSync } = await import("node:fs");
 mkdirSync(repoPath("evidence", "arkiv"), { recursive: true });
 writeFileSync(repoPath("evidence", "arkiv", "publish.json"), JSON.stringify(out, null, 2));
-console.log(res.createdEntities.map((k, i) => `  ${creates[i].schema.name ?? ""} ${k}`).join("\n"));
+console.log(res.createdEntities.map((k, i) => `  ${fresh[i].schema.name ?? ""} ${k}`).join("\n"));
