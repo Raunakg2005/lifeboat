@@ -4,7 +4,7 @@ import { normalize } from "viem/ens";
 import { eq } from "@arkiv-network/sdk/query";
 import { addr } from "@arkiv-network/sdk/schema";
 import { Aboard, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, type ChainExposure, type HelmReport } from "@lifeboat/core";
-import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, sepoliaAddr, sepoliaClient, sepoliaLogs, short } from "./lib";
+import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
 import { HelmWheel, LuggageTag, Pill, Radar, Rubber, STATUS_FILL, Steps, type SpokeState } from "./ui";
 
 const EXAMPLES = [
@@ -24,7 +24,7 @@ const PATHS: Record<number, { title: string; why: string }> = {
 const HELM_STEPS = ["Finding the registry that holds the name", "Rebuilding every role list from the logs (5 paths in parallel)", "Classifying every key and proving the lists complete"];
 
 type Query = { kind: "name" | "address"; value: string };
-type Tab = "check" | "escape" | "harbour";
+type Tab = "check" | "discover" | "escape" | "harbour";
 
 export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
   const [mode, setMode] = useState<"address" | "name">("name");
@@ -189,7 +189,7 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
   const [err, setErr] = useState("");
   const [step, setStep] = useState(0);
   const [active, setActive] = useState<number | null>(null);
-  const [published, setPublished] = useState<{ verdict: string; block: string; key: string }[] | null>(null);
+  const [published, setPublished] = useState<{ verdict: string; block: string; key: string; swarmRef?: string }[] | null>(null);
   const [secs, setSecs] = useState(0);
 
   useEffect(() => {
@@ -200,12 +200,12 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
       .catch((e) => live && setErr(String(e?.shortMessage ?? e?.message ?? e).slice(0, 240)))
       .finally(() => live && onDone());
     arkiv
-      .select({ $key: true, verdict: true, checkedBlock: true })
+      .select({ $key: true, verdict: true, checkedBlock: true, swarmRef: true })
       .from(NameCheck)
       .where(eq("name", name))
       .limit(5)
       .fetch()
-      .then((res) => live && setPublished(res.entities.map((e) => ({ verdict: e.verdict.value, block: String(e.checkedBlock.value), key: e.$key }))))
+      .then((res) => live && setPublished(res.entities.map((e) => ({ verdict: e.verdict.value, block: String(e.checkedBlock.value), key: e.$key, swarmRef: e.swarmRef?.value }))))
       .catch(() => live && setPublished([]));
     return () => {
       live = false;
@@ -313,7 +313,17 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
             published.map((p) => (
               <div key={p.key} style={{ marginTop: 8 }}>
                 <Pill status={p.verdict === "protected" ? "pq" : "exposed"}>{p.verdict}</Pill> <span className="muted">at Sepolia block {p.block}</span>
-                <div className="note mono">Arkiv entity {short(p.key, 8)}</div>
+                <div className="note mono">
+                  Arkiv entity {short(p.key, 8)}
+                  {p.swarmRef && (
+                    <>
+                      {" · "}
+                      <a href={swarmUrl(p.swarmRef)} target="_blank" rel="noreferrer">
+                        full report on Swarm ↗
+                      </a>
+                    </>
+                  )}
+                </div>
               </div>
             ))
           )}

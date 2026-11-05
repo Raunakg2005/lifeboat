@@ -19,3 +19,6 @@ export const short = (a: string, n = 6) => (a.length > 2 * n + 2 ? `${a.slice(0,
 export const explorerTx = (h: string) => `https://explorer.altmempool.wtf/tx/${h}?node=${encodeURIComponent("https://altmempoolgateway.forshtat.com/rpc")}`;
 export const sepoliaTx = (h: string) => `https://sepolia.etherscan.io/tx/${h}`;
 export const sepoliaAddr = (a: string) => `https://sepolia.etherscan.io/address/${a}`;
+
+export const SWARM_GATEWAY = "https://api.gateway.testnet.ethswarm.org";
+export const swarmUrl = (ref: string) => `${SWARM_GATEWAY}/bzz/${ref}/`;

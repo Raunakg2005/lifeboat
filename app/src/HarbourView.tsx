@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { desc, eq } from "@arkiv-network/sdk/query";
 import { ARKIV_BLOCK_SECONDS, Aboard, Exposure, Leaf, NameCheck, PUBLISHER } from "@lifeboat/core";
-import { REPO, arkiv, short } from "./lib";
+import { REPO, arkiv, short, swarmUrl } from "./lib";
 import { Pill, Ring, Rubber } from "./ui";
 
 type Data = {
   block: bigint;
   exposed: { key: string; address: string; chainId: string; eth: string; via: string; expiresAt: bigint }[];
   aboard: { key: string; from: string; to: string; kind: string; chainId: string; note: string }[];
-  names: { key: string; name: string; verdict: string; expiresAt: bigint }[];
+  names: { key: string; name: string; verdict: string; expiresAt: bigint; swarmRef?: string }[];
   leaves: { key: string; owner: string; root: string; leaf: string; account: string; digest: string; tx: string }[];
 };
 
@@ -30,14 +30,14 @@ export default function HarbourView() {
         arkiv.getBlockNumber(),
         arkiv.select({ $key: true, $expiresAt: true, address: true, chainId: true, ethAtRisk: true, via: true }).from(Exposure).where(eq("status", "exposed")).ownedBy(PUBLISHER).orderBy(desc("ethAtRisk")).limit(50).fetch(),
         arkiv.select({ $key: true, from: true, to: true, kind: true, chainId: true, note: true }).from(Aboard).ownedBy(PUBLISHER).limit(50).fetch(),
-        arkiv.select({ $key: true, $expiresAt: true, name: true, verdict: true }).from(NameCheck).ownedBy(PUBLISHER).limit(50).fetch(),
+        arkiv.select({ $key: true, $expiresAt: true, name: true, verdict: true, swarmRef: true }).from(NameCheck).ownedBy(PUBLISHER).limit(50).fetch(),
         arkiv.select({ $key: true, $owner: true, root: true, leaf: true, account: true, digest: true, txHash: true }).from(Leaf).limit(100).fetch(),
       ]);
       setData({
         block,
         exposed: ex.entities.map((e) => ({ key: e.$key, address: e.address.value, chainId: String(e.chainId.value), eth: e.ethAtRisk.value, via: e.via.value, expiresAt: e.$expiresAt })),
         aboard: ab.entities.map((e) => ({ key: e.$key, from: e.from.value, to: e.to.value, kind: e.kind.value, chainId: String(e.chainId.value), note: e.note.value })),
-        names: nm.entities.map((e) => ({ key: e.$key, name: e.name.value, verdict: e.verdict.value, expiresAt: e.$expiresAt })),
+        names: nm.entities.map((e) => ({ key: e.$key, name: e.name.value, verdict: e.verdict.value, expiresAt: e.$expiresAt, swarmRef: e.swarmRef?.value })),
         leaves: lv.entities.map((e) => ({ key: e.$key, owner: e.$owner, root: e.root.value, leaf: String(e.leaf.value), account: e.account.value, digest: e.digest.value.toLowerCase(), tx: e.txHash.value })),
       });
     })().catch((e) => setErr(String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)));
@@ -156,6 +156,11 @@ export default function HarbourView() {
                   <div className="board-row" key={n.key}>
                     <Pill status={n.verdict === "protected" ? "pq" : "exposed"}>{n.verdict}</Pill>
                     <b>{n.name}</b>
+                    {n.swarmRef && (
+                      <a className="mono" style={{ fontSize: 12 }} href={swarmUrl(n.swarmRef)} target="_blank" rel="noreferrer">
+                        evidence on Swarm ↗
+                      </a>
+                    )}
                     <span style={{ marginLeft: "auto" }}>
                       <Ring fraction={l.fraction} label={l.label} />
                     </span>

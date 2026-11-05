@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import CheckView from "./CheckView";
 import EscapeView from "./EscapeView";
 import HarbourView from "./HarbourView";
+import DiscoverView from "./DiscoverView";
 import { REPO } from "./lib";
 import { WaveBand } from "./ui";
 
 const TABS = [
   { id: "check", label: "Scan" },
+  { id: "discover", label: "Discover" },
   { id: "escape", label: "Escape" },
   { id: "harbour", label: "Harbour" },
 ] as const;
@@ -49,6 +51,7 @@ export default function App() {
       <WaveBand />
       <main className="wrap">
         {tab === "check" && <CheckView onGo={go} />}
+        {tab === "discover" && <DiscoverView />}
         {tab === "escape" && <EscapeView />}
         {tab === "harbour" && <HarbourView />}
       </main>

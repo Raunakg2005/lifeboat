@@ -1,0 +1,89 @@
+{
+  "bee": {
+    "api": "http://127.0.0.1:1633",
+    "version": "2.8.3-8e9bb914",
+    "mode": "light",
+    "network": "Sepolia testnet (network 10)",
+    "wallet": "0xf7e0dbaa225ffdba49abbdf9d52ca3b3842b2466",
+    "chequebook": "0x07b8c94fc323799df155c9392823132f6c9c69c8"
+  },
+  "postageBatch": {
+    "id": "d65b35d84fb16b2811f5cbb0a1b5d00045c074bd43ac2a04014e7266bd3a7bae",
+    "depth": 18,
+    "ttlHours": 71.89472222222223,
+    "txHash": "0xc8669c51715ff7c747251b7e8b456e3ef290e34c60f1e21b858087adb7faba23",
+    "boughtBy": "0xf7e0dbaa225ffdba49abbdf9d52ca3b3842b2466"
+  },
+  "gateway": "https://api.gateway.testnet.ethswarm.org",
+  "refs": {
+    "evidence/ef/frame-demo-leaf1.json": {
+      "reference": "486a4f3dd33f6d199d9c6329d2625884ce8d084e5e425c0b7f20ce50a92b6771",
+      "local": "http://127.0.0.1:1633/bzz/486a4f3dd33f6d199d9c6329d2625884ce8d084e5e425c0b7f20ce50a92b6771/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/486a4f3dd33f6d199d9c6329d2625884ce8d084e5e425c0b7f20ce50a92b6771/",
+      "gatewayOk": true
+    },
+    "evidence/ef/rescue.json": {
+      "reference": "69fab974ed2cbb408be4db1c1629698f9fad9672512458ec8f2ce452cdb8bdd4",
+      "local": "http://127.0.0.1:1633/bzz/69fab974ed2cbb408be4db1c1629698f9fad9672512458ec8f2ce452cdb8bdd4/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/69fab974ed2cbb408be4db1c1629698f9fad9672512458ec8f2ce452cdb8bdd4/",
+      "gatewayOk": true
+    },
+    "evidence/ef/paymaster-guards.json": {
+      "reference": "f595ff8b7db858272fe8c2e06f79eef0c57faa571a3087c613840972ea5167e4",
+      "local": "http://127.0.0.1:1633/bzz/f595ff8b7db858272fe8c2e06f79eef0c57faa571a3087c613840972ea5167e4/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/f595ff8b7db858272fe8c2e06f79eef0c57faa571a3087c613840972ea5167e4/",
+      "gatewayOk": true
+    },
+    "evidence/ef/forgery.json": {
+      "reference": "1866b02388e81ffd8587bc2b928c9aedf2fa339cbca6ac11d0712c80778547b2",
+      "local": "http://127.0.0.1:1633/bzz/1866b02388e81ffd8587bc2b928c9aedf2fa339cbca6ac11d0712c80778547b2/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/1866b02388e81ffd8587bc2b928c9aedf2fa339cbca6ac11d0712c80778547b2/",
+      "gatewayOk": true
+    },
+    "evidence/ens/handover.json": {
+      "reference": "e3d23a6aae034169f1cf5edeb22426530d7ca076f44ba5dfeb54d63294875057",
+      "local": "http://127.0.0.1:1633/bzz/e3d23a6aae034169f1cf5edeb22426530d7ca076f44ba5dfeb54d63294875057/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/e3d23a6aae034169f1cf5edeb22426530d7ca076f44ba5dfeb54d63294875057/",
+      "gatewayOk": true
+    },
+    "evidence/arkiv/publish.json": {
+      "reference": "a14250328bc0e034baa57dffabc48050a11e7c33b45413cd8e8c734197a4ec1f",
+      "local": "http://127.0.0.1:1633/bzz/a14250328bc0e034baa57dffabc48050a11e7c33b45413cd8e8c734197a4ec1f/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/a14250328bc0e034baa57dffabc48050a11e7c33b45413cd8e8c734197a4ec1f/",
+      "gatewayOk": true
+    },
+    "evidence/ens/helm-lifeboatpq.eth-12070648.json": {
+      "reference": "91a0dafc6752d6acf9c39dfb5281aba72fb41266eefc0a65e1b17e4610ab642d",
+      "local": "http://127.0.0.1:1633/bzz/91a0dafc6752d6acf9c39dfb5281aba72fb41266eefc0a65e1b17e4610ab642d/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/91a0dafc6752d6acf9c39dfb5281aba72fb41266eefc0a65e1b17e4610ab642d/",
+      "gatewayOk": true
+    },
+    "evidence/ens/helm-lifeboatdemo.eth-12071211.json": {
+      "reference": "b27da9a9139a945c83d021f60803995494784479d42b9e9af5165319422de0de",
+      "local": "http://127.0.0.1:1633/bzz/b27da9a9139a945c83d021f60803995494784479d42b9e9af5165319422de0de/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/b27da9a9139a945c83d021f60803995494784479d42b9e9af5165319422de0de/",
+      "gatewayOk": true
+    }
+  },
+  "arkiv": {
+    "txHash": "0xd960c0f0a61cf90925bfcae87b4803704a089918eea382818494aaa193c2cdc1",
+    "entities": [
+      {
+        "key": "0x3f95966ca70d7533cf0cb097d3d30d2823b3c7c79d20c88d43d24ebdc95f5773",
+        "schema": "lifeboat.name.v1",
+        "swarmRef": "91a0dafc6752d6acf9c39dfb5281aba72fb41266eefc0a65e1b17e4610ab642d"
+      },
+      {
+        "key": "0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc",
+        "schema": "lifeboat.name.v1",
+        "swarmRef": "b27da9a9139a945c83d021f60803995494784479d42b9e9af5165319422de0de"
+      },
+      {
+        "key": "0x6e1cd17777eeadabfc22507cd625ce91ad7e48cec0e851c527f1a7adf50b6853",
+        "schema": "lifeboat.exposure.v1",
+        "swarmRef": "1866b02388e81ffd8587bc2b928c9aedf2fa339cbca6ac11d0712c80778547b2"
+      }
+    ]
+  },
+  "at": "2026-11-05T18:43:36.466Z"
+}
