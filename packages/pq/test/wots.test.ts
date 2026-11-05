@@ -145,3 +145,36 @@ describe("WOTS+C property", () => {
     expect(avg).toBeLessThan(5000);
   });
 });
+
+describe("forgery from reused leaves (the attack Lifeboat prevents)", () => {
+  const reuse = (leaf: number, n: number) => Array.from({ length: n }, (_, i) => ({ sigHash: hash(200 + i), witness: sign(key, leaf, hash(200 + i)).witness }));
+
+  it("16 signatures from one leaf let anyone forge a new message (a wallet re-signing every fee bump)", async () => {
+    const { forge } = await import("../src/forge.js");
+    const target = hash(250);
+    const result = forge(key, reuse(30, 16), target, 2_000_000);
+    expect(result).not.toBeNull();
+    expect(verify(key, target, result!.witness)).toBe(true);
+    console.log(`forged with 16 reuses after ${result!.tries} tries`);
+  }, 120_000);
+
+  it("5 reuses already cost an attacker only ~2^35 tries (GPU range)", async () => {
+    const { estimateTriesLog2 } = await import("../src/forge.js");
+    const bits = estimateTriesLog2(key, reuse(33, 5), 100_000);
+    console.log(`5 reuses: ~2^${bits.toFixed(1)} tries`);
+    expect(bits).toBeLessThan(45);
+    expect(bits).toBeGreaterThan(25);
+  });
+
+  it("a single signature can't be forged (fixed digit sum)", async () => {
+    const { forge } = await import("../src/forge.js");
+    expect(forge(key, reuse(31, 1), hash(251), 200_000)).toBeNull();
+  });
+
+  it("2 reuses need astronomically many tries", async () => {
+    const { estimateTriesLog2 } = await import("../src/forge.js");
+    const bits = estimateTriesLog2(key, reuse(32, 2), 100_000);
+    console.log(`2 reuses: ~2^${bits.toFixed(0)} tries`);
+    expect(bits).toBeGreaterThan(30);
+  });
+});

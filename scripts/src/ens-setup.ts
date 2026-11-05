@@ -76,7 +76,9 @@ for (const role of ["delegate", "operator"]) {
 save();
 
 // 2. the old resolver, controlled by the dev wallet
-if (!state.oldResolver) {
+state.oldResolvers ??= {};
+if (!state.oldResolvers[label] && state.name === name && state.oldResolver) state.oldResolvers[label] = state.oldResolver;
+if (!state.oldResolvers[label]) {
   const dns = dnsEncode(name);
   const init = encodeFunctionData({
     abi: resolverAbi,
@@ -92,7 +94,8 @@ if (!state.oldResolver) {
   const salt = BigInt(keccak256(toHex(`lifeboat-old-resolver-${label}-${Date.now()}`)));
   const sim = await pub.simulateContract({ account: dev, address: ENS.VerifiableFactory, abi: factoryAbi, functionName: "deployProxy", args: [ENS.PermissionedResolverImpl, salt, init] });
   await send("deploy old resolver (dev wallet holds ALL_ROLES)", { to: ENS.VerifiableFactory, data: encodeFunctionData({ abi: factoryAbi, functionName: "deployProxy", args: [ENS.PermissionedResolverImpl, salt, init] }) });
-  state.oldResolver = sim.result as Address;
+  state.oldResolvers[label] = sim.result as Address;
+  if (!state.oldResolver) state.oldResolver = sim.result as Address;
 }
 save();
 
@@ -109,18 +112,19 @@ if (available) {
     address: ENS.ETHRegistrar,
     abi: registrarAbi,
     functionName: "makeCommitment",
-    args: [label, dev.address, secret, "0x0000000000000000000000000000000000000000", state.oldResolver, DURATION, zero32],
+    args: [label, dev.address, secret, "0x0000000000000000000000000000000000000000", state.oldResolvers[label], DURATION, zero32],
   })) as Hex;
   await send("commit", { to: ENS.ETHRegistrar, data: encodeFunctionData({ abi: registrarAbi, functionName: "commit", args: [commitment] }) });
   console.log("waiting 70 s (MIN_COMMITMENT_AGE is 60 s)…");
   await new Promise((r) => setTimeout(r, 70_000));
   await send(`register ${name} (28 days)`, {
     to: ENS.ETHRegistrar,
-    data: encodeFunctionData({ abi: registrarAbi, functionName: "register", args: [label, dev.address, secret, "0x0000000000000000000000000000000000000000", state.oldResolver, DURATION, ENS.MockUSDC, zero32] }),
+    data: encodeFunctionData({ abi: registrarAbi, functionName: "register", args: [label, dev.address, secret, "0x0000000000000000000000000000000000000000", state.oldResolvers[label], DURATION, ENS.MockUSDC, zero32] }),
     gas: 1_500_000n,
   });
 } else console.log(`${name} is already registered`);
-state.name = name;
+if (!state.name) state.name = name; // the primary name (handed over by ens-handover)
+state.demoNames = [...new Set([...(state.demoNames ?? []), ...(state.name === name ? [] : [name])])];
 save();
 
 // 4. messy but realistic: an extra delegate and an operator
@@ -134,4 +138,4 @@ if (owner.toLowerCase() === dev.address.toLowerCase()) {
   if (!approved) await send("approve an operator for all names", { to: ENS.ETHRegistry, data: encodeFunctionData({ abi: registryAbi, functionName: "setApprovalForAll", args: [state.operator, true] }) });
 }
 save();
-console.log({ name, pqWallet: state.pqWallet, verifier: state.verifier, oldResolver: state.oldResolver, delegate: state.delegate, operator: state.operator });
+console.log({ name, pqWallet: state.pqWallet, verifier: state.verifier, oldResolver: state.oldResolvers[label], delegate: state.delegate, operator: state.operator });
