@@ -1,0 +1,670 @@
+{
+  "chain": "ethereum",
+  "scannedAt": "2026-11-05T18:43:07.055Z",
+  "results": [
+    {
+      "safe": "0xF06E95eF589D9c38af242a8AAee8375f14023F85",
+      "label": "Arbitrum Security Council (L1)",
+      "version": "1.3.0",
+      "threshold": 9,
+      "owners": [
+        {
+          "address": "0xEEFFd9041F8C4411C3Ad90310e61aDd65e0b7C1E",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Base": 0,
+            "Polygon": 0,
+            "Optimism": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x045d9c8a6e81c945db5de60bbdb3397e7c8280da0a8c3ee0f56a43e77dbe6ab9a58f80a2a50dddfae9e3e4918206002cd2d81d9d64a0e230f2113636c4db582aca"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0xeEB8886c48490355D6473901E2C1Ea03f9cc8398",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Arbitrum": 1,
+            "Optimism": 0,
+            "Ethereum": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04677db405ef430e29e55ed67e92b1ab68ec19a8326cd392ab9c74a356f419f0c1d609e97b9005994ae9d993beacd0a6898f3e75cad4ddd04dcec8286ce9859125"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x09BDaf6Be43CD6ff378E9CC785CD7A667B64668D",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Base": 0,
+            "Polygon": 0,
+            "Optimism": 0,
+            "Arbitrum": 1
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04ae5b8e33e6eedd4910369beacaed80675e3debfd8357038e5452e60d7151ebf33accb808f10cffd8b968da8e44790ec7fbf061f126f7a43cb1fcd997de741017"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x913Af9a61d1a59aA5D21CE9Bbf7Fd44Ed61dB4ce",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 2,
+            "Base": 0,
+            "Ethereum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04f5126e238185bae499ea45e9e7fc2c929baa2d46bab42d250aa33cf59bded423f71aecc83279d1516cccb01793b26e02ba341c86d2961f65cf10bfe054a57f70"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x875573B973F7E9Ca54eb34a59180C70eE1128208",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 1,
+            "Polygon": 0,
+            "Ethereum": 0,
+            "Base": 0,
+            "Optimism": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04347d6ef9a1bf9daa49bd7d31da81ae3d58f5d183aba3a4c9fd4dbaf54ca4082088acd0f97f2e6ae0c29464f796783e6333158ccdfc4ec12de69820b67d9a26f2"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x0cd9e52891A0a48d45b0C61A31086be8361Ef157",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 1,
+            "Base": 0,
+            "Optimism": 0,
+            "Ethereum": 1,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x043d955a6d77d9f06ec5c466f1b704353440eeb94a60f52eb733f25270a263bf383fd7f6d8cf7f448727fc879ea6f791d4d59b82cbcc2e11ee7a72e811bece9c1f"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xBBD2E01eFB88ce00F8f5b6B9a696966070089392",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Optimism": 0,
+            "Polygon": 0,
+            "Arbitrum": 2
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x30732bb7d2fe35e3ada0929ad5ab603c59355ad71a3f75d109bba0d3db97d11f",
+            "safeTxHash": "0xa35efe5881c3a43efbf2bdb83c41115c3abe7d71f0f39fe86c2990179641dc70",
+            "publicKey": "0x042b5fee6554031ad47787fa6157d863e18237cb7e945f41a8afa01fe5483d0b9073f6b1edb8ad59fcb2196b4e827ad14ef56c5cbfcc4b720d5c2e3202350abb89"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xe2e9d5B97d8C0457B1cf80BC93802bce4DF03e33",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 1,
+            "Optimism": 0,
+            "Polygon": 0,
+            "Arbitrum": 4
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04ea07ee47ecd1fbe79fd509eded2b2456a9131e211d49ba64a55298fc4d1e5676484459e9140a21e9648c127995618660f8f3979280b1ff332874cc3d7a2b863d"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x33ddb82e68940f0e4C1050885BcE8faF5Ddd1b93",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 2,
+            "Optimism": 0,
+            "Polygon": 0,
+            "Base": 0,
+            "Arbitrum": 4
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04992353173ef11124ca2c7869b95575698d13ba08bf30236dae43e03114714ea692b89c8b5cbe2346397b6b204b1e0aad864b36ca673e2ab553c67d55cda67543"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x882c6FCb3D358b9d70B97c6999159cea64168B6F",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Arbitrum": 2,
+            "Base": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x30732bb7d2fe35e3ada0929ad5ab603c59355ad71a3f75d109bba0d3db97d11f",
+            "safeTxHash": "0xa35efe5881c3a43efbf2bdb83c41115c3abe7d71f0f39fe86c2990179641dc70",
+            "publicKey": "0x04e7be6584e014a67916084a1d21874e79598c643bf13aa7bfeededd27860f496e939fa8321c89605befae6ab9c600f1531018240d151c6c9d9e01277edf997de4"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x0275b3D54a5dDbf8205A75984796eFE8b7357Bae",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Optimism": 0,
+            "Polygon": 0,
+            "Arbitrum": 3,
+            "Base": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xc73eba5e946d0b435545c99df91f045c1122c393a718652d15f87f9fde23151f",
+            "safeTxHash": "0x58a9af2d7166aba3dc62d3bfe100fa73ff5646e4133f238666774b5816658ad3",
+            "publicKey": "0x04c20c679065d64ca5007fb492861e832aa68089dd55ddc85ff0f0b925bf07d43123fe5305acc7742e6b21807a87a484961e44a2991f55d8e0082f236beb6ae6ce"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x475816ca2a31D601B4e336f5c2418A67978aBf09",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 2,
+            "Ethereum": 0,
+            "Base": 0,
+            "Polygon": 0,
+            "Optimism": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xb69c81774f507d46ce776aeaed8b4d31df96dd66ce6fd05073481011835355d6",
+            "safeTxHash": "0xcc950a5dc38ffa2fd85d4d96efb3b292035f0b03c463a4b057dd129340f48f0c",
+            "publicKey": "0x04b6ff64704aeb063e8fbefe7178268e3d9e9326dab9a178f3b7dff15eb2440f0785e0c7bfe8256ed8446b897bda5b4df862f87009d06ed82792bc31d5ddb707d8"
+          },
+          "how": "both"
+        }
+      ],
+      "block": "26350495",
+      "executionsSeen": 8,
+      "executionsDecoded": 8,
+      "exposedByNonce": 11,
+      "exposedTotal": 12,
+      "takeableByNonce": true,
+      "takeableWithSignatures": true
+    },
+    {
+      "safe": "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03",
+      "label": "Optimism Security Council",
+      "version": "1.3.0",
+      "threshold": 10,
+      "owners": [
+        {
+          "address": "0xE61F12136bA47De67D15a1D59fE2f383ec5176aE",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Arbitrum": 0,
+            "Ethereum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x70f8ad94fe4be9fd7f10f42f481971995944fb3c3b853ca2a36ec12b7c886d3c",
+            "safeTxHash": "0x45aa9c405b5e3e368c666ab065b2390b8a6785a419691bbae98428428245eb9f",
+            "publicKey": "0x04dde33b1ad15ffa95964abbd5748a770abc3b315bdccd0b66859586d83d33469f5845aa36ba48b1724b30c8e4ffe946fd129e6cb9d10addb51d89decef4d4d43f"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x652BC529E171847E2fFddCeA13567643C84ccB5f",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xafff922beb59e73c08bdf6c94a990d7e777bfc4920b6779198443f269bda02c2",
+            "safeTxHash": "0x646e098e3380cb8830b5819990c34ce687527d73ae26294a5d15b3f81e79d5ca",
+            "publicKey": "0x04ccc467a8f3d016b1496d6322e4eca6c7cd29277fc77a9c1da50cb4cf747b9482a4ff6805793f1261fe2eab4a3fa859fecbad4acb9874c8681f7585e6cdb03276"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x5c1f9E9384Ca9fE0499277F6a015a2ac0A317a81",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x70f8ad94fe4be9fd7f10f42f481971995944fb3c3b853ca2a36ec12b7c886d3c",
+            "safeTxHash": "0x45aa9c405b5e3e368c666ab065b2390b8a6785a419691bbae98428428245eb9f",
+            "publicKey": "0x04c969dfaddf41234029e98cf5b50da86ec6e6da45beda588c8ee9eb7460f7fb0f5337af2de17e46003e0a8866a07f9b184669beb25cea1079eec77a82416e7b37"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x4A7322258c9E690e4CB8Cea6e5251443E956e61E",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 4,
+            "Arbitrum": 0,
+            "Base": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x6d60e7d62bf89d83b76ae05fe366974f027f769f9221bd2f2a92365f0c0d675c",
+            "safeTxHash": "0x269964122c91a724fcc0a938c7165734e3308af058c47342636960cd8acd5445",
+            "publicKey": "0x041c054bd89ac6bfbc77b0955826ee85804bf871e0262e708581171e3a2332d91054013d8842b889d44f9e1122de2adc4a2aa692014a8a9aea2de540157e3220d7"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x3A53B4B081Eb7Cb00C46497b16Ea22e65E4Faa94",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 0,
+            "Base": 0,
+            "Ethereum": 0,
+            "Polygon": 0,
+            "Optimism": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x70f8ad94fe4be9fd7f10f42f481971995944fb3c3b853ca2a36ec12b7c886d3c",
+            "safeTxHash": "0x45aa9c405b5e3e368c666ab065b2390b8a6785a419691bbae98428428245eb9f",
+            "publicKey": "0x04e42dcc02c71a38bda7706155d9c6487f5465a8a1fe8dce5ce2a793692f9e2c3e11181eeb4220f7863015923f358d2c5f4b3ed3c7002570cced0b3b4c32553fd3"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0xEF9A98511939eEe6Ec69af62082E3F2ff606877c",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xafff922beb59e73c08bdf6c94a990d7e777bfc4920b6779198443f269bda02c2",
+            "safeTxHash": "0x646e098e3380cb8830b5819990c34ce687527d73ae26294a5d15b3f81e79d5ca",
+            "publicKey": "0x04b42e695c8c3b99fff27a139ffc02bc4c0ea82b7fa282c3f0cef0ae1a7f31e6c60137735b2ac216e194cb846e47b71dc22c3820e95212c8c586a41cf2311e2407"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x6323ef2b80030f3fBc508bFc321Fc71fDB95c865",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 0,
+            "Base": 0,
+            "Ethereum": 1,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x6d60e7d62bf89d83b76ae05fe366974f027f769f9221bd2f2a92365f0c0d675c",
+            "safeTxHash": "0x269964122c91a724fcc0a938c7165734e3308af058c47342636960cd8acd5445",
+            "publicKey": "0x04fbbc75b6bd7ffbb11611081e0cf95121a1bd413daf6b6b4c60a13be9708e0f0c57fffe2aaf6ee8442fd2e97bfab551a7c00bc7ebfcbb42ccbca0552a74197b8d"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xd5b735b676A043a53946C3b6F6BE28c1ECE6aC90",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xafff922beb59e73c08bdf6c94a990d7e777bfc4920b6779198443f269bda02c2",
+            "safeTxHash": "0x646e098e3380cb8830b5819990c34ce687527d73ae26294a5d15b3f81e79d5ca",
+            "publicKey": "0x047c95b75731b89c54b7f90813733134dc4ffc4dd17e739bcca05ce991564dd181076a9a6f0974ddf21992486d435431375f82115db8a38fd3fd638079cc8493e4"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x7ed8d9Af9eaA194D1A75C67c1475579E42289E39",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 2,
+            "Base": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x6c6ebbeb825f04a5746d0326ac026746d50a4fd2c482eb8ddf1d60ba635a802a",
+            "safeTxHash": "0xfa3bc7f210ee44b6add2072cb2302eb38a7d83440f15a54de9bfc58d3530cce1",
+            "publicKey": "0x041162155dd055d4c6d5dff21a511cdf649a66c02ae8a080abf5c58807648e6916ad7b57137beee3c0bc11167982bf42086ba6d2950233f2d8b99801bcde9c9780"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xd91530dB01c60C6B3b824707D33fb0771aB85930",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x70f8ad94fe4be9fd7f10f42f481971995944fb3c3b853ca2a36ec12b7c886d3c",
+            "safeTxHash": "0x45aa9c405b5e3e368c666ab065b2390b8a6785a419691bbae98428428245eb9f",
+            "publicKey": "0x04f6f353297c6ac9e3f0ce0e46cb20b951511006672385635afefc197d5c28434628024e61b88b6bd9c26604746228ef83cb3d91f80bbed24245715c2292e7fd86"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x0a8742365a7EB0A3698293ac54357B5Ac04cefE6",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 0,
+            "Ethereum": 0,
+            "Base": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xb6ac4e1dfccf015eeac3e6bd34a8a2b9356fcc1ccd95cd78e60304709461f05d",
+            "safeTxHash": "0x5238e958bc4d4b2564e72f6dd19200c7dd0888b1db3c830744496d7effd6f0fd",
+            "publicKey": "0x04b654da9162d8485dfdec34d6c8786bddc58cf67d5dd549e0883490aaaa0f5289c4e4e2a148280443ba050ee5f2ce6ade2ffb0e390a16fe716dda7e1795b4b6ee"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0xbfA046B0bc5cEa1596be62B8b3f79f9f41f1E0d9",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 2,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x6c6ebbeb825f04a5746d0326ac026746d50a4fd2c482eb8ddf1d60ba635a802a",
+            "safeTxHash": "0xfa3bc7f210ee44b6add2072cb2302eb38a7d83440f15a54de9bfc58d3530cce1",
+            "publicKey": "0x04036fa134546c4e17295817af43f9521b98156c69ed897cf9c775dd78a847557a7709590deb9642fc214f54417d88285b006665a406c33d5b43e69ed6aa361064"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xcbC7dCeb857F0b25523618cCa0A03c419a6d7eA6",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 0,
+            "Ethereum": 0,
+            "Base": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x70f8ad94fe4be9fd7f10f42f481971995944fb3c3b853ca2a36ec12b7c886d3c",
+            "safeTxHash": "0x45aa9c405b5e3e368c666ab065b2390b8a6785a419691bbae98428428245eb9f",
+            "publicKey": "0x0447dd5c97e5a68637f30e9d46597ec52750c465fb4bd936f61855fb0a3b13bcb54c6a4603f7a2f8aeea88678ef4231c41649d1a560a66cb7a6f658d7e7d74e285"
+          },
+          "how": "signature"
+        }
+      ],
+      "block": "26350495",
+      "executionsSeen": 75,
+      "executionsDecoded": 72,
+      "exposedByNonce": 4,
+      "exposedTotal": 13,
+      "takeableByNonce": false,
+      "takeableWithSignatures": true
+    },
+    {
+      "safe": "0x7bB41C3008B3f03FE483B28b8DB90e19Cf07595c",
+      "label": "Base multisig",
+      "version": "1.3.0",
+      "threshold": 2,
+      "owners": [
+        {
+          "address": "0x9855054731540A48b28990B63DcF4f33d8AE46A1",
+          "isContract": true,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 1,
+            "Optimism": 0,
+            "Arbitrum": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": null,
+          "how": "contract",
+          "nested": {
+            "label": "nested Safe 0x985505",
+            "threshold": 3,
+            "owners": 6,
+            "exposedByNonce": 4,
+            "exposedTotal": 6,
+            "takeableByNonce": true,
+            "takeableWithSignatures": true
+          }
+        },
+        {
+          "address": "0x20AcF55A3DCfe07fC4cecaCFa1628F788EC8A4Dd",
+          "isContract": true,
+          "nonces": {
+            "Base": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Ethereum": 1,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": null,
+          "how": "contract",
+          "nested": {
+            "label": "nested Safe 0x20AcF5",
+            "threshold": 8,
+            "owners": 11,
+            "exposedByNonce": 0,
+            "exposedTotal": 11,
+            "takeableByNonce": false,
+            "takeableWithSignatures": true
+          }
+        }
+      ],
+      "block": "26350496",
+      "executionsSeen": 23,
+      "executionsDecoded": 23,
+      "exposedByNonce": 1,
+      "exposedTotal": 2,
+      "takeableByNonce": false,
+      "takeableWithSignatures": true
+    },
+    {
+      "safe": "0x9855054731540A48b28990B63DcF4f33d8AE46A1",
+      "label": "Base multisig 2",
+      "version": "1.3.0",
+      "threshold": 3,
+      "owners": [
+        {
+          "address": "0xf9e320f3dA12E68af219d9E2A490Dd649f6B177c",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 9,
+            "Base": 4,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0x655d851a6318c97851af75a9f7008ec439fbb2c6fa56adadc6aced045bdccb96",
+            "safeTxHash": "0x5fcef29eb014ece53a93d99312fd30a7d2959aeb0dfff50535902ae80750af35",
+            "publicKey": "0x04567397d25f493f2244f9f381d96841c9d138d881c5d5425a375050b8b4aefdc368dd18509031deaddcae9f8ff682a46d99dd1f339ebbcc6648a25b9adf18199f"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0xB011a32ED8b4F70D9943A2199F539bbeCd7b62F7",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0,
+            "Ethereum": 1
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xd15bc1365781c6f2c4935f04844510a9ff030dc4a1f88e939c19305c0f04be0d",
+            "safeTxHash": "0x773f87337967c079c1239ca9fed022d445dd5f9b882752ba5a89125f19e4777f",
+            "publicKey": "0x04cf5ddefd3f14497df772ac1abe3c8a2f27f5099ac887de15fe2e25b87d0323426d634971d380a330ef9893ed099917f44e92281cef0c1e121256e4e8b4c5a59f"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x3Dad2200849925Bb46d9bF05aFa5f7F213F4c18E",
+          "isContract": false,
+          "nonces": {
+            "Base": 0,
+            "Ethereum": 2,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xd808a602cc66a8aba3018ed839673efdcb247a6172b0f0ab13906385d30093b0",
+            "safeTxHash": "0xda3db50649d8ca5135fe64d984542d795eb4af8c38a3133063572050dace323f",
+            "publicKey": "0x04d7aef306f90ed3312ec755713df5b43f9cadb0e865e4eb942e08a179ffd7263fe12891d8f3d0c347700d9eb279ecc991cc1e419e761907f501a9015397c5a8be"
+          },
+          "how": "both"
+        },
+        {
+          "address": "0x1c870776B168A9ffAE80c51f050C611eDd246741",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Base": 0,
+            "Arbitrum": 0,
+            "Optimism": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0xd808a602cc66a8aba3018ed839673efdcb247a6172b0f0ab13906385d30093b0",
+            "safeTxHash": "0xda3db50649d8ca5135fe64d984542d795eb4af8c38a3133063572050dace323f",
+            "publicKey": "0x0421c10412b9032bed4b666a72fca78f92da5da4e35826c05c09721dcbcaedcd89202e584eab2a31cba879f6002b13dec6e394570bc1f7df836ae06ebba236c867"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x3cd692eCE8b6573A2220ae00d0dEb98f0DfFA9a1",
+          "isContract": false,
+          "nonces": {
+            "Ethereum": 0,
+            "Optimism": 0,
+            "Arbitrum": 0,
+            "Base": 0,
+            "Polygon": 0
+          },
+          "byNonce": false,
+          "bySignature": {
+            "txHash": "0x049ba9bbb6ea607351458018702f2dc28d1edd53e84c01897c9c10ff8fcaa71a",
+            "safeTxHash": "0x32921a15284b4b50a6a49686539611ee2a457d05c0f8bd42ea5706ba03e35e7f",
+            "publicKey": "0x044f8672192e2b810224a3be2e78de808d58929ca313066367ace388dc845a1c84e0ee7037b6a31bf505a65fcbf97be2be406ef2c7122faba7ed722bf33b60fcd3"
+          },
+          "how": "signature"
+        },
+        {
+          "address": "0x6CD3850756b7894774Ab715D136F9dD02837De50",
+          "isContract": false,
+          "nonces": {
+            "Arbitrum": 0,
+            "Ethereum": 1,
+            "Optimism": 0,
+            "Base": 0,
+            "Polygon": 0
+          },
+          "byNonce": true,
+          "bySignature": {
+            "txHash": "0xd15bc1365781c6f2c4935f04844510a9ff030dc4a1f88e939c19305c0f04be0d",
+            "safeTxHash": "0x773f87337967c079c1239ca9fed022d445dd5f9b882752ba5a89125f19e4777f",
+            "publicKey": "0x0492a76fcc86decefc5a71b41bf6863cbaa5c0473b463496d6661c6a22992871e7b39faab3776d8bd905f9103846bbcbeef0da5e711cdf2982978b34f866da48fc"
+          },
+          "how": "both"
+        }
+      ],
+      "block": "26350498",
+      "executionsSeen": 37,
+      "executionsDecoded": 37,
+      "exposedByNonce": 4,
+      "exposedTotal": 6,
+      "takeableByNonce": true,
+      "takeableWithSignatures": true
+    }
+  ]
+}
