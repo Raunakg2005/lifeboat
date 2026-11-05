@@ -184,23 +184,31 @@ def save(name, payload):
     print(f"wrote {os.path.relpath(path, ROOT)}")
 
 
+TOKEN_NAMES = ("IBM_QUANTUM_TOKEN", "IBM_QUANTUM_API_KEY", "QISKIT_IBM_TOKEN", "IBM_API_KEY", "IBM_CLOUD_API_KEY")
+INSTANCE_NAMES = ("IBM_QUANTUM_INSTANCE", "QISKIT_IBM_INSTANCE", "IBM_QUANTUM_CRN", "IBM_INSTANCE", "IBM_CRN")
+
+
 def load_ibm_env():
-    """Reads only the two IBM Quantum variables from .env, without printing them."""
-    env = {}
+    """Reads only the IBM Quantum variables from .env (a few common names), without printing them."""
+    found = {}
     path = os.path.join(ROOT, ".env")
     if os.path.exists(path):
         for line in open(path, encoding="utf-8"):
             line = line.strip()
             if "=" in line and not line.startswith("#"):
                 k, v = line.split("=", 1)
-                if k.strip() in ("IBM_QUANTUM_TOKEN", "IBM_QUANTUM_INSTANCE"):
-                    env[k.strip()] = v.strip().strip('"').strip("'")
-    for k in ("IBM_QUANTUM_TOKEN", "IBM_QUANTUM_INSTANCE"):
+                k = k.strip().removeprefix("export ").strip()
+                if k in TOKEN_NAMES + INSTANCE_NAMES and v.strip():
+                    found[k] = v.strip().strip('"').strip("'")
+    for k in TOKEN_NAMES + INSTANCE_NAMES:
         if os.environ.get(k):
-            env[k] = os.environ[k]
-    if not env.get("IBM_QUANTUM_TOKEN"):
-        raise SystemExit("IBM_QUANTUM_TOKEN is not set in .env")
-    return env
+            found[k] = os.environ[k]
+    token = next((found[k] for k in TOKEN_NAMES if k in found), None)
+    instance = next((found[k] for k in INSTANCE_NAMES if k in found), None)
+    if not token:
+        raise SystemExit("No IBM Quantum API key in .env. Add a line: IBM_QUANTUM_TOKEN=<your API key>")
+    print(f"IBM key found ({next(k for k in TOKEN_NAMES if k in found)}), instance {'set' if instance else 'not set (the service picks one)'}")
+    return {"IBM_QUANTUM_TOKEN": token, "IBM_QUANTUM_INSTANCE": instance}
 
 
 def service():
