@@ -1,108 +1,93 @@
 # Lifeboat
 
-A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there, not just sending a transaction. Lifeboat shows who could take over what on Q-Day, and gives each one a way out.
+**A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there, not just sending a transaction. Lifeboat shows who could take over what on Q-Day, and gives each one a way out.**
 
-Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026).
+Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can do this today: these are readiness findings from public on-chain data.
 
-**Live demo: https://lifeboat-mu.vercel.app** (scan any address, or any ENSv2 name on Sepolia).
+**Live demo: https://lifeboat-mu.vercel.app** · scan any address, or any ENSv2 name on Sepolia.
 
-> Work in progress. This README is filled in as each part lands, with real numbers and links only.
+| | What | Where it runs |
+|---|---|---|
+| **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
+| **Scan** | Exposure of any address on 6 chains; the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Sepolia ENSv2 |
+| **Escape** | A post-quantum (WOTS+C) account on EIP-8141; a staked **rescue paymaster** for wallets with no ETH; the **forgery** a reused one-time key allows | EIP-8141 alt-mempool devnet (chain 1337) |
+| **Harbour** | A public Q-Day registry and one-time-key ledger | Arkiv (Rabdi), evidence on Swarm |
+| **Sign safely** | An ESP32 signer that can't sign twice with one key | Firmware + Web Serial |
 
-## Live result: a post-quantum signed frame transaction through the alt mempool
+## Findings (block-stamped, lower bounds)
+- **Optimism Security Council (10 of 13):** 4 public keys by nonce → **13 of 13** counting signatures. **Base's nested 8-of-11 council: 0 → 11.** Two of four council Safes look safe by nonce and aren't. → [docs/discovery.md](docs/discovery.md)
+- **`lifeboatdemo.eth`:** hijackable on Q-Day through 4 of 5 control paths. **`lifeboatpq.eth`:** handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
+- **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.1 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
 
-A LifeboatAccount verifies a **WOTS+C hash-based signature** (no ECDSA anywhere) inside an EIP-8141 VERIFY frame. Its first transaction went through the ERC-8421 alt-mempool gateway and landed on chain 1337:
+## EF: Frame Transaction Alternative Mempool
+- **PQ account in Yul** verifying **WOTS+C** in the VERIFY frame: **52,369 gas** for the whole frame, 44,870 for the check itself (constant), 2,336-byte witness in an ARBITRARY signature entry, 256 one-time leaves with an on-chain leaf floor. First tx [`0xd999725a…`](https://explorer.altmempool.wtf/tx/0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 403,931.
+- **Why the alt mempool:** a **staked rescue paymaster** pays gas for exposed wallets that hold tokens but no ETH, and is repaid in USDC in the same transaction. Its VERIFY reads shared state (its registry, and a token balance through a proxy):
 
-| | |
-|---|---|
-| Transaction | [`0xd999725a…6a0f8ef0`](https://explorer.altmempool.wtf/tx/0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 403,931, status success |
-| Account | `0x555B4f232D65ED910F30F8897FA83705E35824dc` (CREATE2, Yul, 2,294 bytes) |
-| VERIFY frame gas | **52,369** used (60,000 declared, under the 100k prefix cap) |
-| WOTS+C core alone | 44,870 gas (Foundry, constant for every valid signature) |
-| Signature (witness) | 2,336 bytes, ARBITRARY scheme entry |
-| Raw evidence | [`evidence/ef/`](evidence/ef/) |
+  | Route | Result |
+  |---|---|
+  | public mempool | ❌ `StorageReadNonSender` |
+  | alt, unstaked | ❌ `unstaked payer accessed payer slot …` |
+  | alt, staked | ✅ [included in block 404,050](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
 
-Design, gas and trade-offs: [docs/pq-account.md](docs/pq-account.md).
+  It refuses 5 attack variants (underpaying, paying someone else, an undoable batched repayment, sweeping first, an unregistered sender).
+- **Forgery demo:** [`0x8dc6c9fb…`](https://explorer.altmempool.wtf/tx/0x8dc6c9fbbadd0e4345557d938f4333a35c726ebbb753493c5edc1726fee6d890?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 405,633: a signature forged from 12 reused fee bumps, accepted by VERIFY, wallet drained.
+- Docs: [pq-account.md](docs/pq-account.md) (design, gas, trade-offs, forgery costs) · [rescue-paymaster.md](docs/rescue-paymaster.md) (admission demo, guards, devnet feedback).
 
-## Live result: a token-only wallet escapes with no ETH (why the alt mempool is needed)
+## ENS: Best Use of ENSv2
+- **Helm check** for **any** ENSv2 name (nothing hard-coded). Five control paths: owner, delegates (EAC roles), operators, resolver role holders (incl. `UPGRADE`), parent registries. Holders are rebuilt from `EACRolesChanged` logs and **proven complete** (the sum of role bitmaps equals `roleCount`).
+- **Registry-verified handover** to a WOTS+C wallet:
+  1. The naive transfer is refused (`TransferUnsafeWithMultipleAssignees`).
+  2. Lifeboat deploys a new resolver, points the name at it, revokes the delegate and removes the operator.
+  3. The transfer is accepted.
+  4. The PQ wallet writes its own `pq.checked` with a hash-based signature.
+- **Draft ENSIP** for `pq.*` text records: [pq-records.md](docs/pq-records.md). Every tx hash: [helm-check.md](docs/helm-check.md).
 
-An exposed wallet with **0 ETH and 100 mUSDC** swept its tokens into the PQ account. A staked **rescue paymaster** paid the gas and was repaid 1 mUSDC inside the same frame transaction. The paymaster's VERIFY reads shared state (its registry of exposed accounts, and the token balance through an upgradeable proxy), which only the alt mempool allows, and only for a staked sponsor:
-
-| Route | Result |
-|---|---|
-| Canonical mempool | ❌ `StorageReadNonSender` |
-| Alt mempool, paymaster unstaked | ❌ `unstaked payer accessed payer slot …` |
-| Alt mempool, paymaster staked (0.012 ETH) | ✅ [included in block 404,050](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
-
-The paymaster also enforces its own repayment: it refused all five attack dry-runs (underpaying, paying someone else, an undoable batched repayment, sweeping first, an unregistered sender). Details: [docs/rescue-paymaster.md](docs/rescue-paymaster.md).
-
-## Live result: ENSv2 Helm check and a registry-verified handover (Sepolia)
-
-Moving the money isn't enough: if an exposed key can still steer your **name**, it can redirect every payment sent to it. The Helm check finds every account that controls an ENSv2 name across **five paths** (owner, delegates, operators, resolver role holders, parent registries), **proves the list complete** against the on-chain role counts, and flags which keys are already public.
-
-| `lifeboatpq.eth` | Verdict |
-|---|---|
-| Before | 🔴 **hijackable on Q-Day** through paths 1–4 (exposed owner, delegate, operator, and resolver admin with `UPGRADE`) |
-| Naive transfer to the PQ wallet | ❌ refused by the registry: `TransferUnsafeWithMultipleAssignees` |
-| Lifeboat handover (new resolver → setResolver → revoke → remove operator → transfer) | ✅ accepted |
-| After | 🟢 **protected**: owner and every resolver role held by the WOTS+C wallet, which then signed its own `pq.checked` record |
-
-Details and every tx hash: [docs/helm-check.md](docs/helm-check.md). The records are a draft ENSIP: [docs/pq-records.md](docs/pq-records.md).
-
-## Live result: a public Q-Day registry on Arkiv (Rabdi testnet)
-
-Lifeboat publishes what it verifies to Arkiv, so anyone can check it without trusting us or asking for an API:
-- **exposure attestations**, 24 h expiry: is this key already public, and how do we know
-- **"aboard" records**: verified moves to PQ accounts, readonly
-- **ENS Helm check verdicts**
-- **a leaf ledger**: every use of a one-time key. Anyone can report a sighting, and two different digests for one leaf raise **"signed twice: this key can be forged"**
-
-The publisher **re-verifies every claim on-chain before writing**. The first batch passed 7 checks, then wrote 12 entities in one transaction (`0x54665e1f…d07f`, 0.0032 tGLM).
-
-- **Writer wallet:** `0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a` (Rabdi, chain 7794095)
+## Arkiv: Build on Arkiv (+ Swarm)
+- **Four schemas:** exposure (24 h), aboard (readonly audit trail), name verdicts, and a **leaf ledger** that anyone can write to. Two digests for one leaf raise **"signed twice"**, which the ledger caught for the naive wallet.
+- **A publisher that re-verifies every claim on-chain** before batch-writing.
+- **Writer wallet:** `0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a` (Rabdi, chain 7794095).
 - **Runnable query** (no access key needed):
   ```bash
   pnpm install && node scripts/arkiv-query-public.mjs
   ```
-  It lists the exposed keys vouched for by the writer, through `and(eq("arkiv.schema", "lifeboat.exposure.v1"), eq("status", "exposed"))` + `.ownedBy(writer)`.
-- Docs: [schema](arkiv/schema.md) · [why Arkiv](arkiv/why-arkiv.md) · [how we use it](arkiv/how-you-use-arkiv.md) · [reach](arkiv/reach.md) · [friction](arkiv/friction.md)
+- **Swarm:** 8 evidence bundles uploaded by our own Bee light node (batch `d65b35d8…7bae`) and referenced from Arkiv entities via `swarmRef`. 8 of 8 open on the public testnet gateway.
+- Docs: [schema](arkiv/schema.md) · [why Arkiv](arkiv/why-arkiv.md) · [how we use it](arkiv/how-you-use-arkiv.md) · [reach](arkiv/reach.md) · [friction](arkiv/friction.md) · [swarm](arkiv/swarm.md)
 
-## Parts
+## Hardware
+ESP32 signer. The secret seed and the leaf counter stay on the device. It shows each request on an OLED, needs the Approve button, saves the counter **before** signing, and refuses a counter that doesn't match its own digest. Its crypto core is verified byte for byte against the TypeScript signer (`node tools/firmware-check.mjs`). → [docs/hardware.md](docs/hardware.md)
 
-| Part | Folder | Status |
+## Repo
+| Folder | What | Tests |
 |---|---|---|
-| WOTS+C post-quantum signatures (TypeScript) | `packages/pq` | done: 13 tests |
-| PQ account on EIP-8141 frame transactions (Yul) | `contracts/yul` | done: 9 Foundry tests against TypeScript vectors |
-| Rescue paymaster (Yul) + mock USDC behind an EIP-1967 proxy | `contracts` | done: 6 Foundry tests + 6 devnet guard dry-runs |
-| PQ wallet for Sepolia (WOTS+C-verified `execute`, owns ENS names) | `contracts/src` | done: 8 Foundry tests with TypeScript signatures |
-| ENSv2 Helm check + handover | `scripts/src/lib/helm.ts`, `scripts/src/ens-*.ts` | done, live on Sepolia |
-| Arkiv registry: 4 schemas, verifying publisher, Harbour queries, leaf ledger | `scripts/src/lib/arkiv.ts`, `scripts/src/arkiv-*.ts` | done, live on Rabdi |
-| Devnet scripts (deploy, sign, dry-run, submit, sponsor, capture evidence) | `scripts` | done |
-
-## How it works (short)
-
-- **WOTS+C** (w = 16, 64 chains, keccak): the signer grinds a counter until the digest's digits sum to exactly 560, so no checksum chains are needed and the verifier always does exactly 400 hashes.
-- **256 one-time leaves** under an index-bound Merkle root. Every signing attempt takes a fresh leaf, written to disk before the signature leaves the wallet, and each landed transaction raises an on-chain **leaf floor**, so an old or reused leaf can never pass VERIFY again.
-- The Yul core is shared by the account and a calldata harness, so Foundry tests the exact code that runs on-chain.
+| `packages/pq` | WOTS+C: keys, signing, verification, Merkle tree, forgery analysis | 17 (vitest) |
+| `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | via scripts and app |
+| `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, mock USDC | 23 (Foundry, TypeScript vectors) |
+| `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
+| `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
+| `firmware/esp32` | the signer | host test vs TypeScript vectors |
 
 ## Run it
-
 ```bash
 pnpm install
 pnpm --filter @lifeboat/pq test
-node tools/gen-yul.mjs && node tools/build-yul.mjs && (cd contracts && forge test -vv)
-pnpm --filter @lifeboat/scripts deploy-account --label demo
-pnpm --filter @lifeboat/scripts send-frame --label demo --verify-gas 60000 --send
-pnpm --filter @lifeboat/scripts rescue-setup && pnpm --filter @lifeboat/scripts rescue
-pnpm --filter @lifeboat/scripts paymaster-guards
-pnpm --filter @lifeboat/scripts helm lifeboatpq.eth   # any ENSv2 name on Sepolia
+node tools/gen-yul.mjs && node tools/build-yul.mjs && (cd contracts && forge test)
+pnpm --filter @lifeboat/app dev                       # the web app
+pnpm --filter @lifeboat/scripts helm lifeboatdemo.eth # any ENSv2 name on Sepolia
+pnpm --filter @lifeboat/scripts council-scan          # hidden exposure, mainnet
+pnpm --filter @lifeboat/scripts rescue                # three-way admission (needs .env)
+node tools/firmware-check.mjs                         # firmware crypto vs TypeScript (needs Docker)
 ```
+Scripts read `.env` (see `.env.example`). Secrets live in `.env` and `secrets/`, both gitignored and guarded by a pre-commit hook. → [SECURITY.md](SECURITY.md)
 
-Scripts read `.env` (see `.env.example`). The WOTS+C secret seed lives in `secrets/` (gitignored).
+## Credits and prior art
+- Fee-bump one-time-key reuse is known in the hash-based-signature community; we credit it and show it live.
+- The Safe co-signer guard pattern comes from Safe Research.
+- PQ accounts: Kohaku, ZKNox, Tectonic.
+- Lifeboat is the **evacuation layer**: any PQ account (including leanSPHINCS when it ships) can be the destination.
+- Libraries: `@forshtat/hegota-support` (frame-tx codec, MIT), `@arkiv-network/sdk`, viem, @noble/hashes, forge-std.
 
 ## AI usage
-
 See [docs/ai-usage.md](docs/ai-usage.md).
 
 ## Licence
-
 MIT, see [LICENSE](LICENSE).
