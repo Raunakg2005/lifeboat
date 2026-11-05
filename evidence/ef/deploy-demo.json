@@ -1,0 +1,14 @@
+{
+  "savedAt": "2026-11-05T15:44:35.378Z",
+  "chainId": 1337,
+  "account": "0x555B4f232D65ED910F30F8897FA83705E35824dc",
+  "factory": "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+  "salt": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e",
+  "root": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e",
+  "pubSeed": "0xd3a33ef44acd8e8b38cf70ca9c0d8efe9a46548e27fc427c663f42494230fea2",
+  "runtimeBytes": 2294,
+  "deployTx": "0x7a0b14833dea289f3a6da7bae95bc18d05b78c48df81a3359cdf1a887f2cc597",
+  "deployBlock": "403923",
+  "deployGasUsed": "4090558",
+  "fundTx": "0x2dc6f8f33002aa2690786851ac3a60efe180b806fe546cb1e5a5b95314732292"
+}

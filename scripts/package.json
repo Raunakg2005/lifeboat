@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "deploy-account": "tsx --env-file=../.env src/deploy-account.ts",
+    "send-frame": "tsx --env-file=../.env src/send-frame.ts"
   },
   "dependencies": {
     "@forshtat/hegota-support": "0.0.1",
