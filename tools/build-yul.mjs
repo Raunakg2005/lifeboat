@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Compiles each generated Yul object (contracts/yul/gen/*.yul) with solc in Yul mode, one file per run
+// Compiles each Yul object (contracts/yul/gen/*.yul and contracts/yul/src/*.yul) with solc in Yul mode, one file per run
 // (Foundry can't compile several Yul files at once). Writes contracts/yul/out/<Name>.json.
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const SOLC_VERSION = "0.8.30";
 const here = fileURLToPath(new URL("..", import.meta.url));
-const genDir = join(here, "contracts", "yul", "gen");
+const genDirs = [join(here, "contracts", "yul", "gen"), join(here, "contracts", "yul", "src")];
 const outDir = join(here, "contracts", "yul", "out");
 
 function findSolc() {
@@ -25,7 +25,7 @@ function findSolc() {
 const solc = findSolc();
 mkdirSync(outDir, { recursive: true });
 
-for (const file of readdirSync(genDir).filter((f) => f.endsWith(".yul"))) {
+for (const [genDir, file] of genDirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith(".yul")).map((f) => [d, f]))) {
   const name = file.replace(/\.yul$/, "");
   const input = {
     language: "Yul",
