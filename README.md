@@ -54,7 +54,7 @@ Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can
 - Docs: [schema](arkiv/schema.md) · [why Arkiv](arkiv/why-arkiv.md) · [how we use it](arkiv/how-you-use-arkiv.md) · [reach](arkiv/reach.md) · [friction](arkiv/friction.md) · [swarm](arkiv/swarm.md)
 
 ## Hardware
-ESP32 signer. The secret seed and the leaf counter stay on the device. It shows each request on an OLED, needs the Approve button, saves the counter **before** signing, and refuses a counter that doesn't match its own digest. Its crypto core is verified byte for byte against the TypeScript signer (`node tools/firmware-check.mjs`). → [docs/hardware.md](docs/hardware.md)
+ESP32 signer, **live**: it generated its own key and signed a frame transaction that was included on chain 1337 ([`0x69c1eaec…`](https://explorer.altmempool.wtf/tx/0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 406,887) after the BOOT button was pressed on the device. The secret seed and the leaf counter stay on the device. It shows each request on an OLED, needs the Approve button, saves the counter **before** signing, and refuses a counter that doesn't match its own digest. Its crypto core is verified byte for byte against the TypeScript signer (`node tools/firmware-check.mjs`). → [docs/hardware.md](docs/hardware.md)
 
 ## Repo
 | Folder | What | Tests |

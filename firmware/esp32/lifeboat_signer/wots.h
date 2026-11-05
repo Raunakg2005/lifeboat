@@ -46,9 +46,10 @@ static void secret_chain_start(const uint8_t sk_seed[32], const uint8_t pub_seed
   keccak256(buf, 64, out);
 }
 
-/** Leaf hash: keccak(adrs(leaf,0,0,LEAF) ‖ pk_0 ‖ … ‖ pk_63). ~960 chain hashes. yield() is called between chains. */
+/** Leaf hash: keccak(adrs(leaf,0,0,LEAF) ‖ pk_0 ‖ … ‖ pk_63). ~960 chain hashes. yield() is called between chains.
+ *  The 2 KB buffer is on the caller's stack, so two cores can compute different leaves at once. */
 static void leaf_hash(const uint8_t sk_seed[32], const uint8_t pub_seed[32], uint32_t leaf, uint8_t out[32], void (*yield_fn)() = nullptr) {
-  static uint8_t buf[32 + LEN * 32];
+  uint8_t buf[32 + LEN * 32];
   write_adrs(buf, pub_seed, leaf, 0, 0, T_LEAF);
   for (int i = 0; i < LEN; i++) {
     uint8_t x[32];

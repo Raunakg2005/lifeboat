@@ -17,13 +17,16 @@
     "arkiv-query": "tsx --env-file=../.env src/arkiv-query.ts",
     "forgery-demo": "tsx --env-file=../.env src/forgery-demo.ts",
     "swarm-publish": "tsx --env-file=../.env src/swarm-publish.ts",
-    "council-scan": "tsx --env-file=../.env src/council-scan.ts"
+    "council-scan": "tsx --env-file=../.env src/council-scan.ts",
+    "hw-frame": "tsx --env-file=../.env src/hw-frame.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
     "@forshtat/hegota-support": "0.0.1",
     "@lifeboat/core": "workspace:^",
     "@lifeboat/pq": "workspace:^",
+    "@serialport/parser-readline": "12",
+    "serialport": "12",
     "viem": "^2.57.16"
   }
 }

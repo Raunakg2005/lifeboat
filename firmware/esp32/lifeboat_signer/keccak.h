@@ -1,6 +1,8 @@
 // Keccak-256 (Ethereum's keccak: pad byte 0x01, not SHA3's 0x06). Portable C++, no dependencies,
 // so the same file runs on the ESP32 and in the host test (firmware/esp32/test).
 #pragma once
+// Hashing dominates keygen time: build it for speed even when the sketch is built for size (-Os).
+#pragma GCC optimize("O3")
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>

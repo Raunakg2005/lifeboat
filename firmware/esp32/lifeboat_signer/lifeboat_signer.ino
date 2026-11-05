@@ -17,6 +17,8 @@
 //        -> WOTS|ASK|<leaf>  (waits for a button) -> WOTS|SIG|<k>/64|<chain value> x64 -> WOTS|DONE|<leaf>|<keccak of sigs>
 //        or WOTS|ERR|<reason>
 //   WOTS|EFUSE                         -> WOTS|EFUSE|<coding scheme of BLOCK3> (read-only, never burns)
+//   WOTS|BENCH                         -> WOTS|BENCH|single_core_est_ms|<n>|dual_core_ms|<n>
+//   (keygen and tree export use both cores; the public tree is cached in NVS, so LEAVES is instant after the first time)
 // Libraries: SSD1306Ascii (Bill Greiman). Preferences is built into the ESP32 core.
 #include <Arduino.h>
 #include <Preferences.h>
@@ -88,19 +90,55 @@ static void load_key() {
   have_key = prefs.getBool("keyok", false) && prefs.getBytes("sk", sk_seed, 32) == 32 && prefs.getBytes("pub", pub_seed, 32) == 32 && prefs.getBytes("root", root, 32) == 32;
 }
 
-static void stream_leaves_and_root(bool store) {
+// ---- leaf computation on both cores ----
+// Core 1 (this loop task) computes the even leaves, a helper task pinned to core 0 the odd ones.
+static volatile int leaves_done = 0;
+static SemaphoreHandle_t helper_done = nullptr;
+static void helper_task(void*) {
+  for (uint32_t l = 1; l < (uint32_t)lb::LEAVES; l += 2) {
+    lb::leaf_hash(sk_seed, pub_seed, l, leaves[l]);
+    __atomic_add_fetch(&leaves_done, 1, __ATOMIC_SEQ_CST);
+    vTaskDelay(1);  // let core 0's idle task run (task watchdog)
+  }
+  xSemaphoreGive(helper_done);
+  vTaskDelete(nullptr);
+}
+
+/** Computes all 256 leaf hashes into `leaves`, using both cores. Returns the time taken in ms. */
+static uint32_t compute_leaves(const char* title) {
+  uint32_t t0 = millis();
+  leaves_done = 0;
+  helper_done = xSemaphoreCreateBinary();
+  xTaskCreatePinnedToCore(helper_task, "lb_leaves", 8192, nullptr, 1, nullptr, 0);
   char line[24];
-  for (uint32_t l = 0; l < (uint32_t)lb::LEAVES; l++) {
+  for (uint32_t l = 0; l < (uint32_t)lb::LEAVES; l += 2) {
     lb::leaf_hash(sk_seed, pub_seed, l, leaves[l], []() { yield(); });
+    int d = __atomic_add_fetch(&leaves_done, 1, __ATOMIC_SEQ_CST);
+    if (l % 16 == 0) {
+      snprintf(line, sizeof line, "leaf %d/256", d);
+      show(title, line, "2 cores", "do not unplug");
+    }
+  }
+  xSemaphoreTake(helper_done, portMAX_DELAY);
+  vSemaphoreDelete(helper_done);
+  return millis() - t0;
+}
+
+/** Streams the public leaf hashes and root. Uses the cache in NVS when it's there (instant). */
+static void stream_leaves_and_root(bool store) {
+  bool cached = !store && prefs.getBytesLength("leaves") == sizeof leaves && prefs.getBytes("leaves", leaves, sizeof leaves) == sizeof leaves;
+  if (!cached) {
+    uint32_t ms = compute_leaves(store ? "KEYGEN" : "TREE");
+    prefs.putBytes("leaves", leaves, sizeof leaves);  // public data: cache it so the next export is instant
+    Serial.print("WOTS|TIME|leaves|");
+    Serial.println(ms);
+  }
+  for (uint32_t l = 0; l < (uint32_t)lb::LEAVES; l++) {
     Serial.print("WOTS|LH|");
     Serial.print(l);
     Serial.print("|");
     hexout(leaves[l], 32);
     Serial.println();
-    if (l % 8 == 0) {
-      snprintf(line, sizeof line, "leaf %lu/256", (unsigned long)l);
-      show("KEYGEN", line, "do not unplug");
-    }
   }
   static uint8_t lvl[lb::LEAVES][32];  // 8 KB: static, the Arduino loop task's stack is only ~8 KB
   memcpy(lvl, leaves, sizeof lvl);
@@ -207,6 +245,21 @@ static void cmd_sign(const String& sig_hash_hex, uint32_t counter, const String&
   show("SIGNED", l2, "leaf burned", l4);
 }
 
+/** Times one core vs both, on the real key's (public) leaves. Touches no secret state and no counter. */
+static void cmd_bench() {
+  if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  uint8_t tmp[32];
+  uint32_t t0 = millis();
+  for (uint32_t l = 0; l < 8; l++) lb::leaf_hash(sk_seed, pub_seed, l, tmp, []() { yield(); });
+  uint32_t single_est = (millis() - t0) * (lb::LEAVES / 8);
+  uint32_t dual = compute_leaves("BENCH");
+  Serial.print("WOTS|BENCH|single_core_est_ms|");
+  Serial.print(single_est);
+  Serial.print("|dual_core_ms|");
+  Serial.println(dual);
+  show("BENCH", "done");
+}
+
 static void cmd_efuse() {
 #ifdef LB_HAVE_EFUSE
   esp_efuse_coding_scheme_t cs = esp_efuse_get_coding_scheme(EFUSE_BLK3);
@@ -268,5 +321,6 @@ void loop() {
     uint32_t counter = (uint32_t)strtoul(rest.substring(a + 1, b < 0 ? rest.length() : b).c_str(), nullptr, 10);
     cmd_sign(sh, counter, b < 0 ? String("") : rest.substring(b + 1));
   } else if (cmd == "EFUSE") cmd_efuse();
+  else if (cmd == "BENCH") cmd_bench();
   else Serial.println("WOTS|ERR|unknown");
 }

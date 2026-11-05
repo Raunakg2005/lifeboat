@@ -2,10 +2,28 @@
 
 A one-time key is only as safe as its counter. The signer keeps the secret seed and the leaf counter on a small device, shows every request on its own screen, needs a physical button press, and **saves the counter before it computes anything**. A crash, a reset or a malicious host can burn a leaf, but it can never make the device sign twice with one.
 
+## Live result: a frame transaction signed by the ESP32 (6 Nov 2026, ~02:10 IST)
+| | |
+|---|---|
+| Device key | generated **on the ESP32** (its TRNG mixed with browser entropy); root `0xf2949ed2…434f` |
+| Account | LifeboatAccount `0x1C3FF4E170967ee70E097B7364890732CA7d00cc` (CREATE2 from the device's public key) |
+| Transaction | [`0x69c1eaec…9213`](https://explorer.altmempool.wtf/tx/0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), chain 1337, **block 406,887, status success**, through the alt mempool |
+| How it was signed | The laptop read the public tree from the device and checked its root, built the tx, and found the counter (1,813 tries). The **ESP32 showed SIGN? and waited for the BOOT button**, saved its counter, then streamed the chains. The laptop verified the signature before sending. VERIFY used 52,374 gas |
+| Ledger | leaf 1 published to the Arkiv leaf ledger (`0x4f3e2a68…56ba`) |
+| Evidence | [`evidence/hardware/esp32-frame-tx.json`](../evidence/hardware/esp32-frame-tx.json) |
+
+Before that, a test message signed through the web app's Web Serial panel (leaf 0) came back **valid**.
+
+**Measured on this ESP32 (240 MHz, both cores):**
+- Key generation (256 leaves, about 266k Keccak permutations): **35.0 s** with both cores, against ~66.7 s on one.
+- Exporting the public tree: **1.8 s** once it's cached in NVS (37 s the first time).
+- The counter and key survive reflashing the app.
+- `WOTS|EFUSE` reports BLOCK3 coding scheme **NONE**, so the burn-a-fuse-per-signature counter is possible on this chip.
+
 ## Boards
 | Board | Role | Status (6 Nov 2026) |
 |---|---|---|
-| **ESP32 DevKit V1** | main signer | Firmware written. Crypto core verified byte for byte against the TypeScript signer on the host (see Tests). On-device test pending: needs the CP210x USB driver on the laptop |
+| **ESP32 DevKit V1** | main signer | ✅ Working: key generated on-device, a frame transaction signed with it and included on chain 1337 (above). Crypto core also verified byte for byte against the TypeScript signer on the host |
 | Crossbar **Dabao** (Baochip-1x) | planned: hardware one-way counters, on-chip TRNG | Neither of our two boards enumerated over USB on Windows ("Device Descriptor Request Failed" once, then nothing). Taken to the Crossbar booth |
 | Arduino Uno R3 + SSD1306 OLED | spare / display test | Working (OLED found at I2C 0x3C) |
 
