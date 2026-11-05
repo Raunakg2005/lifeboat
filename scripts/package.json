@@ -1,0 +1,14 @@
+{
+  "name": "@lifeboat/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@forshtat/hegota-support": "0.0.1",
+    "@lifeboat/pq": "workspace:^",
+    "viem": "^2.57.16"
+  }
+}
