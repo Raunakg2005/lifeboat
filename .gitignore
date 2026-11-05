@@ -1,0 +1,29 @@
+# secrets: never commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+.vercel/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# firmware build output
+firmware/**/build/
+
+# local scratch
+tmp/
+*.log
+.DS_Store
+Thumbs.db
