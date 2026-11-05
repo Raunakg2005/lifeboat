@@ -1,0 +1,79 @@
+{
+  "name": "lifeboatpq.eth",
+  "pqWallet": "0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f",
+  "steps": [
+    {
+      "what": "1. naive transfer to the PQ wallet (refused on purpose)",
+      "hash": "0x9f8f9c2629c198d7deeca5158f779067942086c47542dc46382b038b057584c1",
+      "status": "reverted",
+      "block": "12070637",
+      "gasUsed": "51625"
+    },
+    {
+      "what": "2. new resolver for the PQ wallet (pq.* records at init)",
+      "hash": "0x9cd30d1701620903a96778bb5a39d6e216fc65be4baa4e775d333a38c122b05e",
+      "status": "success",
+      "block": "12070638",
+      "gasUsed": "2295006"
+    },
+    {
+      "what": "3. setResolver to the PQ wallet's resolver",
+      "hash": "0xee330c7b780ad20f0925241e1ccaa7e3072a9c9c886dae21e5d16f214302861a",
+      "status": "success",
+      "block": "12070639",
+      "gasUsed": "41632"
+    },
+    {
+      "what": "4. revoke the extra delegate's SET_RESOLVER",
+      "hash": "0x308a500e9130eb4ff3cb9486b7c98f0493afb3c55cfaa49a1a744cf29eef7dff",
+      "status": "success",
+      "block": "12070640",
+      "gasUsed": "174238"
+    },
+    {
+      "what": "5. remove the operator",
+      "hash": "0x02d31d775dff34697dac9a1ddffaa9456ff33fbd6a8b57ae21882ef7d0f773bb",
+      "status": "success",
+      "block": "12070641",
+      "gasUsed": "24268"
+    },
+    {
+      "what": "6. transfer to the PQ wallet (accepted)",
+      "hash": "0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a",
+      "status": "success",
+      "block": "12070644",
+      "gasUsed": "172618"
+    },
+    {
+      "what": "7. PQ wallet sets pq.checked (WOTS+C leaf 0, relayed)",
+      "hash": "0x652d20aec4e1cd9f2d3bf4209240040ba03601284a76438cc2b0e004db380c18",
+      "status": "success",
+      "block": "12070645",
+      "gasUsed": "482403"
+    }
+  ],
+  "before": {
+    "verdict": "hijackable",
+    "hijackablePaths": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "block": "12070635"
+  },
+  "naiveRefusal": "TransferUnsafeWithMultipleAssignees(21440669584729392767067113587604754915520854139970573577561726597940771815425, 0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a)",
+  "newResolver": "0x0D5dE2f42BA9465E3C4D580dA10C8FaebeF12A1B",
+  "relayerRolesOnNewResolver": "0",
+  "ownerAfter": "0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F",
+  "pqSignedLeaf": 0,
+  "after": {
+    "verdict": "protected",
+    "hijackablePaths": [],
+    "block": "12070648",
+    "owner": "0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F",
+    "resolver": "0x0D5dE2f42BA9465E3C4D580dA10C8FaebeF12A1B",
+    "report": "helm-lifeboatpq.eth-12070648.json"
+  },
+  "note": "ownerAfter re-read after the run: the first read hit a lagging public RPC backend"
+}

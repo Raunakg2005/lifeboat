@@ -33,6 +33,19 @@ An exposed wallet with **0 ETH and 100 mUSDC** swept its tokens into the PQ acco
 
 The paymaster also enforces its own repayment: it refused all five attack dry-runs (underpaying, paying someone else, an undoable batched repayment, sweeping first, an unregistered sender). Details: [docs/rescue-paymaster.md](docs/rescue-paymaster.md).
 
+## Live result: ENSv2 Helm check and a registry-verified handover (Sepolia)
+
+Moving the money isn't enough: if an exposed key can still steer your **name**, it can redirect every payment sent to it. The Helm check finds every account that controls an ENSv2 name across **five paths** (owner, delegates, operators, resolver role holders, parent registries), **proves the list complete** against the on-chain role counts, and flags which keys are already public.
+
+| `lifeboatpq.eth` | Verdict |
+|---|---|
+| Before | 🔴 **hijackable on Q-Day** through paths 1–4 (exposed owner, delegate, operator, and resolver admin with `UPGRADE`) |
+| Naive transfer to the PQ wallet | ❌ refused by the registry: `TransferUnsafeWithMultipleAssignees` |
+| Lifeboat handover (new resolver → setResolver → revoke → remove operator → transfer) | ✅ accepted |
+| After | 🟢 **protected**: owner and every resolver role held by the WOTS+C wallet, which then signed its own `pq.checked` record |
+
+Details and every tx hash: [docs/helm-check.md](docs/helm-check.md). The records are a draft ENSIP: [docs/pq-records.md](docs/pq-records.md).
+
 ## Parts
 
 | Part | Folder | Status |
@@ -40,6 +53,8 @@ The paymaster also enforces its own repayment: it refused all five attack dry-ru
 | WOTS+C post-quantum signatures (TypeScript) | `packages/pq` | done: 13 tests |
 | PQ account on EIP-8141 frame transactions (Yul) | `contracts/yul` | done: 9 Foundry tests against TypeScript vectors |
 | Rescue paymaster (Yul) + mock USDC behind an EIP-1967 proxy | `contracts` | done: 6 Foundry tests + 6 devnet guard dry-runs |
+| PQ wallet for Sepolia (WOTS+C-verified `execute`, owns ENS names) | `contracts/src` | done: 8 Foundry tests with TypeScript signatures |
+| ENSv2 Helm check + handover | `scripts/src/lib/helm.ts`, `scripts/src/ens-*.ts` | done, live on Sepolia |
 | Devnet scripts (deploy, sign, dry-run, submit, sponsor, capture evidence) | `scripts` | done |
 
 ## How it works (short)
@@ -58,6 +73,7 @@ pnpm --filter @lifeboat/scripts deploy-account --label demo
 pnpm --filter @lifeboat/scripts send-frame --label demo --verify-gas 60000 --send
 pnpm --filter @lifeboat/scripts rescue-setup && pnpm --filter @lifeboat/scripts rescue
 pnpm --filter @lifeboat/scripts paymaster-guards
+pnpm --filter @lifeboat/scripts helm lifeboatpq.eth   # any ENSv2 name on Sepolia
 ```
 
 Scripts read `.env` (see `.env.example`). The WOTS+C secret seed lives in `secrets/` (gitignored).
