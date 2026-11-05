@@ -73,9 +73,18 @@ export default function HarbourView() {
               <div className="big">{twice.length ? "A one-time key signed twice" : "No one-time key has signed twice"}</div>
               <div className="muted">
                 {twice.length
-                  ? `${twice.length} leaf(s) signed two different messages. Those keys can be forged: move the funds now.`
+                  ? `${twice.length} leaf(s) signed more than one message. Those keys can be forged: move the funds now.`
                   : `${data.leaves.length} published uses of one-time keys, from any writer. Each one signed exactly one message.`}
               </div>
+              {twice.map(([k, digests]) => {
+                const [root, leaf] = k.split(":");
+                const acct = data.leaves.find((l) => l.root === root && l.leaf === leaf)?.account ?? "";
+                return (
+                  <div key={k} className="mono" style={{ marginTop: 6, fontSize: 13 }}>
+                    ⚠ key {short(root ?? "")} leaf #{leaf}: <b>{digests.size} different messages</b> · account {short(acct)} (the naive-wallet forgery demo)
+                  </div>
+                );
+              })}
             </div>
           </div>
 

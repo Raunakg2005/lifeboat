@@ -8,7 +8,8 @@ import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, sepoliaAddr, sepoliaClient, s
 import { HelmWheel, LuggageTag, Pill, Radar, Rubber, STATUS_FILL, Steps, type SpokeState } from "./ui";
 
 const EXAMPLES = [
-  { tag: "name", label: "lifeboatpq.eth", value: "lifeboatpq.eth" },
+  { tag: "name", label: "lifeboatdemo.eth (hijackable)", value: "lifeboatdemo.eth" },
+  { tag: "name", label: "lifeboatpq.eth (handed over)", value: "lifeboatpq.eth" },
   { tag: "wallet", label: "exposed dev wallet", value: "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a" },
   { tag: "wallet", label: "post-quantum wallet", value: "0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F" },
 ];
@@ -27,7 +28,7 @@ type Tab = "check" | "escape" | "harbour";
 
 export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
   const [mode, setMode] = useState<"address" | "name">("name");
-  const [input, setInput] = useState("lifeboatpq.eth");
+  const [input, setInput] = useState("lifeboatdemo.eth");
   const [query, setQuery] = useState<Query | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,7 +65,7 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
             Q-Day.
           </p>
           <div className="toggle" role="group" aria-label="What to check">
-            <button aria-pressed={mode === "name"} onClick={() => (setMode("name"), setInput("lifeboatpq.eth"))}>
+            <button aria-pressed={mode === "name"} onClick={() => (setMode("name"), setInput("lifeboatdemo.eth"))}>
               ENS name
             </button>
             <button aria-pressed={mode === "address"} onClick={() => (setMode("address"), setInput("0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a"))}>

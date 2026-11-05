@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import first from "../../evidence/ef/frame-demo-leaf1.json";
 import rescue from "../../evidence/ef/rescue.json";
 import guards from "../../evidence/ef/paymaster-guards.json";
+import forgery from "../../evidence/ef/forgery.json";
 import { REPO, explorerTx, short } from "./lib";
 import { Boat, LuggageTag, Pill } from "./ui";
 
@@ -139,6 +140,78 @@ export default function EscapeView() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="section">
+        <div className="label">Why one-time means one time</div>
+        <h2>
+          Re-sign a fee bump, <span className="o">lose the boat</span>
+        </h2>
+        <p className="lead">
+          The frame-transaction signature covers the fees, so every fee bump is a new message. A naive wallet that re-signs each bump with the same one-time key leaks more of it every time. We ran it on
+          the live devnet.
+        </p>
+        <LuggageTag tone="bad" verdict="Forged" id={`Naive wallet ${short(forgery.naiveAccount)}`} meta={`chain 1337 · block ${parseInt(forgery.receipt.blockNumber, 16).toLocaleString()}`}>
+          <div className="grid cols-4" style={{ margin: "10px 0 14px" }}>
+            <div>
+              <div className="label">Fee bumps re-signed</div>
+              <div className="stencil" style={{ fontSize: 46 }}>
+                {forgery.bumps.length}
+              </div>
+              <div className="note">same leaf, tips 1–{forgery.bumps.length} gwei</div>
+            </div>
+            <div>
+              <div className="label">Attacker's tries</div>
+              <div className="stencil" style={{ fontSize: 46 }}>
+                {forgery.forge.tries.toLocaleString()}
+              </div>
+              <div className="note">{(forgery.forge.ms / 1000).toFixed(2)} s on a laptop, public data only</div>
+            </div>
+            <div>
+              <div className="label">Stolen</div>
+              <div className="stencil" style={{ fontSize: 46, color: "var(--orange-deep)" }}>
+                {Number(forgery.after.attacker).toFixed(4)}
+              </div>
+              <div className="note">ETH, via the alt mempool</div>
+            </div>
+            <div>
+              <div className="label">Account's verdict</div>
+              <div className="stencil" style={{ fontSize: 46 }}>
+                Valid
+              </div>
+              <div className="note">VERIFY accepted the forged signature</div>
+            </div>
+          </div>
+          <table className="manifest">
+            <thead>
+              <tr>
+                <th>Reuses of one key</th>
+                <th>2</th>
+                <th>5</th>
+                <th>10</th>
+                <th>12</th>
+                <th>16</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="b">Tries to forge</td>
+                <td className="m">~2^64</td>
+                <td className="m">~2^32</td>
+                <td className="m">~2^23</td>
+                <td className="m">~2^18</td>
+                <td className="m">~2^14</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="desc" style={{ marginTop: 12 }}>
+            Lifeboat's wallet can't make this mistake: every signing attempt reserves a fresh leaf and writes it to disk before the signature leaves the device, and each landed transaction raises an on-chain
+            leaf floor. The reuse also shows up in the public leaf ledger: see Harbour.
+          </p>
+          <a className="mono" href={explorerTx(forgery.forgedTx)} target="_blank" rel="noreferrer" style={{ wordBreak: "break-all" }}>
+            forged transaction {short(forgery.forgedTx, 10)} ↗
+          </a>
+        </LuggageTag>
       </section>
 
       <section className="section grid cols-2">
