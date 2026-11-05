@@ -5,7 +5,7 @@
 //  3. contains a private-key assignment pattern.
 // It never prints a secret value, only the file and the variable name.
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 const SECRET_NAME = /(KEY|SECRET|TOKEN|PASSWORD|MNEMONIC|PRIVATE)/i;
 const KEY_PATTERN = /(private[_-]?key|mnemonic|seed[_-]?phrase)\s*[:=]\s*["']?(0x)?[0-9a-f]{64}/i;
@@ -21,6 +21,17 @@ if (existsSync(".env")) {
     if (!m) continue;
     const [, name, value] = m;
     if (SECRET_NAME.test(name) && value.length >= 12) secrets.push({ name, value: value.replace(/^0x/i, "").toLowerCase() });
+  }
+}
+
+// key files written by the scripts (WOTS+C seeds, throwaway EOA keys)
+if (existsSync("secrets")) {
+  for (const f of readdirSync("secrets").filter((n) => n.endsWith(".json"))) {
+    try {
+      const obj = JSON.parse(readFileSync(`secrets/${f}`, "utf8"));
+      for (const name of ["skSeed", "privateKey"])
+        if (typeof obj[name] === "string" && obj[name].length >= 34) secrets.push({ name: `secrets/${f}:${name}`, value: obj[name].replace(/^0x/i, "").toLowerCase() });
+    } catch {}
   }
 }
 
