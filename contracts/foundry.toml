@@ -9,5 +9,5 @@ evm_version = "prague"
 optimizer = true
 optimizer_runs = 1000
 # The Yul account uses `verbatim` for the EIP-8141 opcodes, so it is only valid as a pure Yul object.
-fs_permissions = [{ access = "read", path = "./out" }, { access = "read", path = "./test/vectors" }]
+fs_permissions = [{ access = "read", path = "./yul/out" }, { access = "read", path = "./test/vectors" }]
 gas_reports = ["*"]

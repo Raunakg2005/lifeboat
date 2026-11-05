@@ -27,3 +27,6 @@ tmp/
 *.log
 .DS_Store
 Thumbs.db
+
+# compiled Yul (rebuild with node tools/build-yul.mjs)
+contracts/yul/out/

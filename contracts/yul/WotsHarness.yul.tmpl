@@ -1,0 +1,26 @@
+// Test harness: the same WOTS+C verifier core as LifeboatAccount, fed from calldata instead of frame opcodes.
+// GENERATED from contracts/yul/WotsHarness.yul.tmpl + wots_core.yul by tools/gen-yul.mjs. Edit those.
+//
+// calldata = root ‖ pubSeed ‖ sigHash ‖ witness (2336 bytes)
+// returns  = ok (uint256) ‖ gas spent inside wots_verify (uint256)
+object "WotsHarness" {
+    code {
+        let size := datasize("runtime")
+        datacopy(0, dataoffset("runtime"), size)
+        return(0, size)
+    }
+    object "runtime" {
+        code {
+            if iszero(eq(calldatasize(), add(96, 2336))) { revert(0, 0) }
+            calldatacopy(0x1000, 96, 2336)
+            let g := gas()
+            let valid := wots_verify(0x1000, calldataload(0), calldataload(32), calldataload(64))
+            let used := sub(g, gas())
+            mstore(0, valid)
+            mstore(32, used)
+            return(0, 64)
+
+// @@WOTS_CORE@@
+        }
+    }
+}
