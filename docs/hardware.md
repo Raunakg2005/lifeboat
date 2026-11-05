@@ -15,8 +15,8 @@ A one-time key is only as safe as its counter. The signer keeps the secret seed 
 | OLED SDA | GPIO 21 |
 | OLED SCL | GPIO 22 |
 | OLED VCC / GND | 3V3 / GND |
-| Approve button | GPIO 32 → GND (internal pull-up) |
-| Reject button | GPIO 33 → GND (internal pull-up) |
+| Approve | the board's own **BOOT** button (GPIO 0, read only after boot); optionally a button D18 → GND |
+| Reject | optional button D19 → GND, or just let the 60 s timeout cancel |
 
 ## Firmware
 [`firmware/esp32/lifeboat_signer/`](../firmware/esp32/lifeboat_signer/):
@@ -27,7 +27,7 @@ A one-time key is only as safe as its counter. The signer keeps the secret seed 
 **Signing, step by step:**
 1. The host (browser or laptop) sends `WOTS|SIGN|<sigHash>|<counter>|<label>`. The counter is found by the host: grinding needs no secret.
 2. The device takes the leaf **from its own counter**, recomputes the digest and **refuses** if the digits don't sum to 560. No secret is touched and no leaf is spent.
-3. It shows `SIGN? leaf n, tx 0x1234..abcd` on the OLED and waits for **Approve** (GPIO 32) or Reject (GPIO 33), with a 60 s timeout.
+3. It shows `SIGN? leaf n, tx 0x1234..abcd` on the OLED and waits for **Approve** (the BOOT button, or D18) or Reject (D19), with a 60 s timeout.
 4. On Approve it writes `next = n + 1` to NVS, reads it back, and halts if that fails. **Then** it walks the 64 chains and streams them.
 5. The host assembles the witness with its own copy of the public Merkle tree and **verifies it** before using it.
 

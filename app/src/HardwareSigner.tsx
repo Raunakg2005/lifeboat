@@ -151,7 +151,7 @@ export default function HardwareSigner() {
         const [, , k, h] = l.split("|");
         sigs[Number(k!.split("/")[0]) - 1] = fromHex(h!);
       }
-      if (l.startsWith("WOTS|ASK|")) setStatus(`device is asking: press APPROVE (GPIO32) to sign with leaf ${l.split("|")[2]}`);
+      if (l.startsWith("WOTS|ASK|")) setStatus(`device is asking: press BOOT on the ESP32 (Approve) to sign with leaf ${l.split("|")[2]}`);
       if (l.startsWith("WOTS|DONE|")) leaf = Number(l.split("|")[2]);
       return l.startsWith("WOTS|DONE|") || l.startsWith("WOTS|ERR|");
     }, 90_000);

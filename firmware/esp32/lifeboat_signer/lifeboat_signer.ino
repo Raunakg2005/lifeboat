@@ -7,7 +7,7 @@
 //     computes and streams the 64 chain values
 //
 // Wiring (3.3 V): OLED SSD1306 SDA -> GPIO21, SCL -> GPIO22, VCC -> 3V3, GND -> GND
-//                 Approve button GPIO32 -> GND, Reject button GPIO33 -> GND (internal pull-ups)
+//                 Approve: the on-board BOOT button (or a button D18 -> GND); Reject: D19 -> GND or just wait 60 s
 // Serial: 115200 baud, line protocol, every line starts with "WOTS|" (the host ignores anything else):
 //   WOTS|PING                          -> WOTS|PONG
 //   WOTS|INFO                          -> WOTS|INFO|<nextLeaf>|<pubSeed>|<root>   or  WOTS|INFO|NOKEY
@@ -33,8 +33,9 @@
 #define LB_HAVE_EFUSE 1
 #endif
 
-static const int PIN_APPROVE = 32;
-static const int PIN_REJECT = 33;
+static const int PIN_APPROVE = 18;  // right-side pins: the only ones with a free breadboard hole on a DevKit V1
+static const int PIN_REJECT = 19;
+static const int PIN_BOOT = 0;  // the board's own BOOT button also approves (no wiring needed); read only after boot
 static const uint32_t ASK_TIMEOUT_MS = 60000;
 
 Preferences prefs;
@@ -137,12 +138,15 @@ static void cmd_keygen(const String& host_entropy_hex) {
   show("KEY READY", "256 one-time keys", "next leaf 0");
 }
 
+static bool approve_pressed() { return digitalRead(PIN_APPROVE) == LOW || digitalRead(PIN_BOOT) == LOW; }
+
 static int wait_button() {
   uint32_t t0 = millis();
+  while (approve_pressed() && millis() - t0 < 2000) delay(5);  // ignore a press that started before the request
   while (millis() - t0 < ASK_TIMEOUT_MS) {
-    if (digitalRead(PIN_APPROVE) == LOW) {
+    if (approve_pressed()) {
       delay(30);
-      if (digitalRead(PIN_APPROVE) == LOW) return 1;
+      if (approve_pressed()) return 1;
     }
     if (digitalRead(PIN_REJECT) == LOW) {
       delay(30);
@@ -167,7 +171,7 @@ static void cmd_sign(const String& sig_hash_hex, uint32_t counter, const String&
   char l2[32], l3[32];
   snprintf(l2, sizeof l2, "leaf %lu  tx %c%c%c%c..%c%c%c%c", (unsigned long)leaf, sig_hash_hex[2], sig_hash_hex[3], sig_hash_hex[4], sig_hash_hex[5], sig_hash_hex[62], sig_hash_hex[63], sig_hash_hex[64], sig_hash_hex[65]);
   snprintf(l3, sizeof l3, "%.21s", label.c_str());
-  show("SIGN?", l2, l3, "32=yes  33=no");
+  show("SIGN?", l2, l3, "BOOT=yes  wait=no");
   Serial.print("WOTS|ASK|");
   Serial.println(leaf);
   int b = wait_button();
@@ -217,6 +221,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(PIN_APPROVE, INPUT_PULLUP);
   pinMode(PIN_REJECT, INPUT_PULLUP);
+  pinMode(PIN_BOOT, INPUT_PULLUP);
   Wire.begin(21, 22);
   Wire.setClock(400000L);
   oled.begin(&Adafruit128x64, 0x3C);
