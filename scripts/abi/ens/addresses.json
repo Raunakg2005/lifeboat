@@ -1,0 +1,10 @@
+{
+  "UniversalResolver": "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe",
+  "RootRegistry": "0xb458d6a3a77919449d03e7a6903c26827c1ec43f",
+  "ETHRegistry": "0xd4ebcbbdf463c9c45784603db0ddd499bc44a8b4",
+  "ETHRegistrar": "0xf633e7fc17e2bbe0d0965d18ec1821dcb754a3d3",
+  "PermissionedResolverImpl": "0x115eb53f0c60696633855f90b138178fb40b2b2c",
+  "VerifiableFactory": "0xda70306c98e97ece36f997a21368e53298572991",
+  "UniversalHelper": "0xd453e5bdb62cc3bea84341b1e306319c8ffd7dfe",
+  "MockUSDC": "0x240b0316df57887dbbe58b586508b19e633a14aa"
+}

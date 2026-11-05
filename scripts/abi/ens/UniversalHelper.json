@@ -1,0 +1,271 @@
+[
+ {
+  "type": "constructor",
+  "inputs": [
+   {
+    "name": "rootRegistry",
+    "type": "address",
+    "internalType": "contract IPermissionedRegistry"
+   },
+   {
+    "name": "contractNamer",
+    "type": "address",
+    "internalType": "contract IContractNamer"
+   }
+  ],
+  "stateMutability": "nonpayable"
+ },
+ {
+  "name": "DNSDecodingFailed",
+  "type": "error",
+  "inputs": [
+   {
+    "name": "dns",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ]
+ },
+ {
+  "name": "LabelIsEmpty",
+  "type": "error",
+  "inputs": []
+ },
+ {
+  "name": "LabelIsTooLong",
+  "type": "error",
+  "inputs": [
+   {
+    "name": "label",
+    "type": "string",
+    "internalType": "string"
+   }
+  ]
+ },
+ {
+  "name": "CONTRACT_NAMER",
+  "type": "function",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "contract IContractNamer"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "ROOT_REGISTRY",
+  "type": "function",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "contract IPermissionedRegistry"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findCanonicalName",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "registry",
+    "type": "address",
+    "internalType": "contract IRegistry"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findCanonicalRegistry",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "contract IRegistry"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findExactOwner",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "address"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findExactRegistry",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "contract IRegistry"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findNearestOwner",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "owner",
+    "type": "address",
+    "internalType": "address"
+   },
+   {
+    "name": "offset",
+    "type": "uint256",
+    "internalType": "uint256"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findNearestRegistry",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "registry",
+    "type": "address",
+    "internalType": "contract IRegistry"
+   },
+   {
+    "name": "offset",
+    "type": "uint256",
+    "internalType": "uint256"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findParentRegistry",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address",
+    "internalType": "contract IRegistry"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "findRegistries",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "name",
+    "type": "bytes",
+    "internalType": "bytes"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "address[]",
+    "internalType": "contract IRegistry[]"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "isContractNamer",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "namer",
+    "type": "address",
+    "internalType": "address"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "bool",
+    "internalType": "bool"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "name": "supportsInterface",
+  "type": "function",
+  "inputs": [
+   {
+    "name": "interfaceId",
+    "type": "bytes4",
+    "internalType": "bytes4"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "bool",
+    "internalType": "bool"
+   }
+  ],
+  "stateMutability": "view"
+ }
+]
