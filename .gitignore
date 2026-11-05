@@ -30,3 +30,6 @@ Thumbs.db
 
 # compiled Yul (rebuild with node tools/build-yul.mjs)
 contracts/yul/out/
+
+# staged static deploys (vercel deploy deploy/lifeboat)
+deploy/
