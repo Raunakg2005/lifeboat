@@ -5,6 +5,7 @@ import guards from "../../evidence/ef/paymaster-guards.json";
 import forgery from "../../evidence/ef/forgery.json";
 import { REPO, explorerTx, short } from "./lib";
 import { Boat, LuggageTag, Pill } from "./ui";
+import HardwareSigner from "./HardwareSigner";
 
 const verifyGas = parseInt(first.simulation.frames[0]!.gasUsed, 16);
 const rescueFrames = rescue.simulation.frames.map((f: { gasUsed: string }) => parseInt(f.gasUsed, 16));
@@ -83,6 +84,14 @@ export default function EscapeView() {
             {first.txHash}
           </a>
         </LuggageTag>
+      </section>
+
+      <section className="section">
+        <div className="label">Sign safely</div>
+        <h2>
+          A key that <span className="o">can't</span> sign twice
+        </h2>
+        <HardwareSigner />
       </section>
 
       <section className="section">

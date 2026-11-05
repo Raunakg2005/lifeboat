@@ -29,6 +29,9 @@ importers:
       '@lifeboat/core':
         specifier: workspace:^
         version: link:../packages/core
+      '@lifeboat/pq':
+        specifier: workspace:^
+        version: link:../packages/pq
       react:
         specifier: ^19.1.0
         version: 19.3.1

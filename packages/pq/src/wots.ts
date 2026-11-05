@@ -1,5 +1,5 @@
 import { chain, digitSum, digitsOf, leafHash, messageDigest, nodeHash, secretChainStart } from "./hash.js";
-import { LEAVES, LEN, MAX_STEP, N, TARGET_SUM, TREE_HEIGHT, WITNESS_BYTES, WITNESS_WORDS } from "./params.js";
+import { LEAVES, LEN, MAX_STEP, N, TARGET_SUM, TREE_HEIGHT, WITNESS_BYTES } from "./params.js";
 
 export interface PublicKey {
   root: Uint8Array;

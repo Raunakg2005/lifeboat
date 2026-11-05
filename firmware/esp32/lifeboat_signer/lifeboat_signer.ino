@@ -101,7 +101,7 @@ static void stream_leaves_and_root(bool store) {
       show("KEYGEN", line, "do not unplug");
     }
   }
-  uint8_t lvl[lb::LEAVES][32];
+  static uint8_t lvl[lb::LEAVES][32];  // 8 KB: static, the Arduino loop task's stack is only ~8 KB
   memcpy(lvl, leaves, sizeof lvl);
   for (int h = 1, n = lb::LEAVES; h <= lb::TREE_HEIGHT; h++, n /= 2)
     for (int i = 0; i < n / 2; i++) lb::node_hash(pub_seed, (uint8_t)h, (uint32_t)i, lvl[2 * i], lvl[2 * i + 1], lvl[i]);
