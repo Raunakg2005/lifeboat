@@ -46,3 +46,12 @@ It also includes an ESP32 signer that keeps the counter on the device and can't 
 - Writer wallet and a runnable query are in the README.
 
 **Links:** live demo https://lifeboat-mu.vercel.app · repo (public at submission) https://github.com/Raunakg2005/lifeboat · video: _add_
+
+## Before submitting (Sat 7 Nov, by 09:00 IST)
+- [ ] **Refresh Arkiv:** exposure and name entries expire after 24 h (the first batch was written Thu ~22:16). Run `pnpm --filter @lifeboat/scripts swarm-publish` on Sat morning: it re-checks both names and writes fresh entities with `swarmRef`. The Harbour counts come back with it.
+- [ ] Check the Bee batch TTL is above 24 h (`curl http://127.0.0.1:1633/stamps`)
+- [ ] Hardware: flash the ESP32, run keygen and one signature from the Escape page, add a photo and the log to `docs/hardware.md`
+- [ ] Record the video (docs/demo-script.md) and add the link here and in the README
+- [ ] Rebuild and redeploy the app (`pnpm --filter @lifeboat/app build`, copy into `deploy/lifeboat`, `vercel deploy deploy\lifeboat --prod`)
+- [ ] Make the GitHub repo **public**
+- [ ] Fill the form: Finalist + Partner; EF / ENS / Arkiv (+ Swarm bonus box)
