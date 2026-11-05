@@ -3,17 +3,19 @@ import CheckView from "./CheckView";
 import EscapeView from "./EscapeView";
 import HarbourView from "./HarbourView";
 import DiscoverView from "./DiscoverView";
+import HomeView from "./HomeView";
 import { REPO } from "./lib";
 import { WaveBand } from "./ui";
 
 const TABS = [
+  { id: "home", label: "Home" },
   { id: "check", label: "Scan" },
   { id: "discover", label: "Discover" },
   { id: "escape", label: "Escape" },
   { id: "harbour", label: "Harbour" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
-const fromHash = (): Tab => (TABS.find((t) => t.id === window.location.hash.replace("#", ""))?.id ?? "check") as Tab;
+const fromHash = (): Tab => (TABS.find((t) => t.id === window.location.hash.replace("#", ""))?.id ?? "home") as Tab;
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(fromHash);
@@ -35,7 +37,7 @@ export default function App() {
     <>
       <header className="topbar">
         <div className="wrap">
-          <a className="wordmark" href="#check" onClick={() => go("check")}>
+          <a className="wordmark" href="#home" onClick={() => go("home")}>
             <b>LIFEBOAT</b>
             <span>Q-Day readiness · Port of Mumbai</span>
           </a>
@@ -50,6 +52,7 @@ export default function App() {
       </header>
       <WaveBand />
       <main className="wrap">
+        {tab === "home" && <HomeView onGo={go} />}
         {tab === "check" && <CheckView onGo={go} />}
         {tab === "discover" && <DiscoverView />}
         {tab === "escape" && <EscapeView />}

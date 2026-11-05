@@ -1,0 +1,176 @@
+// Drives the app through every beat of the narration while Chrome's screencast captures frames.
+// Captions are drawn on the page (beat label + the line being spoken). Writes cache/frames/*.jpg,
+// cache/frames.json and cache/timeline.json (where each narration line starts).
+// Needs the app running (pnpm --filter @lifeboat/app dev) and Google Chrome installed.
+// Usage: pnpm --filter @lifeboat/video record [--url http://localhost:5173]
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { chromium } from "playwright-core";
+import { SEGMENTS } from "./narration.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const CACHE = join(ROOT, "cache");
+const FRAMES = join(CACHE, "frames");
+const argUrl = process.argv.indexOf("--url");
+const URL0 = (argUrl > 0 ? process.argv[argUrl + 1] : "http://localhost:5173").replace(/\/+$/, "");
+const W = 1280;
+const H = 720;
+const LEAD = 0.5; // seconds of picture before the first line of a beat
+const GAP_LINE = 0.3;
+const GAP_SEG = 0.8;
+
+const audio = JSON.parse(readFileSync(join(CACHE, "timeline-audio.json"), "utf8"));
+if (audio.segments.length !== SEGMENTS.length) throw new Error("timeline-audio.json is stale: run the tts step again");
+
+rmSync(FRAMES, { recursive: true, force: true });
+mkdirSync(FRAMES, { recursive: true });
+
+const OVERLAY = `
+(() => {
+  const css = \`
+  #__cap { position: fixed; left: 22px; right: 22px; bottom: 18px; z-index: 2147483647; pointer-events: none;
+    background: rgba(11,31,51,.94); color: #f2eee6; border: 3px solid #0b1f33; box-shadow: 6px 6px 0 #f05a1a;
+    padding: 9px 16px 11px; font-family: Archivo, system-ui, sans-serif; transition: opacity .25s; }
+  #__cap .b { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: #ff8a52; }
+  #__cap .l { font-size: 20px; font-weight: 600; line-height: 1.32; margin-top: 3px; min-height: 26px; }
+  #__badge { position: fixed; top: 76px; right: 22px; z-index: 2147483647; pointer-events: none; background: #f2eee6; color: #0b1f33;
+    border: 2px solid #0b1f33; font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; padding: 4px 8px; }
+  \`;
+  const mount = () => {
+    if (document.getElementById("__cap")) return;
+    const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+    const d = document.createElement("div"); d.id = "__cap"; d.innerHTML = '<div class="b"></div><div class="l"></div>'; d.style.opacity = "0"; document.body.appendChild(d);
+    const g = document.createElement("div"); g.id = "__badge"; g.textContent = "Rehearsal walkthrough · synthetic voice"; document.body.appendChild(g);
+  };
+  window.__beat = (b) => { mount(); const d = document.getElementById("__cap"); d.querySelector(".b").textContent = b; d.style.opacity = "1"; };
+  window.__line = (t) => { mount(); document.querySelector("#__cap .l").textContent = t; };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
+})();`;
+
+const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--hide-scrollbars", "--force-color-profile=srgb", "--font-render-hinting=none"] });
+const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, colorScheme: "light" });
+await ctx.addInitScript(OVERLAY);
+const page = await ctx.newPage();
+page.setDefaultTimeout(15_000);
+
+const now = () => Date.now() / 1000;
+const sleep = (s) => new Promise((r) => setTimeout(r, Math.max(0, s * 1000)));
+
+// helpers the narration's act() uses
+const p = {
+  async goHome() {
+    if (!page.url().endsWith("#home")) await page.goto(`${URL0}/#home`);
+    await this.scrollTo(0, 0.4);
+  },
+  async tab(label) {
+    await page.getByRole("tab", { name: label, exact: true }).click();
+    await sleep(0.5);
+  },
+  async clickText(text) {
+    const btn = page.getByRole("button", { name: text }).first();
+    if (await btn.count()) await btn.click();
+    else await page.getByText(text).first().click();
+  },
+  async scrollTo(y, seconds = 1.1) {
+    await page.evaluate(
+      ([to, ms]) =>
+        new Promise((done) => {
+          const from = window.scrollY;
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const target = Math.max(0, Math.min(max, to));
+          const t0 = performance.now();
+          const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+          const step = (t) => {
+            const k = Math.min(1, (t - t0) / ms);
+            window.scrollTo(0, from + (target - from) * ease(k));
+            if (k < 1) requestAnimationFrame(step);
+            else done();
+          };
+          requestAnimationFrame(step);
+        }),
+      [y, seconds * 1000],
+    );
+  },
+  async scrollBy(dy) {
+    const y = await page.evaluate(() => window.scrollY);
+    await this.scrollTo(y + dy);
+  },
+  async scrollToSel(selector, offset = -80) {
+    const loc = page.locator(selector).first();
+    await loc.waitFor({ state: "attached", timeout: 20_000 });
+    const top = await loc.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+    await this.scrollTo(top + offset);
+  },
+  async scrollToText(text, offset = -80) {
+    let loc = page.getByText(text, { exact: true }).first();
+    if (!(await loc.count())) loc = page.getByText(text).first();
+    await loc.waitFor({ state: "attached", timeout: 20_000 });
+    const top = await loc.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+    await this.scrollTo(top + offset);
+  },
+};
+
+// screencast
+const cdp = await ctx.newCDPSession(page);
+const frames = [];
+let n = 0;
+cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+  const file = `${String(n++).padStart(6, "0")}.jpg`;
+  writeFileSync(join(FRAMES, file), Buffer.from(data, "base64"));
+  frames.push({ file, ts: metadata.timestamp });
+  try {
+    await cdp.send("Page.screencastFrameAck", { sessionId });
+  } catch {}
+});
+
+await page.goto(`${URL0}/#home`);
+await page.evaluate(() => document.fonts.ready);
+await sleep(1.5);
+await cdp.send("Page.startScreencast", { format: "jpeg", quality: 86, maxWidth: W, maxHeight: H, everyNthFrame: 2 });
+await sleep(0.6);
+
+const t0 = now();
+const placed = [];
+for (const [i, seg] of SEGMENTS.entries()) {
+  const lines = audio.segments[i].lines;
+  const speech = lines.reduce((s, l) => s + l.seconds, 0) + GAP_LINE * (lines.length - 1);
+  const start = now();
+  console.log(`${String(i + 1).padStart(2)}/${SEGMENTS.length} ${seg.id.padEnd(9)} ${speech.toFixed(1)} s`);
+  await page.evaluate((b) => window.__beat(b), `${String(i + 1).padStart(2, "0")} / ${SEGMENTS.length} · ${seg.label} · ${seg.title}`);
+
+  // captions on their own clock; audio is placed at the same planned offsets
+  let off = LEAD;
+  const timers = [];
+  for (const l of lines) {
+    const at = off;
+    placed.push({ file: l.file, text: l.text, t: start - t0 + at, seconds: l.seconds, seg: seg.id });
+    timers.push(sleep(at - (now() - start)).then(() => page.evaluate((t) => window.__line(t), l.text).catch(() => {})));
+    off += l.seconds + GAP_LINE;
+  }
+  const at = async (frac, fn) => {
+    await sleep(start + LEAD + frac * speech - now());
+    await fn();
+  };
+  try {
+    await seg.act(p, at, speech);
+  } catch (e) {
+    console.log(`   (action warning: ${String(e.message).split("\n")[0].slice(0, 120)})`);
+  }
+  await Promise.all(timers);
+  await sleep(start + LEAD + speech + GAP_SEG - now());
+}
+await page.evaluate(() => window.__line(""));
+await sleep(1.5);
+const end = now();
+await cdp.send("Page.stopScreencast");
+await sleep(0.5);
+await browser.close();
+
+const duration = end - t0;
+writeFileSync(join(CACHE, "frames.json"), JSON.stringify(frames.map((f) => ({ file: f.file, t: Number((f.ts - t0).toFixed(4)) }))));
+writeFileSync(
+  join(CACHE, "timeline.json"),
+  JSON.stringify({ duration, width: W, height: H, voice: audio.voice, lines: placed, chapters: SEGMENTS.map((s, i) => ({ title: s.title, t: placed.find((x) => x.seg === s.id).t - LEAD })) }, null, 2),
+);
+console.log(`recorded ${duration.toFixed(1)} s, ${frames.length} frames`);

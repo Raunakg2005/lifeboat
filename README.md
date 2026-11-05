@@ -4,7 +4,7 @@
 
 Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can do this today: these are readiness findings from public on-chain data.
 
-**Live demo: https://lifeboat-mu.vercel.app** · scan any address, or any ENSv2 name on Sepolia.
+**Live demo: https://lifeboat-mu.vercel.app** · the landing page explains it in a minute; then scan any address, or any ENSv2 name on Sepolia.
 
 New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in plain words, plus judge Q&A) and the [business model](docs/business-model.md).
 
@@ -67,6 +67,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
 | `firmware/esp32` | the signer | host test vs TypeScript vectors |
+| `video` | the narrated walkthrough: TTS (IBM Watson or offline), scripted recording, MP4 + subtitles | renders in about 10 minutes |
 
 ## Run it
 ```bash

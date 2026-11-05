@@ -1,0 +1,17 @@
+{
+  "name": "@lifeboat/video",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Narrated walkthrough video of the Lifeboat app: TTS (IBM Watson or the offline Windows voice), a scripted screen recording, and an H.264 + AAC mux.",
+  "scripts": {
+    "tts": "node --env-file-if-exists=../.env src/tts.mjs",
+    "shots": "node src/shots.mjs",
+    "record": "node src/record.mjs",
+    "compose": "node src/compose.mjs",
+    "make": "node --env-file-if-exists=../.env src/tts.mjs && node src/record.mjs && node src/compose.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.52.0"
+  }
+}

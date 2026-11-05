@@ -36,3 +36,7 @@ deploy/
 
 # local firmware builds
 tmp-build/
+
+# walkthrough video: cached TTS, frames and renders
+video/cache/
+video/out/
