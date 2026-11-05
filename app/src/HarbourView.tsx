@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { desc, eq } from "@arkiv-network/sdk/query";
 import { ARKIV_BLOCK_SECONDS, Aboard, Exposure, Leaf, NameCheck, PUBLISHER } from "@lifeboat/core";
 import { REPO, arkiv, short } from "./lib";
-import { Badge, ExpiryRing, Seal } from "./ui";
+import { Pill, Ring, Rubber } from "./ui";
 
 type Data = {
   block: bigint;
@@ -15,13 +15,14 @@ type Data = {
 const DAY = 86400;
 const life = (expiresAt: bigint, block: bigint, total: number) => {
   const s = Number(expiresAt - block) * ARKIV_BLOCK_SECONDS;
-  return { fraction: s / total, label: s <= 0 ? "expired" : s > 2 * DAY ? `${Math.round(s / DAY)} d left` : `${(s / 3600).toFixed(1)} h left` };
+  return { fraction: s / total, label: s <= 0 ? "expired" : s > 2 * DAY ? `${Math.round(s / DAY)} d` : `re-check in ${(s / 3600).toFixed(1)} h` };
 };
 const chainName = (id: string) => ({ "1337": "EIP-8141 devnet", "11155111": "Sepolia", "1": "Ethereum" })[id] ?? `chain ${id}`;
 
 export default function HarbourView() {
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState("");
+  const [sort, setSort] = useState<"risk" | "newest">("risk");
 
   useEffect(() => {
     (async () => {
@@ -42,60 +43,75 @@ export default function HarbourView() {
     })().catch((e) => setErr(String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)));
   }, []);
 
-  const twice = data
-    ? [...data.leaves.reduce((m, l) => m.set(`${l.root}:${l.leaf}`, (m.get(`${l.root}:${l.leaf}`) ?? new Set<string>()).add(l.digest)), new Map<string, Set<string>>())].filter(([, s]) => s.size > 1)
-    : [];
+  const twice = useMemo(
+    () =>
+      data
+        ? [...data.leaves.reduce((m, l) => m.set(`${l.root}:${l.leaf}`, (m.get(`${l.root}:${l.leaf}`) ?? new Set<string>()).add(l.digest)), new Map<string, Set<string>>())].filter(([, s]) => s.size > 1)
+        : [],
+    [data],
+  );
+  const exposed = useMemo(() => (data ? [...data.exposed].sort((a, b) => (sort === "risk" ? Number(b.eth) - Number(a.eth) : Number(b.expiresAt - a.expiresAt))) : []), [data, sort]);
 
   return (
-    <div className="wrap">
-      <div className="page-head">
-        <span className="eyebrow">Arkiv · public Q-Day registry</span>
-        <h2>Harbour: the manifest anyone can check</h2>
-        <p>Live from Arkiv. Every entry is signed by its writer and was re-checked on-chain before it was written. Readings expire after 24 hours; the audit trail is readonly, and anyone can keep it alive.</p>
-      </div>
-      {err && <p className="error-box section">Arkiv is unreachable right now: {err}</p>}
-      {!data && !err && (
-        <div className="panel section scanning">
-          <span className="spinner" /> Reading the registry from Arkiv…
-        </div>
-      )}
+    <>
+      <section className="section" style={{ marginTop: 26 }}>
+        <div className="label">Arkiv · the public Q-Day registry</div>
+        <h2>
+          Harbour <span className="o">manifest</span>
+        </h2>
+        <p className="lead">
+          Live from Arkiv. Every entry is signed by its writer and was re-checked on-chain before it was written. Readings expire after 24 hours; the audit trail is readonly, and anyone can keep it alive.
+        </p>
+      </section>
+      {err && <p className="error-box">Arkiv is unreachable right now: {err}</p>}
+      {!data && !err && <p className="note">Reading the registry from Arkiv…</p>}
       {data && (
-        <div className="grid section">
+        <div className="grid">
           <div className={`seal ${twice.length ? "bad" : "good"}`}>
-            <Seal good={!twice.length} />
+            <Rubber good={!twice.length}>{twice.length ? "Signed twice" : "All clear"}</Rubber>
             <div>
               <div className="big">{twice.length ? "A one-time key signed twice" : "No one-time key has signed twice"}</div>
               <div className="muted">
                 {twice.length
                   ? `${twice.length} leaf(s) signed two different messages. Those keys can be forged: move the funds now.`
-                  : `${data.leaves.length} published uses of one-time keys, from any writer. Each leaf signed exactly one message.`}
+                  : `${data.leaves.length} published uses of one-time keys, from any writer. Each one signed exactly one message.`}
               </div>
             </div>
           </div>
 
           <div className="grid cols-2">
-            <div className="panel">
-              <h3>Exposed keys</h3>
+            <div className="board">
+              <div className="board-head">
+                <h3>Exposed keys</h3>
+                <div className="toggle" style={{ margin: 0 }}>
+                  <button aria-pressed={sort === "risk"} onClick={() => setSort("risk")}>
+                    Most at risk
+                  </button>
+                  <button aria-pressed={sort === "newest"} onClick={() => setSort("newest")}>
+                    Newest
+                  </button>
+                </div>
+              </div>
               <div className="table-wrap">
-                <table>
+                <table className="manifest">
                   <thead>
                     <tr>
-                      <th>Address</th>
+                      <th>Key</th>
                       <th>Where</th>
-                      <th>At risk</th>
+                      <th>Cargo</th>
                       <th>Valid</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.exposed.map((e) => {
+                    {exposed.map((e) => {
                       const l = life(e.expiresAt, data.block, DAY);
                       return (
                         <tr key={e.key}>
-                          <td className="mono">{short(e.address)}</td>
-                          <td className="muted">{chainName(e.chainId)}</td>
-                          <td className="num">{Number(e.eth).toFixed(4)} ETH</td>
+                          <td className="m">{short(e.address)}</td>
+                          <td>{chainName(e.chainId)}</td>
+                          <td className="m">{Number(e.eth).toFixed(4)} ETH</td>
                           <td>
-                            <ExpiryRing fraction={l.fraction} label={l.label} />
+                            <Ring fraction={l.fraction} label={l.label} />
                           </td>
                         </tr>
                       );
@@ -104,40 +120,49 @@ export default function HarbourView() {
                 </table>
               </div>
             </div>
-            <div className="panel">
-              <h3>Aboard: verified moves to post-quantum accounts</h3>
+            <div className="board">
+              <div className="board-head">
+                <h3>Aboard</h3>
+                <span className="label">verified moves to post-quantum accounts</span>
+              </div>
               {data.aboard.map((a) => (
-                <div key={a.key} className="aboard-item">
-                  <span className="ico">🛟</span>
-                  <span>
-                    <b>{a.kind === "rescue-sweep" ? "Rescue sweep" : a.kind === "ens-handover" ? "ENS handover" : a.kind}</b> <span className="muted">on {chainName(a.chainId)}</span>
-                  </span>
-                  <span className="route">
+                <div className="board-row" key={a.key} style={{ display: "block" }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span>🛟</span>
+                    <b>{a.kind === "rescue-sweep" ? "Rescue sweep" : a.kind === "ens-handover" ? "ENS handover" : a.kind}</b>
+                    <span className="note">on {chainName(a.chainId)}</span>
+                  </div>
+                  <div className="mono muted" style={{ marginTop: 2 }}>
                     {short(a.from)} → {short(a.to)}
-                  </span>
+                  </div>
                 </div>
               ))}
-              <h3 style={{ marginTop: 18 }}>ENS names</h3>
+              <div className="board-head" style={{ borderTop: "3px solid var(--ink)" }}>
+                <h3>Names</h3>
+                <span className="label">ENS Helm check verdicts</span>
+              </div>
               {data.names.map((n) => {
                 const l = life(n.expiresAt, data.block, DAY);
                 return (
-                  <div key={n.key} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <Badge status={n.verdict === "protected" ? "ok" : "exposed"}>{n.verdict}</Badge>
+                  <div className="board-row" key={n.key}>
+                    <Pill status={n.verdict === "protected" ? "pq" : "exposed"}>{n.verdict}</Pill>
                     <b>{n.name}</b>
-                    <ExpiryRing fraction={l.fraction} label={l.label} />
+                    <span style={{ marginLeft: "auto" }}>
+                      <Ring fraction={l.fraction} label={l.label} />
+                    </span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="panel">
-            <h3>Logbook: every use of a one-time key</h3>
-            <p className="muted" style={{ marginTop: 0, fontSize: 14 }}>
-              Anyone can write a sighting, for example a watcher that saw a leaf in a mempool. Two different messages for one leaf would turn the seal above red.
-            </p>
+          <div className="board">
+            <div className="board-head">
+              <h3>Logbook</h3>
+              <span className="label">every use of a one-time key · anyone can report a sighting</span>
+            </div>
             <div className="table-wrap">
-              <table>
+              <table className="manifest">
                 <thead>
                   <tr>
                     <th>Key</th>
@@ -150,11 +175,11 @@ export default function HarbourView() {
                 <tbody>
                   {data.leaves.map((l) => (
                     <tr key={l.key}>
-                      <td className="mono">{short(l.root)}</td>
-                      <td className="num">#{l.leaf}</td>
-                      <td className="mono">{short(l.account)}</td>
-                      <td className="mono muted">{l.tx.startsWith("0x") ? short(l.tx, 8) : l.tx}</td>
-                      <td className="mono muted">{short(l.owner)}</td>
+                      <td className="m">{short(l.root)}</td>
+                      <td className="m">#{l.leaf}</td>
+                      <td className="m">{short(l.account)}</td>
+                      <td className="m">{l.tx.startsWith("0x") ? short(l.tx, 8) : l.tx}</td>
+                      <td className="m">{short(l.owner)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -167,6 +192,6 @@ export default function HarbourView() {
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 }

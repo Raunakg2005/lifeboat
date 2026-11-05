@@ -3,16 +3,19 @@ import first from "../../evidence/ef/frame-demo-leaf1.json";
 import rescue from "../../evidence/ef/rescue.json";
 import guards from "../../evidence/ef/paymaster-guards.json";
 import { REPO, explorerTx, short } from "./lib";
-import { Badge, Boat } from "./ui";
+import { Boat, LuggageTag, Pill } from "./ui";
 
 const verifyGas = parseInt(first.simulation.frames[0]!.gasUsed, 16);
 const rescueFrames = rescue.simulation.frames.map((f: { gasUsed: string }) => parseInt(f.gasUsed, 16));
 const strip = (m: string) => m.replace(/^[a-zA-Z_]+ @ [^:]+: /, "").replace(/^Invalid params: /, "");
 
-function CountUp({ to, ms = 1200 }: { to: number; ms?: number }) {
+function CountUp({ to, ms = 1100 }: { to: number; ms?: number }) {
   const [v, setV] = useState(0);
   useEffect(() => {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return setV(to);
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setV(to);
+      return;
+    }
     let raf = 0;
     const t0 = performance.now();
     const tick = (t: number) => {
@@ -29,72 +32,78 @@ function CountUp({ to, ms = 1200 }: { to: number; ms?: number }) {
 export default function EscapeView() {
   const [run, setRun] = useState(0);
   return (
-    <div className="wrap">
-      <div className="page-head">
-        <span className="eyebrow">EIP-8141 · ERC-8421 alt mempool</span>
-        <h2>The way out: a post-quantum account that works today</h2>
-        <p>Frame transactions let an account check any signature in a VERIFY frame. Ours checks a WOTS+C hash-based signature, with no ECDSA anywhere, written in Yul and live on the devnet.</p>
-      </div>
-
-      <div className="grid cols-4 section">
-        <div className="panel stat">
-          <div className="v">
-            <CountUp to={verifyGas} />
-          </div>
-          <div className="k">gas for the whole VERIFY frame, under the 100,000 cap</div>
-        </div>
-        <div className="panel stat">
-          <div className="v">
-            <CountUp to={44870} />
-          </div>
-          <div className="k">gas for the WOTS+C check itself: identical for every signature</div>
-        </div>
-        <div className="panel stat">
-          <div className="v">
-            <CountUp to={400} />
-            <small> hashes</small>
-          </div>
-          <div className="k">per check. The digest's digits always sum to 560, so no checksum chains</div>
-        </div>
-        <div className="panel stat">
-          <div className="v">
-            <CountUp to={256} />
-            <small> keys</small>
-          </div>
-          <div className="k">one-time keys per account. A fresh one per signing attempt, burned on-chain once used</div>
-        </div>
-      </div>
-
-      <div className="panel section">
-        <h3>First transaction, through the alt mempool</h3>
-        <a href={explorerTx(first.txHash)} target="_blank" rel="noreferrer" className="mono" style={{ wordBreak: "break-all" }}>
-          {first.txHash}
-        </a>
-        <div className="note" style={{ marginTop: 6 }}>
-          Chain 1337 · block {parseInt(first.receipt.blockNumber, 16).toLocaleString()} · status success · witness {first.witnessBytes.toLocaleString()} bytes · leaf {first.leaf} (leaf 0 was revealed to a dry-run, so it's
-          never used again)
-        </div>
-      </div>
-
-      <div className="section">
-        <h3 className="section-title">
-          <span className="num">RESCUE</span> A wallet with tokens but no ETH escapes anyway
-        </h3>
-        <p className="muted" style={{ marginTop: 0, maxWidth: 820 }}>
-          A staked paymaster pays the gas and is repaid in USDC in the same transaction. To decide, it must read shared state: its registry of exposed accounts, and the token balance through an upgradeable proxy.
-          Only the alt mempool allows that, and only for a staked sponsor. The same signed transaction, three mempools:
+    <>
+      <section className="section" style={{ marginTop: 26 }}>
+        <div className="label">EIP-8141 frame transactions · ERC-8421 alt mempool</div>
+        <h2>
+          The way <span className="o">out</span>
+        </h2>
+        <p className="lead">
+          A post-quantum account that works today. Frame transactions let an account check any signature in a VERIFY frame. Ours checks a WOTS+C hash-based signature, with no ECDSA anywhere, written in Yul
+          and live on the devnet.
         </p>
-        <div className="panel lanes" key={run}>
+        <div className="grid cols-4">
+          <div className="tile">
+            <div className="v">
+              <CountUp to={verifyGas} />
+            </div>
+            <div className="k">gas for the whole VERIFY frame. The cap is 100,000</div>
+          </div>
+          <div className="tile">
+            <div className="v">
+              <CountUp to={44870} />
+            </div>
+            <div className="k">gas for the WOTS+C check itself, the same for every signature</div>
+          </div>
+          <div className="tile">
+            <div className="v">
+              <CountUp to={400} />
+              <small> hashes</small>
+            </div>
+            <div className="k">per check: the digest's digits always sum to 560, so no checksum chains</div>
+          </div>
+          <div className="tile">
+            <div className="v">
+              <CountUp to={256} />
+              <small> keys</small>
+            </div>
+            <div className="k">one-time keys per account; each used once, then burned on-chain</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <LuggageTag tone="good" verdict="On chain" id="First post-quantum transaction" meta={`chain 1337 · block ${parseInt(first.receipt.blockNumber, 16).toLocaleString()}`}>
+          <p className="desc">
+            Signed with a one-time WOTS+C key (leaf {first.leaf}; leaf 0 was revealed to a dry-run, so it's never used again), sent through the ERC-8421 alt-mempool gateway, and included with status success.
+            Witness: {first.witnessBytes.toLocaleString()} bytes.
+          </p>
+          <a className="mono" href={explorerTx(first.txHash)} target="_blank" rel="noreferrer" style={{ wordBreak: "break-all" }}>
+            {first.txHash}
+          </a>
+        </LuggageTag>
+      </section>
+
+      <section className="section">
+        <div className="label">The rescue</div>
+        <h2>
+          No ETH? <span className="o">No problem.</span>
+        </h2>
+        <p className="lead">
+          An exposed wallet holds tokens but no ETH for gas. A staked paymaster pays, and is repaid in USDC inside the same transaction. To decide, it must read shared state: its registry of exposed
+          accounts, and the token balance through an upgradeable proxy. Only the alt mempool allows that, and only for a staked sponsor. The same signed transaction, sent three ways:
+        </p>
+        <div className="lanes" key={run}>
           <div className="lane blocked">
             <div className="who">
               Public mempool<small>canonical rules</small>
             </div>
             <div className="channel">
-              <div className="tx">
-                <Boat size={56} />
+              <div className="ship">
+                <Boat width={58} />
               </div>
-              <div className="gate" />
-              <div className="reason">✕ {strip(rescue.canonical.message)}</div>
+              <div className="boom" />
+              <div className="why">✕ {strip(rescue.canonical.message)}</div>
             </div>
           </div>
           <div className="lane blocked">
@@ -102,79 +111,79 @@ export default function EscapeView() {
               Alt mempool<small>paymaster not staked</small>
             </div>
             <div className="channel">
-              <div className="tx">
-                <Boat size={56} />
+              <div className="ship">
+                <Boat width={58} />
               </div>
-              <div className="gate" />
-              <div className="reason">✕ {strip(rescue.altUnstaked.message).replace(/0x0+(\d+)$/, "0x…$1")}</div>
+              <div className="boom" />
+              <div className="why">✕ {strip(rescue.altUnstaked.message).replace(/0x0+(\d+)$/, "0x…$1")}</div>
             </div>
           </div>
           <div className="lane passed">
             <div className="who">
-              Alt mempool<small>paymaster staked (0.012 ETH)</small>
+              Alt mempool<small>paymaster staked · 0.012 ETH</small>
             </div>
             <div className="channel">
-              <div className="tx">
-                <Boat size={56} />
+              <div className="ship">
+                <Boat width={58} />
               </div>
-              <div className="gate" />
-              <div className="reason">✓ included in block {parseInt(rescue.receipt.blockNumber, 16).toLocaleString()}</div>
+              <div className="boom" />
+              <div className="why">✓ included in block {parseInt(rescue.receipt.blockNumber, 16).toLocaleString()}</div>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <a href={explorerTx(rescue.altStaked.hash)} target="_blank" rel="noreferrer" className="mono">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <a className="mono" href={explorerTx(rescue.altStaked.hash)} target="_blank" rel="noreferrer">
               {short(rescue.altStaked.hash, 10)} on the explorer ↗
             </a>
-            <button className="chip" onClick={() => setRun((r) => r + 1)}>
-              ↻ replay
-            </button>
+            <div className="examples" style={{ marginTop: 0 }}>
+              <button onClick={() => setRun((r) => r + 1)}>↻ sail again</button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid cols-2 section">
-        <div className="panel">
-          <h3>Before → after</h3>
-          <table>
+      <section className="section grid cols-2">
+        <div className="paper-card">
+          <h3>Cargo moved</h3>
+          <table className="manifest">
             <tbody>
               <tr>
-                <td>Exposed wallet</td>
-                <td className="num">
-                  {rescue.before.eoaEth} ETH · {rescue.before.eoaUsdc} mUSDC → <b>{rescue.after.eoaUsdc} mUSDC</b>
+                <td className="b">Exposed wallet</td>
+                <td className="m">
+                  {rescue.before.eoaEth} ETH · {rescue.before.eoaUsdc} → {rescue.after.eoaUsdc} mUSDC
                 </td>
               </tr>
               <tr>
-                <td>Post-quantum account</td>
-                <td className="num">
+                <td className="b">Post-quantum account</td>
+                <td className="m">
                   {rescue.before.destUsdc} → <b style={{ color: "var(--green)" }}>{rescue.after.destUsdc} mUSDC</b>
                 </td>
               </tr>
               <tr>
-                <td>Paymaster</td>
-                <td className="num">repaid {rescue.after.paymasterUsdc} mUSDC</td>
+                <td className="b">Paymaster</td>
+                <td className="m">repaid {rescue.after.paymasterUsdc} mUSDC</td>
               </tr>
             </tbody>
           </table>
-          <p className="note">Frame gas: {rescueFrames.map((g: number) => g.toLocaleString()).join(" · ")} (the sponsor's check is the 2nd frame)</p>
+          <p className="note">Frame gas: {rescueFrames.map((g: number) => g.toLocaleString()).join(" · ")}. The sponsor's check is the 2nd frame.</p>
         </div>
-        <div className="panel">
+        <div className="paper-card">
           <h3>The sponsor can't be cheated</h3>
-          <table>
+          <table className="manifest">
             <tbody>
               {guards.cases.map((c: { name: string; paymasterApproved: boolean }) => (
                 <tr key={c.name}>
                   <td>{c.name}</td>
-                  <td style={{ textAlign: "right" }}>{c.paymasterApproved ? <Badge status="ok">pays</Badge> : <Badge status="exposed">refuses</Badge>}</td>
+                  <td style={{ textAlign: "right" }}>{c.paymasterApproved ? <Pill status="ok">pays</Pill> : <Pill status="exposed">refuses</Pill>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="note">Dry-runs on the live devnet, each changing one thing.</p>
         </div>
-      </div>
+      </section>
       <p className="note section">
         Design, gas and trade-offs: <a href={`${REPO}/blob/main/docs/pq-account.md`}>pq-account.md</a> · <a href={`${REPO}/blob/main/docs/rescue-paymaster.md`}>rescue-paymaster.md</a>
       </p>
-    </div>
+    </>
   );
 }
