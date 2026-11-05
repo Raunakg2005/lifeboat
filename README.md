@@ -6,6 +6,8 @@ Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can
 
 **Live demo: https://lifeboat-mu.vercel.app** · scan any address, or any ENSv2 name on Sepolia.
 
+New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in plain words, plus judge Q&A) and the [business model](docs/business-model.md).
+
 | | What | Where it runs |
 |---|---|---|
 | **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
@@ -60,7 +62,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 | Folder | What | Tests |
 |---|---|---|
 | `packages/pq` | WOTS+C: keys, signing, verification, Merkle tree, forgery analysis | 17 (vitest) |
-| `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | via scripts and app |
+| `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | 3 (vitest: Safe signature recovery) |
 | `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, mock USDC | 23 (Foundry, TypeScript vectors) |
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |

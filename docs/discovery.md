@@ -19,7 +19,7 @@
 
 Executions routed through other contracts (about 1–4% here) are skipped, so the result is a **lower bound**.
 
-## Results: security councils and protocol multisigs, Ethereum mainnet, block 26,350,495
+## Results: security councils and protocol multisigs, Ethereum mainnet, block 26,350,495 (re-scanned at blocks 26,351,153–156 before publishing: same numbers)
 Raw: [`evidence/discovery/councils.json`](../evidence/discovery/councils.json). The app's Discover tab can re-run it live in the browser.
 
 | Safe (public infrastructure) | Rule | Public keys by nonce | Counting signatures | Takeover-able on Q-Day |
