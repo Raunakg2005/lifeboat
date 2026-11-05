@@ -14,7 +14,8 @@
     "helm": "tsx --env-file=../.env src/helm.ts",
     "ens-handover": "tsx --env-file=../.env src/ens-handover.ts",
     "arkiv-publish": "tsx --env-file=../.env src/arkiv-publish.ts",
-    "arkiv-query": "tsx --env-file=../.env src/arkiv-query.ts"
+    "arkiv-query": "tsx --env-file=../.env src/arkiv-query.ts",
+    "forgery-demo": "tsx --env-file=../.env src/forgery-demo.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
