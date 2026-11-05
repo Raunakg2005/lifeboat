@@ -1,0 +1,56 @@
+{
+  "writer": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+  "txHash": "0x54665e1faefbd2665f7a4d2634951dd061fcbec6bc2243ede449d38e327ed07f",
+  "entities": [
+    "0xeaa08fe4864924abfe64b2f109be057911e353568de76b5b296a2a284c7bc784",
+    "0xb9030446825b61b096f5d790deffa331ec3cf9fe2419c16c420f96660bce2ee6",
+    "0x1f1720fc1290711ba113ef5655d20e30c55741c5604e11142858c98078a479d1",
+    "0x3fced31a6769635466e3c5e36df985b20d43c720f5b23992cf2faf1bb02ac5dc",
+    "0x45a712d70c982122061c19f993488ef4109f99cb7e572b8807fe9e5f6355b587",
+    "0x5f4ffebb448ab8f04fa28e040637d939ed04d06ccfd442b4406fd7cd4816baa7",
+    "0xeff1735581933dc1e6fbb9069933785624a81fd96b0b99f5ab074f8a92515812",
+    "0xfe2cf008f04af119437a4445da4460cabe08bf96e7210d643e4fe98db3634f24",
+    "0x6eeb600719d54998ac2c0a4f28f3518808be1f8cbbd1a957fd668bc3e1690b63",
+    "0x2323c3a9d7a22b78f3e8bf362df3c9f39a8b8c3e4d1bfe18e4bbc7fc68a9dbe8",
+    "0x1a694a8d6730eec2bdf5155f4ec958f0538a28d7d6c01d2d7b33603667e3d65e",
+    "0x41c1c8981d596eeaf4fee478eb41dff94a3291c51888c92f09fec265ce386163"
+  ],
+  "checks": [
+    {
+      "claim": "frame tx with leaf 1 landed",
+      "ok": true,
+      "detail": "0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0 on chain 1337"
+    },
+    {
+      "claim": "on-chain leaf floor is past leaf 1",
+      "ok": true,
+      "detail": "slot 2 = 3 (lowest usable leaf 2)"
+    },
+    {
+      "claim": "rescue sweep landed",
+      "ok": true,
+      "detail": "0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3 (sponsored by 0x98cd804aE58Ea5FC9fA4Fb403f6D0D88acDd0ac8)"
+    },
+    {
+      "claim": "the exposed wallet's tokens are gone",
+      "ok": true,
+      "detail": "0x9fb5BA369c59A94f51969D76502A9283FED253e5 holds 0 mUSDC"
+    },
+    {
+      "claim": "PQ wallet's WOTS-signed setText landed",
+      "ok": true,
+      "detail": "0x652d20aec4e1cd9f2d3bf4209240040ba03601284a76438cc2b0e004db380c18"
+    },
+    {
+      "claim": "Sepolia PQ wallet marks leaf 0 used",
+      "ok": true,
+      "detail": "isLeafUsed(0) = true"
+    },
+    {
+      "claim": "fresh Helm check of lifeboatpq.eth",
+      "ok": true,
+      "detail": "verdict protected, owner 0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F, block 12070751"
+    }
+  ],
+  "publishedAt": "2026-11-05T16:46:12.536Z"
+}

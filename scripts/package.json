@@ -12,9 +12,12 @@
     "paymaster-guards": "tsx --env-file=../.env src/paymaster-guards.ts",
     "ens-setup": "tsx --env-file=../.env src/ens-setup.ts",
     "helm": "tsx --env-file=../.env src/helm.ts",
-    "ens-handover": "tsx --env-file=../.env src/ens-handover.ts"
+    "ens-handover": "tsx --env-file=../.env src/ens-handover.ts",
+    "arkiv-publish": "tsx --env-file=../.env src/arkiv-publish.ts",
+    "arkiv-query": "tsx --env-file=../.env src/arkiv-query.ts"
   },
   "dependencies": {
+    "@arkiv-network/sdk": "1.0.1",
     "@forshtat/hegota-support": "0.0.1",
     "@lifeboat/pq": "workspace:^",
     "viem": "^2.57.16"

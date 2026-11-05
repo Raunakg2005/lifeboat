@@ -46,6 +46,24 @@ Moving the money isn't enough: if an exposed key can still steer your **name**, 
 
 Details and every tx hash: [docs/helm-check.md](docs/helm-check.md). The records are a draft ENSIP: [docs/pq-records.md](docs/pq-records.md).
 
+## Live result: a public Q-Day registry on Arkiv (Rabdi testnet)
+
+Lifeboat publishes what it verifies to Arkiv, so anyone can check it without trusting us or asking for an API:
+- **exposure attestations**, 24 h expiry: is this key already public, and how do we know
+- **"aboard" records**: verified moves to PQ accounts, readonly
+- **ENS Helm check verdicts**
+- **a leaf ledger**: every use of a one-time key. Anyone can report a sighting, and two different digests for one leaf raise **"signed twice: this key can be forged"**
+
+The publisher **re-verifies every claim on-chain before writing**. The first batch passed 7 checks, then wrote 12 entities in one transaction (`0x54665e1f…d07f`, 0.0032 tGLM).
+
+- **Writer wallet:** `0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a` (Rabdi, chain 7794095)
+- **Runnable query** (no access key needed):
+  ```bash
+  pnpm install && node scripts/arkiv-query-public.mjs
+  ```
+  It lists the exposed keys vouched for by the writer, through `and(eq("arkiv.schema", "lifeboat.exposure.v1"), eq("status", "exposed"))` + `.ownedBy(writer)`.
+- Docs: [schema](arkiv/schema.md) · [why Arkiv](arkiv/why-arkiv.md) · [how we use it](arkiv/how-you-use-arkiv.md) · [reach](arkiv/reach.md) · [friction](arkiv/friction.md)
+
 ## Parts
 
 | Part | Folder | Status |
@@ -55,6 +73,7 @@ Details and every tx hash: [docs/helm-check.md](docs/helm-check.md). The records
 | Rescue paymaster (Yul) + mock USDC behind an EIP-1967 proxy | `contracts` | done: 6 Foundry tests + 6 devnet guard dry-runs |
 | PQ wallet for Sepolia (WOTS+C-verified `execute`, owns ENS names) | `contracts/src` | done: 8 Foundry tests with TypeScript signatures |
 | ENSv2 Helm check + handover | `scripts/src/lib/helm.ts`, `scripts/src/ens-*.ts` | done, live on Sepolia |
+| Arkiv registry: 4 schemas, verifying publisher, Harbour queries, leaf ledger | `scripts/src/lib/arkiv.ts`, `scripts/src/arkiv-*.ts` | done, live on Rabdi |
 | Devnet scripts (deploy, sign, dry-run, submit, sponsor, capture evidence) | `scripts` | done |
 
 ## How it works (short)

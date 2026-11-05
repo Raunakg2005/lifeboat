@@ -29,6 +29,9 @@ importers:
 
   scripts:
     dependencies:
+      '@arkiv-network/sdk':
+        specifier: 1.0.1
+        version: 1.0.1(typescript@5.9.3)(viem@2.57.16(typescript@5.9.3))
       '@forshtat/hegota-support':
         specifier: 0.0.1
         version: 0.0.1(viem@2.57.16(typescript@5.9.3))
@@ -43,6 +46,16 @@ packages:
 
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
+
+  '@arkiv-network/sdk@1.0.1':
+    resolution: {integrity: sha512-DCOFdGunn4I5nYrvIV/YIkMCkLZM7EQNSyNPtqpmQkP2JzTEfRLBJleBSB2rokWMa833/9P8DMiwsEXACr3CUQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      typescript: '>=5.0.0'
+      viem: ^2.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   '@esbuild/aix-ppc64@0.28.2':
     resolution: {integrity: sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ==}
@@ -680,6 +693,12 @@ packages:
 snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
+
+  '@arkiv-network/sdk@1.0.1(typescript@5.9.3)(viem@2.57.16(typescript@5.9.3))':
+    dependencies:
+      viem: 2.57.16(typescript@5.9.3)
+    optionalDependencies:
+      typescript: 5.9.3
 
   '@esbuild/aix-ppc64@0.28.2':
     optional: true
