@@ -1,0 +1,49 @@
+{
+  "savedAt": "2026-11-05T15:55:57.751Z",
+  "chainId": 1337,
+  "sender": "0x9fb5BA369c59A94f51969D76502A9283FED253e5",
+  "paymaster": "0x98cd804aE58Ea5FC9fA4Fb403f6D0D88acDd0ac8",
+  "usdc": "0xe65147390d3ea7157Ea22c36BF9406626E373BB4",
+  "dest": "0x555B4f232D65ED910F30F8897FA83705E35824dc",
+  "fee": "1000000",
+  "sweep": "99000000",
+  "nonce": 0,
+  "before": {
+    "eoaEth": "0",
+    "eoaUsdc": 100,
+    "destUsdc": 0,
+    "paymasterUsdc": 0,
+    "paymasterEth": "0.05"
+  },
+  "raw": "0x06f9016f820539c18080949fb5ba369c59a94f51969d76502a9283fed253e5f8faca010280c4827530808080de01019498cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac8c4829c40808080f866028094e65147390d3ea7157ea22c36bf9406626e373bb4c782ea608301d4c080b844a9059cbb00000000000000000000000098cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac800000000000000000000000000000000000000000000000000000000000f4240f866028094e65147390d3ea7157ea22c36bf9406626e373bb4c782ea608301d4c080b844a9059cbb000000000000000000000000555b4f232d65ed910f30f8897fa83705e35824dc0000000000000000000000000000000000000000000000000000000005e69ec0f848f846018080b8410072c81117dfc19d74ecbfca1310d50e3bfefea5be1afb55af2c60fcbd35f106e829cf5bd56fbfa3f249662204440e0ab9ee8515e5526256a4d94a6a52096aa591cb843b9aca00843b9aca0e80c0c0",
+  "simulation": {
+    "canonicalMempoolValid": false,
+    "canonicalMempoolViolation": "StorageReadNonSender",
+    "erc7562Trace": null,
+    "erc7562TraceError": null,
+    "executionError": null,
+    "executionStatus": "success",
+    "frames": [
+      {
+        "gasUsed": "0x64",
+        "succeeded": true
+      },
+      {
+        "gasUsed": "0x589b",
+        "succeeded": true
+      },
+      {
+        "gasUsed": "0x63bd",
+        "succeeded": true
+      },
+      {
+        "gasUsed": "0x3cad",
+        "succeeded": true
+      }
+    ],
+    "gasUsed": "0x4408d",
+    "maxCost": "0x198584dc93198",
+    "payer": "0x98cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac8",
+    "prefixShape": "OnlyVerifyPay"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "savedAt": "2026-11-05T15:54:59.978Z",
+  "usdc": "0xe65147390d3ea7157ea22c36bf9406626e373bb4",
+  "paymaster": "0x98cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac8",
+  "paymasterOwner": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+  "paymasterEth": "0.05",
+  "exposedEoa": "0x9fb5BA369c59A94f51969D76502A9283FED253e5",
+  "exposedEoaEth": "0",
+  "exposedEoaUsdc": 100,
+  "txs": {
+    "deploy MockUSDCImpl": "0x4b93b16fa95e160aa1033b8985f096abfa9b5e6cf04794e07570d316107dc77c",
+    "deploy USDC proxy": "0x549d936ad4cb99118a0d52ea11eed131794c0a5bc3aece6b45a9227e6ed0eda4",
+    "deploy RescuePaymaster": "0x3bea2d4e59da97408799ba0bc6b7e16176d0fd8f543e85917fb47d9bc25ae1d1",
+    "fund paymaster 0.05 ETH": "0x79d0d98f227f14461455b813a3b1a6d284da5cef25270dbf16c46e6bbb067bf4",
+    "mint 100 mUSDC to the exposed EOA": "0xf0b99295f0348e199fb2184c3fd7a2ff9f7064fe44a4c9b21b7b9a5bb64da57c",
+    "register the exposed EOA with the paymaster": "0xbc943e3e4625aa5f49ef9d954e7a76b6eea3a1ea945ba8e5a0efaf34f3a6905f"
+  }
+}

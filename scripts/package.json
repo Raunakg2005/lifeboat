@@ -6,7 +6,9 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "deploy-account": "tsx --env-file=../.env src/deploy-account.ts",
-    "send-frame": "tsx --env-file=../.env src/send-frame.ts"
+    "send-frame": "tsx --env-file=../.env src/send-frame.ts",
+    "rescue-setup": "tsx --env-file=../.env src/rescue-setup.ts",
+    "rescue": "tsx --env-file=../.env src/rescue.ts"
   },
   "dependencies": {
     "@forshtat/hegota-support": "0.0.1",
