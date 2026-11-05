@@ -60,19 +60,19 @@ async function holders(client: PublicClient, logs: PublicClient, contract: Addre
   const evs = await logsAll(logs, { address: contract, event: EAC_ROLES_CHANGED, args: resource === undefined ? {} : { resource } }, ENS_V2_FROM_BLOCK, toBlock);
   const pairs = new Map<string, { resource: bigint; account: Address }>();
   for (const e of evs) pairs.set(`${e.args.resource}:${e.args.account}`, { resource: e.args.resource, account: getAddress(e.args.account) });
-  const out: { resource: bigint; account: Address; bitmap: bigint }[] = [];
-  for (const p of pairs.values()) {
-    const bitmap = (await client.readContract({ address: contract, abi, functionName: "roles", args: [p.resource, p.account], blockNumber: toBlock })) as bigint;
-    if (bitmap !== 0n) out.push({ ...p, bitmap });
-  }
+  const read = await Promise.all(
+    [...pairs.values()].map(async (p) => ({ ...p, bitmap: (await client.readContract({ address: contract, abi, functionName: "roles", args: [p.resource, p.account], blockNumber: toBlock })) as bigint })),
+  );
+  const out = read.filter((h) => h.bitmap !== 0n);
   const resources = [...new Set(out.map((h) => h.resource))];
   if (resource !== undefined && !resources.includes(resource)) resources.push(resource);
-  const completeness = [];
-  for (const r of resources) {
-    const rebuilt = out.filter((h) => h.resource === r).reduce((s, h) => s + h.bitmap, 0n);
-    const onChain = (await client.readContract({ address: contract, abi, functionName: "roleCount", args: [r], blockNumber: toBlock })) as bigint;
-    completeness.push({ resource: r, rebuilt, onChain, complete: rebuilt === onChain });
-  }
+  const completeness = await Promise.all(
+    resources.map(async (r) => {
+      const rebuilt = out.filter((h) => h.resource === r).reduce((s, h) => s + h.bitmap, 0n);
+      const onChain = (await client.readContract({ address: contract, abi, functionName: "roleCount", args: [r], blockNumber: toBlock })) as bigint;
+      return { resource: r, rebuilt, onChain, complete: rebuilt === onChain };
+    }),
+  );
   return { holders: out, completeness };
 }
 
@@ -93,17 +93,29 @@ export async function classify(client: PublicClient, others: PublicClient[], a: 
     : { address: a, exposure: "not-seen", detail: "EOA with no transactions yet: public key not revealed" };
 }
 
-export async function helmCheck(client: PublicClient, logs: PublicClient, others: PublicClient[], name: string, known: { pqWallets: Address[] }): Promise<HelmReport> {
+export async function helmCheck(
+  client: PublicClient,
+  logs: PublicClient,
+  others: PublicClient[],
+  name: string,
+  known: { pqWallets: Address[]; onStep?: (step: string) => void },
+): Promise<HelmReport> {
+  const step = known.onStep ?? (() => {});
+  step("Finding the registry that holds the name");
   const block = await client.getBlockNumber();
   const dns = dnsEncode(name);
   const label = name.split(".")[0]!;
   const parentRegistry = getAddress((await client.readContract({ address: ENS.UniversalHelper, abi: helperAbi, functionName: "findParentRegistry", args: [dns], blockNumber: block })) as Address);
   const read = (fn: string, args: any[], address: Address = parentRegistry, abi: any = registryAbi) => client.readContract({ address, abi, functionName: fn, args, blockNumber: block });
 
-  const tokenId = (await read("findTokenId", [label])) as bigint;
-  const state = (await read("getState", [tokenId])) as { status: number; resource: bigint };
-  const owner = getAddress((await read("getOwner", [tokenId])) as Address);
-  const resolver = getAddress((await read("getResolver", [label])) as Address);
+  const [tokenId, resolverRaw, registriesRaw] = (await Promise.all([
+    read("findTokenId", [label]),
+    read("getResolver", [label]),
+    client.readContract({ address: ENS.UniversalHelper, abi: helperAbi, functionName: "findRegistries", args: [dns], blockNumber: block }),
+  ])) as [bigint, Address, Address[]];
+  const [state, ownerRaw] = (await Promise.all([read("getState", [tokenId]), read("getOwner", [tokenId])])) as [{ status: number; resource: bigint }, Address];
+  const owner = getAddress(ownerRaw);
+  const resolver = getAddress(resolverRaw);
   const resource = state.resource;
 
   const cache = new Map<string, Promise<Controller>>();
@@ -112,42 +124,58 @@ export async function helmCheck(client: PublicClient, logs: PublicClient, others
     if (!cache.has(k)) cache.set(k, classify(client, others, a, known));
     return cache.get(k)!;
   };
-  const entries: PathEntry[] = [];
   const completeness: HelmReport["completeness"] = [];
+  const registries = [...new Set(registriesRaw.map((a) => getAddress(a)).filter((a) => a !== "0x0000000000000000000000000000000000000000"))];
+  step("Rebuilding every role list from the logs (5 paths in parallel)");
 
-  // 1. owner
-  entries.push({ path: 1, title: "owner", holder: await who(owner), power: ["owns the name token"], where: `registry ${parentRegistry}` });
-
-  // 2. delegates (and the owner's own roles, for the record)
-  const reg = await holders(client, logs, parentRegistry, registryAbi, resource, block);
-  for (const c of reg.completeness) completeness.push({ where: `registry ${parentRegistry}`, ...c });
-  for (const h of reg.holders) {
-    if (h.account === owner) continue;
-    entries.push({ path: 2, title: "delegate", holder: await who(h.account), power: roleNames(h.bitmap, REGISTRY_ROLES), where: `registry ${parentRegistry}, resource ${h.resource}` });
-  }
-
-  // 3. operators of the owner (they can transfer every name the owner holds in this registry)
-  const ops = await logsAll(logs, { address: parentRegistry, event: APPROVAL_FOR_ALL, args: { account: owner } }, ENS_V2_FROM_BLOCK, block);
-  for (const op of [...new Set(ops.map((e) => getAddress(e.args.operator)))]) {
-    if (await read("isApprovedForAll", [owner, op])) entries.push({ path: 3, title: "operator", holder: await who(op), power: ["transfer the name (ERC-1155 approved for all)"], where: `registry ${parentRegistry}` });
-  }
-
-  // 4. resolver role holders (all resources: root = whole resolver, others = per-name/per-record setters)
-  if (resolver !== "0x0000000000000000000000000000000000000000") {
-    const res = await holders(client, logs, resolver, resolverAbi, undefined, block);
-    for (const c of res.completeness) completeness.push({ where: `resolver ${resolver}`, ...c });
-    for (const h of res.holders)
-      entries.push({ path: 4, title: h.resource === 0n ? "resolver admin" : "record setter", holder: await who(h.account), power: roleNames(h.bitmap, RESOLVER_ROLES), where: `resolver ${resolver}, resource ${h.resource === 0n ? "root" : h.resource}` });
-  }
-
-  // 5. parent registries: root-role holders of every registry above the name
-  const registries = ((await client.readContract({ address: ENS.UniversalHelper, abi: helperAbi, functionName: "findRegistries", args: [dns], blockNumber: block })) as Address[])
-    .map((a) => getAddress(a))
-    .filter((a) => a !== "0x0000000000000000000000000000000000000000");
-  for (const r of [...new Set(registries)]) {
-    const root = await holders(client, logs, r, registryAbi, 0n, block);
-    for (const h of root.holders) entries.push({ path: 5, title: "parent registry admin", holder: await who(h.account), power: roleNames(h.bitmap, REGISTRY_ROLES), where: `registry ${r}, root` });
-  }
+  // all five paths in parallel
+  const [p1, p2, p3, p4, p5] = await Promise.all([
+    // 1. owner
+    (async (): Promise<PathEntry[]> => [{ path: 1, title: "owner", holder: await who(owner), power: ["owns the name token"], where: `registry ${parentRegistry}` }])(),
+    // 2. delegates (the owner's own roles are skipped)
+    (async (): Promise<PathEntry[]> => {
+      const reg = await holders(client, logs, parentRegistry, registryAbi, resource, block);
+      for (const c of reg.completeness) completeness.push({ where: `registry ${parentRegistry}`, ...c });
+      return Promise.all(
+        reg.holders
+          .filter((h) => h.account !== owner)
+          .map(async (h) => ({ path: 2 as const, title: "delegate", holder: await who(h.account), power: roleNames(h.bitmap, REGISTRY_ROLES), where: `registry ${parentRegistry}, resource ${h.resource}` })),
+      );
+    })(),
+    // 3. operators of the owner (they can transfer every name the owner holds in this registry)
+    (async (): Promise<PathEntry[]> => {
+      const ops = await logsAll(logs, { address: parentRegistry, event: APPROVAL_FOR_ALL, args: { account: owner } }, ENS_V2_FROM_BLOCK, block);
+      const found = await Promise.all([...new Set(ops.map((e) => getAddress(e.args.operator)))].map(async (op) => ((await read("isApprovedForAll", [owner, op])) ? op : null)));
+      return Promise.all(found.filter((op): op is Address => !!op).map(async (op) => ({ path: 3 as const, title: "operator", holder: await who(op), power: ["transfer the name (ERC-1155 approved for all)"], where: `registry ${parentRegistry}` })));
+    })(),
+    // 4. resolver role holders (all resources: root = whole resolver, others = per-name/per-record setters)
+    (async (): Promise<PathEntry[]> => {
+      if (resolver === "0x0000000000000000000000000000000000000000") return [];
+      const res = await holders(client, logs, resolver, resolverAbi, undefined, block);
+      for (const c of res.completeness) completeness.push({ where: `resolver ${resolver}`, ...c });
+      return Promise.all(
+        res.holders.map(async (h) => ({
+          path: 4 as const,
+          title: h.resource === 0n ? "resolver admin" : "record setter",
+          holder: await who(h.account),
+          power: roleNames(h.bitmap, RESOLVER_ROLES),
+          where: `resolver ${resolver}, resource ${h.resource === 0n ? "root" : h.resource}`,
+        })),
+      );
+    })(),
+    // 5. parent registries: root-role holders of every registry above the name
+    (async (): Promise<PathEntry[]> => {
+      const per = await Promise.all(
+        registries.map(async (r) => {
+          const root = await holders(client, logs, r, registryAbi, 0n, block);
+          return Promise.all(root.holders.map(async (h) => ({ path: 5 as const, title: "parent registry admin", holder: await who(h.account), power: roleNames(h.bitmap, REGISTRY_ROLES), where: `registry ${r}, root` })));
+        }),
+      );
+      return per.flat();
+    })(),
+  ]);
+  step("Classifying every key and proving the lists complete");
+  const entries: PathEntry[] = [...p1, ...p2, ...p3, ...p4, ...p5];
 
   const hijackablePaths = [...new Set(entries.filter((e) => e.path <= 4 && e.holder.exposure === "exposed").map((e) => e.path))].sort();
   const systemicExposed = new Set(entries.filter((e) => e.path === 5 && e.holder.exposure === "exposed").map((e) => e.holder.address)).size;

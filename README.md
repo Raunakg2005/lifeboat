@@ -4,6 +4,8 @@ A future quantum computer can take over any wallet whose public key is on-chain,
 
 Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026).
 
+**Live demo: https://lifeboat-mu.vercel.app** (scan any address, or any ENSv2 name on Sepolia).
+
 > Work in progress. This README is filled in as each part lands, with real numbers and links only.
 
 ## Live result: a post-quantum signed frame transaction through the alt mempool
