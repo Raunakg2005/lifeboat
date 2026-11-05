@@ -5,6 +5,7 @@ import { COUNCILS, PUBLIC_RPC, TENDERLY_MAINNET, scanSafe, type SafeScan } from 
 import snapshot from "../../evidence/discovery/councils.json";
 import { REPO, short } from "./lib";
 import { LuggageTag, Radar } from "./ui";
+import QuantumPanel from "./QuantumPanel";
 
 const client = createPublicClient({ chain: mainnet, transport: http(PUBLIC_RPC.mainnet, { retryCount: 3, timeout: 30_000, batch: { batchSize: 50 } }) }) as PublicClient;
 const logs = createPublicClient({ chain: mainnet, transport: http(TENDERLY_MAINNET, { retryCount: 3, timeout: 60_000 }) }) as PublicClient;
@@ -117,6 +118,8 @@ export default function DiscoverView() {
           </div>
         </section>
       )}
+
+      <QuantumPanel />
 
       <section className="section grid">
         {rows.map((r) => (

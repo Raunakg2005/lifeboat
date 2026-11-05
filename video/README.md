@@ -17,12 +17,7 @@ Output in `video/out/`:
 The steps can also run one at a time: `tts`, `record`, `compose`. `shots` takes full-page screenshots at desktop and phone width.
 
 ## Voice
-| Voice | When | Setup |
-|---|---|---|
-| **IBM Watson Text to Speech** | `IBM_TTS_APIKEY` and `IBM_TTS_URL` are set in the repo's `.env` | IBM Cloud → create **Text to Speech** (Lite plan, free) → Manage → Credentials → copy the API key and URL into `.env`. Optional: `IBM_TTS_VOICE` (default `en-US_MichaelExpressive`) |
-| Offline Windows voice | Otherwise, or with `tts -- --offline` | Nothing to set up. `SAPI_VOICE` picks the voice (default `Microsoft David Desktop`) |
-
-The narration is about 5,000 characters. The Lite plan allows 10,000 a month, and every line is cached by voice and text in `video/cache/tts`, so a re-render only pays for lines that changed.
+The free offline Windows voice (System.Speech), with no account or key. `SAPI_VOICE` picks the voice; the default is `Microsoft David Desktop`. Each line is cached by voice and text in `video/cache/tts`.
 
 ## Edit the script
 Everything is in [`src/narration.mjs`](src/narration.mjs):
@@ -32,3 +27,4 @@ Everything is in [`src/narration.mjs`](src/narration.mjs):
 ## Requirements
 - Google Chrome. The recorder uses it through `playwright-core`, so nothing else needs downloading.
 - A Python with PyAV (H.264, AAC) and numpy for the final mux. Set `VIDEO_PYTHON` to its path.
+- Each take captures about 1.5 GB of frames; `compose` deletes them afterwards unless you pass `--keep-frames`.

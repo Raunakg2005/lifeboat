@@ -1,8 +1,6 @@
 // Turns every narration line into a WAV, cached by (voice, text), and writes cache/timeline-audio.json.
-// Voice: IBM Watson Text to Speech when IBM_TTS_APIKEY and IBM_TTS_URL are set in ../.env (the free Lite plan
-// covers this script several times a month), otherwise the offline Windows voice (System.Speech).
-// The key is only ever sent to the IBM URL; nothing here prints it.
-// Usage: pnpm --filter @lifeboat/video tts [--offline]
+// Voice: the offline Windows voice (System.Speech), free and with no account. SAPI_VOICE picks the voice.
+// Usage: pnpm --filter @lifeboat/video tts
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,13 +12,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = join(ROOT, "cache", "tts");
 mkdirSync(CACHE, { recursive: true });
 
-const key = process.env.IBM_TTS_APIKEY?.trim();
-const url = process.env.IBM_TTS_URL?.trim().replace(/\/+$/, "");
-const useIbm = !!(key && url) && !process.argv.includes("--offline");
-const voice = useIbm ? process.env.IBM_TTS_VOICE?.trim() || "en-US_MichaelExpressive" : process.env.SAPI_VOICE?.trim() || "Microsoft David Desktop";
-console.log(`voice: ${useIbm ? "IBM Watson" : "offline Windows"} · ${voice}`);
+const voice = process.env.SAPI_VOICE?.trim() || "Microsoft David Desktop";
+console.log(`voice: offline Windows · ${voice}`);
 
-/** Duration in seconds from the WAV's fmt and data chunks (works when a streamed header leaves the size unset). */
+/** Duration in seconds from the WAV's fmt and data chunks. */
 export function wavSeconds(buf) {
   let off = 12;
   let byteRate = 0;
@@ -35,17 +30,6 @@ export function wavSeconds(buf) {
     off += 8 + size + (size % 2);
   }
   throw new Error("no data chunk in WAV");
-}
-
-async function ibm(text, out) {
-  const r = await fetch(`${url}/v1/synthesize?voice=${encodeURIComponent(voice)}`, {
-    method: "POST",
-    headers: { Authorization: "Basic " + Buffer.from(`apikey:${key}`).toString("base64"), "Content-Type": "application/json", Accept: "audio/wav;rate=24000" },
-    body: JSON.stringify({ text }),
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!r.ok) throw new Error(`IBM TTS HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`);
-  writeFileSync(out, Buffer.from(await r.arrayBuffer()));
 }
 
 function sapi(jobs) {
@@ -68,23 +52,16 @@ const plan = SEGMENTS.map((s) => ({
   id: s.id,
   lines: s.lines.map((text) => {
     const say = spoken(text);
-    const file = join(CACHE, `${useIbm ? "ibm" : "sapi"}-${createHash("sha1").update(voice + "\n" + say).digest("hex").slice(0, 16)}.wav`);
+    const file = join(CACHE, `sapi-${createHash("sha1").update(voice + "\n" + say).digest("hex").slice(0, 16)}.wav`);
     return { text, say, file };
   }),
 }));
 
 const todo = plan.flatMap((s) => s.lines).filter((l) => !existsSync(l.file));
-const chars = todo.reduce((n, l) => n + l.say.length, 0);
-console.log(`${todo.length} new lines to synthesise (${chars} characters), ${plan.flatMap((s) => s.lines).length - todo.length} cached`);
-if (useIbm) {
-  for (const [i, l] of todo.entries()) {
-    await ibm(l.say, l.file);
-    process.stdout.write(`\r  ${i + 1}/${todo.length}`);
-  }
-  if (todo.length) process.stdout.write("\n");
-} else sapi(todo.map((l) => ({ text: l.say, out: l.file })));
+console.log(`${todo.length} new lines to synthesise, ${plan.flatMap((s) => s.lines).length - todo.length} cached`);
+sapi(todo.map((l) => ({ text: l.say, out: l.file })));
 
 const timeline = plan.map((s) => ({ id: s.id, lines: s.lines.map((l) => ({ text: l.text, file: l.file, seconds: Number(wavSeconds(readFileSync(l.file)).toFixed(3)) })) }));
-writeFileSync(join(ROOT, "cache", "timeline-audio.json"), JSON.stringify({ voice: `${useIbm ? "ibm" : "sapi"}:${voice}`, segments: timeline }, null, 2));
+writeFileSync(join(ROOT, "cache", "timeline-audio.json"), JSON.stringify({ voice: `sapi:${voice}`, segments: timeline }, null, 2));
 const total = timeline.flatMap((s) => s.lines).reduce((n, l) => n + l.seconds, 0);
 console.log(`narration: ${total.toFixed(1)} s of speech in ${timeline.length} beats`);

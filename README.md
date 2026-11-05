@@ -67,7 +67,8 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
 | `firmware/esp32` | the signer | host test vs TypeScript vectors |
-| `video` | the narrated walkthrough: TTS (IBM Watson or offline), scripted recording, MP4 + subtitles | renders in about 10 minutes |
+| `quantum` | Shor's algorithm for the elliptic-curve discrete log on toy curves: simulators and IBM quantum hardware | ideal + noisy simulation; hardware run → [docs/quantum-demo.md](docs/quantum-demo.md) |
+| `video` | the narrated walkthrough: offline TTS, scripted recording, MP4 + subtitles | renders in about 10 minutes |
 
 ## Run it
 ```bash

@@ -1,6 +1,7 @@
 import snapshot from "../../evidence/discovery/councils.json";
 import { REPO, explorerTx, sepoliaTx, short, swarmUrl } from "./lib";
 import { Boat, LuggageTag } from "./ui";
+import { quantumHardwareRuns } from "./QuantumPanel";
 
 type Tab = "home" | "check" | "discover" | "escape" | "harbour";
 
@@ -27,6 +28,12 @@ const PROOF: { what: string; net: string; at: string; href: string }[] = [
   { what: "Transaction signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 406,887", href: explorerTx("0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213") },
   { what: "ENS name handed over to a post-quantum wallet", net: "Sepolia ENSv2", at: short("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a", 6), href: sepoliaTx("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a") },
   { what: "Council deep scan, every signer, stored on Swarm", net: "Swarm testnet", at: short(COUNCIL_SWARM, 6), href: swarmUrl(COUNCIL_SWARM) },
+  ...quantumHardwareRuns().map((q) => ({
+    what: `Shor's algorithm recovered a ${q.bits}-bit toy private key from its public key`,
+    net: `IBM ${q.backend}`,
+    at: `job ${q.jobId.slice(0, 8)}…`,
+    href: `${REPO}/blob/main/docs/quantum-demo.md`,
+  })),
 ];
 
 const PARTNERS = [
