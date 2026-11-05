@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks commits that would leak secrets. Enable with: git config core.hooksPath .githooks
+node tools/check-secrets.mjs || exit 1
