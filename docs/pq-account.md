@@ -90,3 +90,12 @@ Two dry-run lessons from the devnet:
 - 256 signatures per key, so the account needs a key rotation (planned: a SENDER-frame `setRoot`).
 - Leaf state lives on the signing device and on-chain; the hardware signer (`docs/hardware.md`) adds a counter that can't go backwards.
 - The demo uses devnet ETH and mock USDC.
+
+## Design note: parallel evacuations (EIP-8250 keyed nonces) vs the leaf floor
+Keyed nonces let one account keep several transactions in flight at once, which is useful for sweeping many tokens in parallel. They don't mix with our **leaf floor**. If transactions using leaves 5, 6 and 7 are pending and the one with leaf 7 lands first, the floor jumps past 7, and the still-valid transactions with leaves 5 and 6 then fail VERIFY.
+
+Two ways to support parallel lanes, and what we chose:
+- **A used-leaf bitmap instead of a floor** (what our Sepolia [`LifeboatPQWallet`](../contracts/src/LifeboatPQWallet.sol) does): any unused leaf passes, each is marked once. It costs a storage read per VERIFY and a write per transaction, and an old unused leaf stays usable. That's fine, because the signer never reuses one.
+- **One leaf range per nonce key:** the floor becomes per-lane. Simple to verify, but the leaves have to be split up in advance.
+
+For the hackathon the EIP-8141 account keeps the floor (sequential evacuations), and the Sepolia wallet shows the bitmap. Moving the EIP-8141 account to the bitmap is a small change in `LifeboatAccount.yul.tmpl` and the first step toward parallel lanes.

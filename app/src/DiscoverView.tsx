@@ -11,7 +11,7 @@ const logs = createPublicClient({ chain: mainnet, transport: http(TENDERLY_MAINN
 
 type Row = Pick<SafeScan, "label" | "safe" | "threshold" | "exposedByNonce" | "exposedTotal" | "takeableByNonce" | "takeableWithSignatures" | "executionsDecoded" | "executionsSeen"> & {
   block: string | bigint;
-  owners: { address: string; how: string; nested?: SafeScan["owners"][number]["nested"] }[];
+  owners: { address: string; how: string; nested?: SafeScan["owners"][number]["nested"]; nonces?: Record<string, number>; bySignature?: { txHash: string; publicKey: string } | null }[];
 };
 
 export default function DiscoverView() {
@@ -38,6 +38,8 @@ export default function DiscoverView() {
   };
 
   const flipped = rows.filter((r) => !r.takeableByNonce && r.takeableWithSignatures);
+  // one concrete, checkable example: a signer with no transactions whose key came from a Safe signature
+  const proof = rows.flatMap((r) => r.owners.filter((o) => o.how === "signature" && o.bySignature).map((o) => ({ r, o })))[0];
   return (
     <>
       <section className="section" style={{ marginTop: 26 }}>
@@ -87,6 +89,34 @@ export default function DiscoverView() {
           </div>
         </div>
       </section>
+
+      {proof && (
+        <section className="section">
+          <div className="board">
+            <div className="board-head">
+              <h3>Proof</h3>
+              <span className="label">one example · check it yourself</span>
+            </div>
+            <div className="board-body">
+              <p style={{ marginTop: 0 }}>
+                A signer of the <b>{proof.r.label}</b> (<span className="mono">{short(proof.o.address, 3)}</span>) has sent <b>0 transactions</b> on {Object.keys(proof.o.nonces ?? {}).length || 5} chains, so a
+                nonce check calls it safe. But it signed Safe transaction{" "}
+                <a className="mono" href={`https://etherscan.io/tx/${proof.o.bySignature!.txHash}`} target="_blank" rel="noreferrer">
+                  {short(proof.o.bySignature!.txHash, 8)} ↗
+                </a>
+                , and its <b>public key</b> comes straight out of that signature:
+              </p>
+              <p className="mono" style={{ wordBreak: "break-all", background: "var(--paper)", border: "2px solid var(--ink)", padding: 10, fontSize: 12.5 }}>
+                {proof.o.bySignature!.publicKey.slice(0, 34)}…{proof.o.bySignature!.publicKey.slice(-8)} <span className="faint">(65 bytes, recovered with ecrecover over the safeTxHash)</span>
+              </p>
+              <p className="note" style={{ marginBottom: 0 }}>
+                Anyone can repeat this from public data: read the transaction's <span className="mono">signatures</span> bytes, take the safeTxHash from the Safe's ExecutionSuccess event, and recover. That
+                public key is what a future quantum computer would need. The address is truncated on purpose.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section grid">
         {rows.map((r) => (
