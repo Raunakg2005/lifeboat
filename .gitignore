@@ -33,3 +33,6 @@ contracts/yul/out/
 
 # staged static deploys (vercel deploy deploy/lifeboat)
 deploy/
+
+# local firmware builds
+tmp-build/
