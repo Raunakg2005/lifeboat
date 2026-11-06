@@ -27,7 +27,7 @@ let md = `# Voice-over script (submission video, ${mmss(tl.duration)})
 
 Read this over \`video/out/lifeboat-submission-silent.mp4\`. The easiest way: open \`video/out/teleprompter.html\`, which plays the video and shows the line to say right now. Every line below starts at the time shown; the time after it is how long you have, at a calm pace (about 2.4 words a second).
 
-**How to record:** a quiet room, phone or laptop mic close to your mouth (a headset mic is best), a voice recorder app running. Press play on the teleprompter and read along. Pause and restart freely: only the final take counts. Save it as \`video/voice/voice.wav\` (or .m4a / .mp3), then run \`pnpm --filter @lifeboat/video final\`, which lines your voice up with the video and checks the rules (2-4 min, 720p, real voice, no speed-up).
+**How to record:** a quiet room, phone or laptop mic close to your mouth (a headset mic is best), a voice recorder app running. Press play on the teleprompter and read along. Pause and restart freely: only the final take counts. Save it as \`video/voice/voice.wav\` (or .m4a / .mp3), or record in parts (\`video/voice/part1.ogg\`, …) and run \`pnpm --filter @lifeboat/video voice\`, which matches every line, cleans the voice and re-records the screen to your pace (2-4 min, 720p, real voice, no music, no speed-up).
 
 **Tone:** calm and certain. Say the numbers clearly. "Q-Day" is "queue day". "ENS" is "E-N-S". "WOTS" doesn't need saying.
 
@@ -42,7 +42,7 @@ for (const [i, seg] of SEGMENTS.entries()) {
 md += `## After recording
 1. \`video/voice/voice.wav\` saved.
 2. \`pnpm --filter @lifeboat/video final\` → \`video/out/lifeboat-submission.mp4\` (your voice + the video, rules checked).
-3. Upload it (YouTube unlisted works), put the link in the README and in the submission form.
+3. Upload the MP4 to ETHGlobal.com (the rules want the file there, voice only, no music), and put the link in the README.
 `;
 writeFileSync(join(REPO, "docs", "voiceover-script.md"), md);
 console.log(`wrote docs/voiceover-script.md (${SEGMENTS.length} beats, ${tl.lines.length} lines, ${mmss(tl.duration)})`);

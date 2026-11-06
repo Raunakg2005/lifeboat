@@ -2,16 +2,24 @@
 
 ## ETHGlobal's rules for the video
 - 2 to 4 minutes, at least 720p.
-- **A real voice:** no text-to-speech or AI voice-over, and no music with on-screen text instead of talking. Quiet background music under your voice is fine.
+- **A real voice:** no text-to-speech or AI voice-over.
+- **Audio without music:** voice only.
+- **Uploaded to ETHGlobal.com** itself (the file, not a link).
 - **No speeding up**, and not recorded on a phone. Keep the intro under 20 seconds and cut out any waiting.
 - Slides, if any: no more than 4 bullet points each.
 
 ## How we make it (the `video/` kit)
 1. Start the app: `pnpm --filter @lifeboat/app dev`.
-2. `pnpm --filter @lifeboat/video submission` drives the app through the script below and makes `video/out/lifeboat-submission-silent.mp4` (1280×720, about 3 minutes, original speed) and `video/out/teleprompter.html`.
-3. Open the teleprompter. Start a voice-only recorder (Windows Voice Recorder or Audacity, with a headset or laptop mic in a quiet room), press play, and read the big line at a normal pace. Save the take as `video/voice/voice.wav` (or `.m4a` / `.mp3`).
-4. `pnpm --filter @lifeboat/video final` lines your first word up with the first cue, levels the voice, and adds the synthesized music bed under it, dipping while you talk (`-- --no-music` for none). It writes `video/out/lifeboat-submission.mp4` and checks the length and resolution.
-5. Watch it once, then upload.
+2. Read the script (`docs/voiceover-script.md`) aloud, in as many takes as you like, in reading order. Save them as `video/voice/part1.ogg`, `part2.ogg`, … (any phone or laptop recorder; .ogg, .m4a, .mp3 or .wav).
+3. Put the phone clip of the ESP32 signing at `video/clips/esp32-ens.mp4`.
+4. `pnpm --filter @lifeboat/video voice` does the rest:
+   - transcribes the takes offline and matches every line to the script (the beat titles you read out are left out);
+   - cleans the voice (80 Hz high-pass, noise reduction, even loudness, long pauses shortened, never sped up);
+   - re-records the screen paced to your lines;
+   - adds the ESP32 clip over the hardware beat and burns in subtitles.
+
+   It writes `video/out/lifeboat-submission.mp4` and `.srt`. Voice only, no music.
+5. Watch it once, then upload the MP4 to ETHGlobal.com.
 
 ## The script (`video/src/submission.mjs`)
 Numbers are read from the evidence files when the video is made. No real person's ENS name is shown: real names appear only as the survey's totals.

@@ -56,7 +56,7 @@ App: Vite + React + viem on Vercel with a strict CSP, EIP-6963 wallet discovery 
 |---|---|
 | GitHub | https://github.com/Raunakg2005/lifeboat (**make it public first**) |
 | Live demo | https://lifeboat-mu.vercel.app |
-| Video | _upload `video/out/lifeboat-submission.mp4` (3:50), paste the link here and in the README_ |
+| Video | **upload the file** `video/out/lifeboat-submission.mp4` to ETHGlobal.com itself (3:50, 1280×720, voice only, no music) |
 
 ## Tech stack (pick the closest options in each dropdown)
 | Category | Pick |
@@ -101,8 +101,8 @@ See docs/ai-usage.md in the repo: which tools we used, where, and what the team 
 
 ## Before you press submit
 - [ ] The repo is **public**.
-- [ ] The video is uploaded and the link is in the form and the README.
+- [ ] The video MP4 is uploaded to ETHGlobal.com (the file, not a link). Voice only, no music.
 - [ ] Live site checked (done 6 Nov, 19:55 IST: new build, Protect works, evidence MATCHES).
 - [ ] Morning refresh run (`pnpm --filter @lifeboat/scripts refresh`), and `arkiv/swarm.md` references updated afterwards.
-- [ ] `docs/ai-usage.md` → "What the team did" reviewed by the team.
+- [x] `docs/ai-usage.md` → "What the team did" reviewed by the team.
 - [ ] Optional: the IBM job `dbmtusm74qds73dsvrf0` collected and added to `docs/quantum-demo.md`.

@@ -1,5 +1,6 @@
-// The submission video: out/lifeboat-submission-silent.mp4 + your recorded voice (video/voice/voice.*) + the music bed.
-// Usage: pnpm --filter @lifeboat/video final [-- --voice path] [--no-music] [--music path] [--offset seconds]
+// The submission video: out/lifeboat-submission-silent.mp4 + your recorded voice (video/voice/voice.*). No music: ETHGlobal
+// requires "audio without music" (a music bed only with --music path, for other uses).
+// Usage: pnpm --filter @lifeboat/video final [-- --voice path] [--music path] [--offset seconds]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -22,7 +23,7 @@ const tl = JSON.parse(readFileSync(join(ROOT, "cache", "submission", "timeline.j
 const firstLine = tl.lines[0]?.t ?? 2.5;
 const py = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean).find((c) => c === "python" || existsSync(c));
 const extra = [];
-if (process.argv.includes("--no-music")) extra.push("--no-music");
+if (!arg("--music")) extra.push("--no-music"); // the submission rule: audio without music
 if (arg("--music")) extra.push("--music", arg("--music"));
 if (arg("--offset")) extra.push("--offset", arg("--offset"));
 execFileSync(py, ["-I", join(ROOT, "src", "final.py"), silent, voice, join(ROOT, "out", "lifeboat-submission.mp4"), "--first-line", String(firstLine), ...extra], { stdio: "inherit" });

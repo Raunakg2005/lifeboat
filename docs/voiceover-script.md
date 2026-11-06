@@ -76,4 +76,4 @@ Read this over `video/out/lifeboat-submission-silent.mp4`. The easiest way: open
 ## After recording
 1. `video/voice/voice.wav` saved.
 2. `pnpm --filter @lifeboat/video final` → `video/out/lifeboat-submission.mp4` (your voice + the video, rules checked).
-3. Upload it (YouTube unlisted works), put the link in the README and in the submission form.
+3. Upload the MP4 to ETHGlobal.com (the rules want the file there, voice only, no music), and put the link in the README.
