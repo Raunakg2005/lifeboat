@@ -1,0 +1,87 @@
+{
+  "device": "ESP32 DevKit V1 (CP2102)",
+  "clearSigning": "the device rebuilt the hash from the unsigned transaction and showed it in words",
+  "deviceHash": "0x056ec527983deda02e6b18ad876766427e03a43e5b6de54781b9fa6a2d71c78b",
+  "port": "COM5",
+  "root": "0xf2949ed28d7a32ccf7e623b3bb777cd338e0d002494dbeb11e48688fd898434f",
+  "pubSeed": "0x403d68bf8b2e52a635c7b22a7547cee63ca9ee008850fb163912c51a80ba9948",
+  "account": "0x1C3FF4E170967ee70E097B7364890732CA7d00cc",
+  "leaf": 3,
+  "counter": 66,
+  "grindTries": 67,
+  "sigHash": "0x056ec527983deda02e6b18ad876766427e03a43e5b6de54781b9fa6a2d71c78b",
+  "txHash": "0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737",
+  "explorer": "https://explorer.altmempool.wtf/tx/0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc",
+  "receipt": {
+    "blockHash": "0xf5ca86f903de956b1ec1dc9608e5f299ea7f0bb86d5709cd6d3dcbc406101d13",
+    "blockNumber": "0xa7f",
+    "contractAddress": null,
+    "cumulativeGasUsed": "0x293fa",
+    "effectiveGasPrice": "0x3b9aca07",
+    "frameReceipts": [
+      {
+        "gasUsed": "0xcc7e",
+        "logs": [],
+        "stateGasUsed": "0x0",
+        "status": "0x1"
+      },
+      {
+        "gasUsed": "0x581e",
+        "logs": [
+          {
+            "address": "0xfffffffffffffffffffffffffffffffffffffffe",
+            "data": "0x00000000000000000000000000000000000000000000000000038d7ea4c68000",
+            "topics": [
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+              "0x0000000000000000000000001c3ff4e170967ee70e097b7364890732ca7d00cc",
+              "0x000000000000000000000000bac277e47dd7b95c04bb3517b76c1dd9151a054a"
+            ]
+          }
+        ],
+        "stateGasUsed": "0x0",
+        "status": "0x1"
+      }
+    ],
+    "from": "0x1c3ff4e170967ee70e097b7364890732ca7d00cc",
+    "gasUsed": "0x293fa",
+    "logs": [
+      {
+        "address": "0xfffffffffffffffffffffffffffffffffffffffe",
+        "blockHash": "0xf5ca86f903de956b1ec1dc9608e5f299ea7f0bb86d5709cd6d3dcbc406101d13",
+        "blockNumber": "0xa7f",
+        "blockTimestamp": "0x6aedb2a0",
+        "data": "0x00000000000000000000000000000000000000000000000000038d7ea4c68000",
+        "logIndex": "0x0",
+        "removed": false,
+        "topics": [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x0000000000000000000000001c3ff4e170967ee70e097b7364890732ca7d00cc",
+          "0x000000000000000000000000bac277e47dd7b95c04bb3517b76c1dd9151a054a"
+        ],
+        "transactionHash": "0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737",
+        "transactionIndex": "0x0"
+      }
+    ],
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000100000800000000000000002000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000008008000000000080000000000000000000000000000400000008000000000000000000000000000000000000000000000000000000000",
+    "payer": "0x1c3ff4e170967ee70e097b7364890732ca7d00cc",
+    "status": "0x1",
+    "to": "0x1c3ff4e170967ee70e097b7364890732ca7d00cc",
+    "transactionHash": "0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737",
+    "transactionIndex": "0x0",
+    "type": "0x6"
+  },
+  "simulation": {
+    "frames": [
+      {
+        "gasUsed": "0xcc7e",
+        "succeeded": true
+      },
+      {
+        "gasUsed": "0x581e",
+        "succeeded": true
+      }
+    ]
+  },
+  "arkivLeafTx": "0xa6a1b7a2afdc570768cf435109f87e07bd5aea36c82a65dc1ef4d35617c48a94",
+  "at": "2026-11-06T10:57:45.127Z"
+}

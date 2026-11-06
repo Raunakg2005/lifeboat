@@ -140,6 +140,36 @@ static void pin_scan() {
   Serial.println(hits);
 }
 
+/**
+ * Line test, no I2C: a powered SSD1306 module holds SDA and SCL high through its own pull-up resistors (~4.7-10 kOhm),
+ * which beat the ESP32's weak internal pull-down. So with every safe pin pulled down, the pins that still read HIGH
+ * are the ones wired to a powered screen. None high = the screen has no power, or its wires don't reach the ESP32.
+ */
+static void line_test() {
+  static const uint8_t P[] = {4, 5, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
+  Wire.end();
+  char high[96] = "";
+  for (uint8_t p : P) {
+    if (p == PIN_APPROVE || p == PIN_REJECT) continue;  // buttons may be wired there
+    pinMode(p, INPUT_PULLDOWN);
+  }
+  delay(5);
+  for (uint8_t p : P) {
+    if (p == PIN_APPROVE || p == PIN_REJECT) continue;
+    if (digitalRead(p) == HIGH) {
+      char h[8];
+      snprintf(h, sizeof h, "%sD%u", high[0] ? "," : "", p);
+      strncat(high, h, sizeof high - strlen(high) - 1);
+    }
+  }
+  for (uint8_t p : P) if (p != PIN_APPROVE && p != PIN_REJECT) pinMode(p, INPUT);
+  Wire.begin(21, 22);
+  Wire.setClock(100000L);
+  Wire.setTimeOut(30);
+  Serial.print("WOTS|LINES|high=");
+  Serial.println(high[0] ? high : "none");
+}
+
 static void show(const char* l1, const char* l2 = "", const char* l3 = "", const char* l4 = "") {
   if (!oled_addr) return;  // no screen found: keep signing over serial, never touch an absent device
   oled.clear();
@@ -447,6 +477,7 @@ void loop() {
   } else if (cmd == "EFUSE") cmd_efuse();
   else if (cmd == "BENCH") cmd_bench();
   else if (cmd == "PINSCAN") pin_scan();
+  else if (cmd == "LINES") line_test();
   else if (cmd == "I2C") {
     scan_i2c();
     show_idle();

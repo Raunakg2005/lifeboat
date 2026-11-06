@@ -1,0 +1,36 @@
+{
+  "device": "ESP32 DevKit V1",
+  "port": "COM5",
+  "root": "0xf2949ed28d7a32ccf7e623b3bb777cd338e0d002494dbeb11e48688fd898434f",
+  "message": "4c696665626f617420636c6561722d7369676e696e67207465737420323032362d31312d30365431303a35363a31332e3830365a",
+  "sigHash": "0x3939272f213e92148363b4c70fc610b0718721bc4113c9e5d58e71de3287d0b0",
+  "deviceHash": "0x3939272f213e92148363b4c70fc610b0718721bc4113c9e5d58e71de3287d0b0",
+  "leaf": 2,
+  "counter": 1337,
+  "refusals": [
+    {
+      "name": "a bare hash",
+      "reply": "WOTS|ERR|blind-signing-off",
+      "ok": true
+    },
+    {
+      "name": "a counter that doesn't match the device's own digest",
+      "reply": "WOTS|ERR|bad-counter",
+      "ok": true
+    },
+    {
+      "name": "a PQ wallet request naming another leaf",
+      "reply": "WOTS|ERR|leaf-mismatch",
+      "ok": true
+    }
+  ],
+  "checks": {
+    "refusals": true,
+    "noLeafUsedByRefusals": true,
+    "deviceRebuiltTheSameHash": true,
+    "signatureVerifies": true,
+    "signedWithItsNextLeaf": true,
+    "counterMovedByOne": true
+  },
+  "at": "2026-11-06T10:56:47.635Z"
+}

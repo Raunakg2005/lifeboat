@@ -2,17 +2,17 @@
 
 A one-time key is only as safe as its counter. The signer keeps the secret seed and the leaf counter on a small device, shows every request on its own screen, needs a physical button press, and **saves the counter before it computes anything**. A crash, a reset or a malicious host can burn a leaf, but it can never make the device sign twice with one.
 
-## Live result: a frame transaction signed by the ESP32 (6 Nov 2026, ~02:10 IST)
-This ran on the devnet before its reset on 6 Nov at 11:59 IST, so the transaction below is no longer on chain; the evidence file keeps its receipt. The clear-signed re-run (`pnpm --filter @lifeboat/scripts hw-frame`, a BOOT press) replaces it.
-
+## Live result: a clear-signed frame transaction from the ESP32 (6 Nov 2026, ~16:35 IST)
 | | |
 |---|---|
 | Device key | generated **on the ESP32** (its TRNG mixed with browser entropy); root `0xf2949ed2…434f` |
 | Account | LifeboatAccount `0x1C3FF4E170967ee70E097B7364890732CA7d00cc` (CREATE2 from the device's public key) |
-| Transaction | [`0x69c1eaec…9213`](https://explorer.altmempool.wtf/tx/0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), chain 1337, **block 406,887, status success**, through the alt mempool |
-| How it was signed | The laptop read the public tree from the device and checked its root, built the tx, and found the counter (1,813 tries). The **ESP32 showed SIGN? and waited for the BOOT button**, saved its counter, then streamed the chains. The laptop verified the signature before sending. VERIFY used 52,374 gas |
-| Ledger | leaf 1 published to the Arkiv leaf ledger (`0x4f3e2a68…56ba`) |
-| Evidence | [`evidence/hardware/esp32-frame-tx.json`](../evidence/hardware/esp32-frame-tx.json) |
+| Transaction | [`0x6836931d…6737`](https://explorer.altmempool.wtf/tx/0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), chain 1337, **block 2,687, status success**, through the alt mempool |
+| How it was signed | **Clear signing:** the laptop sent the unsigned transaction itself. The ESP32 rebuilt the hash from it, reported the same hash, and showed the transaction in words page by page: chain, sender, nonce, the VERIFY and SENDER frames, "send 0.001 ETH" with the full recipient, and the max fee. It signed after the BOOT press on the last page, using leaf 3 with the counter saved first. The laptop verified the signature before sending. VERIFY used 52,350 gas |
+| Ledger | leaf 3 published to the Arkiv leaf ledger (`0xa6a1b7a2…8a94`) |
+| Evidence | [`evidence/hardware/esp32-frame-tx-clear-signed.json`](../evidence/hardware/esp32-frame-tx-clear-signed.json) |
+
+Earlier the same day (02:10 IST), the device signed its first frame transaction (block 406,887) with the older blind protocol, on the devnet before its 6 Nov reset. The receipt is kept in [`evidence/hardware/esp32-frame-tx.json`](../evidence/hardware/esp32-frame-tx.json).
 
 Before that, a test message signed through the web app's Web Serial panel (leaf 0) came back **valid**.
 
@@ -103,7 +103,12 @@ The device refuses, before touching the secret or spending a leaf:
    same hash as the host, and the screen shows the details (12 checks)
 ✅ clear signing refuses: another leaf, non-canonical calls, signature bytes left in, a hidden control character, a bare hash
 ```
-On the real ESP32 (`pnpm --filter @lifeboat/scripts hw-clear-test`), the refusals were checked live: a bare hash, a wrong counter and another leaf were all refused, and no leaf was used. Timeouts used no leaf either.
+On the real ESP32 (`pnpm --filter @lifeboat/scripts hw-clear-test`, [`evidence/hardware/clear-signing.json`](../evidence/hardware/clear-signing.json)):
+- a bare hash, a wrong counter and a request for another leaf were all refused, with no leaf used;
+- the device rebuilt the same hash from the message, showed it, and signed after BOOT;
+- the signature verifies against its public tree, and the counter moved by exactly one.
+
+Timeouts use no leaf either.
 
 ## Claims we can make / can't make
 - ✅ The device never signs two different messages with one leaf, as long as its NVS isn't erased: the counter is saved before signing, and the host can't pick the leaf.

@@ -21,7 +21,7 @@ const ROUTE: { n: number; title: string; line: string; proof: string; tab: Tab; 
   { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: `${survey.verdicts.hijackable.toLocaleString("en-US")} of ${survey.checked.toLocaleString("en-US")} real names exposed`, tab: "check", cta: "Helm check" },
   { n: 3, title: "Escape", line: "A post-quantum account that checks a hash-based signature in the transaction itself.", proof: "52,367 gas · block 2,159", tab: "escape", cta: "Escape" },
   { n: 4, title: "Rescue", line: "A staked sponsor pays gas for wallets with tokens but no ETH, and is repaid in USDC.", proof: "❌ ❌ ✅ · block 2,174", tab: "escape", cta: "The rescue" },
-  { n: 5, title: "Sign safely", line: "A device that saves its counter before signing, so a one-time key is used once.", proof: "ESP32-signed · block 406,887", tab: "escape", cta: "Hardware" },
+  { n: 5, title: "Sign safely", line: "A device that saves its counter before signing, so a one-time key is used once.", proof: "ESP32 clear-signed · block 2,687", tab: "escape", cta: "Hardware" },
   { n: 6, title: "Publish", line: "Every finding re-checked on-chain, then published to Arkiv, with full evidence on Swarm.", proof: "leaf ledger: 'signed twice' caught", tab: "harbour", cta: "Harbour" },
 ];
 
@@ -30,7 +30,7 @@ const PROOF: { what: string; net: string; at: string; href: string; swarm?: { re
   { what: "First post-quantum frame transaction (WOTS+C, no ECDSA)", net: "EIP-8141 devnet", at: "block 2,159", href: explorerTx("0x115659a935d1fe86a81a445f05d2c20ced792bec617ba43ff0fab4ce07345784") },
   { what: "Sponsored rescue, admitted only by the staked alt mempool", net: "EIP-8141 devnet", at: "block 2,174", href: explorerTx("0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3") },
   { what: "Forgery from 12 reused fee bumps, accepted by VERIFY", net: "EIP-8141 devnet", at: "block 2,191", href: explorerTx("0xa70bda46414caaadb53430ae8e26ed27fc2f4f8a2c2a0e3be44b2f33988929cb") },
-  { what: "Transaction signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 406,887 (before the 6 Nov devnet reset)", href: explorerTx("0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213") },
+  { what: "Transaction shown in words and signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 2,687", href: explorerTx("0x6836931d3ad4ff86713e552e2ef3d2d49a84d62676f3ef816c77a580fdf66737") },
   { what: "ENS name handed over to a post-quantum wallet", net: "Sepolia ENSv2", at: short("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a", 6), href: sepoliaTx("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a") },
   { what: "Council deep scan, every signer, stored on Swarm", net: "Swarm testnet", at: short(COUNCIL_SWARM, 6), href: swarmUrl(COUNCIL_SWARM), swarm: { ref: COUNCIL_SWARM, via: "safe-signature" } },
   ...guardEv.steps

@@ -151,7 +151,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   2. It **saves the counter to flash before** computing anything, and refuses a counter that doesn't match its own digest.
   3. The laptop checks the signature before sending it.
   4. Keygen mixes the device's random generator with browser entropy, so neither side alone picks the key.
-- **Proof:** a device-signed frame transaction was **included in block 406,887** (on the devnet before its 6 Nov reset; the clear-signed re-run is next). Keygen takes 35 s on both cores. The crypto core matches the TypeScript signer byte for byte.
+- **Proof:** a frame transaction the device showed in words and then signed was **included in block 2,687** (clear signing). Keygen takes 35 s on both cores. The crypto core matches the TypeScript signer byte for byte.
 - **Say:** "A crash or a reset can waste a leaf, but the device can't sign twice with one."
 
 ## 4. How it fits together
@@ -198,7 +198,7 @@ flowchart LR
 | **22,683 gas** | the paymaster's VERIFY |
 | **12 reuses → 0.2 s** | the forgery |
 | **35 s** | keygen on the ESP32 |
-| **Blocks 2,159 / 2,174 / 2,191** | first PQ tx / rescue / forgery (chain 1337, re-run after the 6 Nov devnet reset); the hardware-signed tx was block 406,887 before the reset |
+| **Blocks 2,159 / 2,174 / 2,191 / 2,687** | first PQ tx / rescue / forgery / hardware clear-signed tx (chain 1337, after the 6 Nov devnet reset) |
 | **17 + 23 + 3** | tests: TypeScript signer, Foundry contracts, Safe signature recovery |
 
 ## 7. Questions judges will likely ask

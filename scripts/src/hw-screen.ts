@@ -13,10 +13,14 @@ await new Promise<void>((res, rej) => port.open((e) => (e ? rej(e) : res())));
 await new Promise<void>((res) => port.set({ dtr: false, rts: false }, () => res()));
 const lines = port.pipe(new ReadlineParser({ delimiter: "\n" }));
 let last = "";
+let lastLines = "";
 let found = false;
 lines.on("data", (raw: string) => {
   const l = raw.trim();
   if (l === "WOTS|PONG") console.log("device answers ✓");
+  if (l.startsWith("WOTS|PINSCAN|sda=")) console.log(`${new Date().toLocaleTimeString()}  screen answers on other pins: ${l.slice(13)} (move SDA to D21 and SCL to D22)`);
+  // which pins a powered screen pulls high (its SDA/SCL resistors): shows each wire move as it happens
+  if (l.startsWith("WOTS|LINES|") && l !== lastLines) console.log(`${new Date().toLocaleTimeString()}  pins held high: ${l.slice(17)}`), (lastLines = l);
   if (!l.startsWith("WOTS|I2C|")) return;
   if (l !== last) console.log(`${new Date().toLocaleTimeString()}  ${l}`);
   last = l;
@@ -25,9 +29,15 @@ lines.on("data", (raw: string) => {
 await new Promise((r) => setTimeout(r, 800));
 port.write("WOTS|PING\n");
 const end = Date.now() + minutes * 60_000;
-while (!found && Date.now() < end) {
+for (let i = 1; !found && Date.now() < end; i++) {
   port.write("WOTS|I2C\n");
-  await new Promise((r) => setTimeout(r, 3000));
+  await new Promise((r) => setTimeout(r, 1500));
+  port.write("WOTS|LINES\n");
+  await new Promise((r) => setTimeout(r, 1500));
+  if (i % 5 === 0 && !found) {
+    port.write("WOTS|PINSCAN\n"); // every 15 s: is the screen answering on some other pair of pins?
+    await new Promise((r) => setTimeout(r, 4000));
+  }
 }
 port.close();
 console.log(found ? "SCREEN FOUND: it should now show LIFEBOAT · post-quantum signer" : "no screen found in time");
