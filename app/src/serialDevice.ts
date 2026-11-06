@@ -22,6 +22,18 @@ type SerialLike = { requestPort(): Promise<SerialPortLike> };
 
 export const serialSupported = () => typeof navigator !== "undefined" && "serial" in navigator;
 
+// The Escape tab's signer and the Protect tab's device share one USB port. Leaving a tab closes the port it opened;
+// the next open anywhere on the page waits for that close to finish, so switching tabs never needs a page reload.
+let releasing: Promise<void> = Promise.resolve();
+/** Registers a port close in progress. */
+export const trackRelease = (p: Promise<void>): Promise<void> => {
+  const done = p.catch(() => {});
+  releasing = Promise.all([releasing, done]).then(() => {});
+  return done;
+};
+/** Resolves once every port close started on this page has finished. */
+export const portReleased = () => releasing;
+
 /** The device's WOTS|ERR reasons, in plain words. */
 const REASONS: Record<string, string> = {
   "leaf-mismatch": "The device's counter moved: reconnect it.",
@@ -63,7 +75,7 @@ export function openErrorText(e: unknown): string {
   const m = String((e as Error)?.message ?? e);
   if (/no port selected|NotFoundError/i.test(m) || (e as Error)?.name === "NotFoundError") return "No device picked.";
   if (/already open|failed to open/i.test(m) || (e as Error)?.name === "InvalidStateError")
-    return "The port is busy: another page or tab (or the Escape tab's signer) has it open. Close it or reload this page, then connect here.";
+    return "The port is busy: another program or browser tab has it open (a serial monitor, or Lifeboat in a second tab). Close that, then connect here.";
   return `Couldn't open the device: ${m.slice(0, 160)}`;
 }
 
@@ -105,6 +117,7 @@ export class SerialDevice {
   /** Asks the person to pick the port, then opens it without resetting the ESP32. */
   static async connect(): Promise<SerialDevice> {
     const port = await (navigator as unknown as { serial: SerialLike }).serial.requestPort();
+    await portReleased(); // the other tab's signer may still be closing this port
     await port.open({ baudRate: 115200, bufferSize: 1 << 16 }); // the tree arrives in a ~20 KB burst; the 255-byte default drops lines
     await port.setSignals?.({ dataTerminalReady: false, requestToSend: false }); // don't auto-reset the ESP32
     const decoder = new TextDecoderStream();
@@ -310,18 +323,22 @@ export class SerialDevice {
 
   /** Releases the port (so another page or a reconnect can open it). */
   async close() {
-    try {
-      await this.reader.cancel();
-    } catch {
-      // already gone
-    }
-    await this.piped;
-    try {
-      this.writer.releaseLock();
-    } catch {
-      // already released
-    }
-    await this.port.close().catch(() => {});
+    await trackRelease(
+      (async () => {
+        try {
+          await this.reader.cancel();
+        } catch {
+          // already gone
+        }
+        await this.piped;
+        try {
+          this.writer.releaseLock();
+        } catch {
+          // already released
+        }
+        await this.port.close().catch(() => {});
+      })(),
+    );
     this.markClosed();
   }
 }

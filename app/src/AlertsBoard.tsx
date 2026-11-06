@@ -19,16 +19,22 @@ export default function AlertsBoard() {
   const [counts, setCounts] = useState<Record<string, bigint> | null>(null);
   const [watching, setWatching] = useState<bigint | null>(null);
   const [err, setErr] = useState("");
+  const [attempt, setAttempt] = useState(0); // "try again" reads Arkiv again, without a page reload
 
   // Totals from the node's count projection: the watch list, and alerts per severity.
   useEffect(() => {
+    let live = true;
     Promise.all([arkiv.count().from(Watch).ownedBy(PUBLISHER).fetch(), ...SEVERITIES.map((s) => arkiv.count().from(Alert).where(eq("severity", s)).ownedBy(PUBLISHER).fetch())])
       .then(([w, ...c]) => {
+        if (!live) return;
         setWatching(w);
         setCounts(Object.fromEntries(SEVERITIES.map((s, i) => [s, c[i] ?? 0n])));
       })
       .catch((e) => console.warn("Monitor board: Arkiv count failed", e));
-  }, []);
+    return () => {
+      live = false;
+    };
+  }, [attempt]);
 
   // The list itself: filtered by severity on the node, newest first.
   useEffect(() => {
@@ -67,7 +73,7 @@ export default function AlertsBoard() {
     return () => {
       live = false;
     };
-  }, [sev]);
+  }, [sev, attempt]);
 
   const all = counts ? SEVERITIES.reduce((n, s) => n + (counts[s] ?? 0n), 0n) : null;
 
@@ -94,7 +100,12 @@ export default function AlertsBoard() {
       {rows === null ? (
         <div className="board-note">reading Arkiv…</div>
       ) : err ? (
-        <div className="board-note">Arkiv didn't answer: {err}</div>
+        <div className="board-note">
+          Arkiv didn't answer: {err}{" "}
+          <button type="button" className="link-btn" onClick={() => setAttempt((n) => n + 1)}>
+            try again
+          </button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="board-note">{sev === "all" ? "No alerts yet." : `No ${sev} alerts.`}</div>
       ) : (

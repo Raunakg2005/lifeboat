@@ -79,8 +79,11 @@ export default function HarbourView() {
   const [err, setErr] = useState("");
   const [sort, setSort] = useState<"risk" | "newest">("risk");
   const [ev, setEv] = useState<{ ref: string; records: EvidenceRecord[]; title: string } | null>(null);
+  const [attempt, setAttempt] = useState(0); // "try again" reads Arkiv again, without a page reload
 
   useEffect(() => {
+    let live = true;
+    setErr("");
     (async () => {
       const [ex, ab, nm, lv] = await Promise.all([
         arkiv
@@ -110,6 +113,7 @@ export default function HarbourView() {
           .fetch(),
         leafPage(),
       ]);
+      if (!live) return;
       const exposed = ex.entities.map((e) => ({
         key: e.$key,
         createdAt: e.$createdAt,
@@ -156,8 +160,11 @@ export default function HarbourView() {
         namesCapped: BigInt(nm.entities.length + nm.skipped) < nm.count,
       });
       setLeaves({ rows: leafRows(lv), total: lv.count, block: lv.blockNumber, more: lv.entities.length + lv.skipped >= LEAF_PAGE, loading: false });
-    })().catch((e) => setErr(arkivErrorText(e)));
-  }, []);
+    })().catch((e) => live && setErr(arkivErrorText(e)));
+    return () => {
+      live = false;
+    };
+  }, [attempt]);
 
   const loadMore = () => {
     if (!leaves || leaves.loading) return;
@@ -208,7 +215,14 @@ export default function HarbourView() {
             ))}
         </p>
       </section>
-      {err && <p className="error-box">Arkiv didn't answer: {err}</p>}
+      {err && (
+        <p className="error-box">
+          Arkiv didn't answer: {err}{" "}
+          <button className="link-btn" onClick={() => setAttempt((n) => n + 1)}>
+            try again
+          </button>
+        </p>
+      )}
       {!data && !err && <p className="note">Reading the registry from Arkiv…</p>}
       {data && leaves && (
         <div className="grid">

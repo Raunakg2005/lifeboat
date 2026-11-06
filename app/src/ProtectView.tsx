@@ -110,9 +110,17 @@ export default function ProtectView() {
   const note = (text: string, hash?: Hex) => setLog((l) => [{ text, hash }, ...l].slice(0, 12));
 
   useEffect(() => {
-    const e = eth() as (Eip1193 & { on?: (ev: string, f: (x: any) => void) => void }) | undefined;
-    e?.on?.("accountsChanged", (a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null));
-    e?.on?.("chainChanged", (c: string) => setChainId(Number(c)));
+    type Listen = (ev: string, f: (x: never) => void) => void;
+    const e = eth() as (Eip1193 & { on?: Listen; removeListener?: Listen }) | undefined;
+    const onAccounts = (a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null);
+    const onChain = (c: string) => setChainId(Number(c));
+    e?.on?.("accountsChanged", onAccounts);
+    e?.on?.("chainChanged", onChain);
+    // remove them when the tab closes, so every visit to Protect doesn't add another pair
+    return () => {
+      e?.removeListener?.("accountsChanged", onAccounts);
+      e?.removeListener?.("chainChanged", onChain);
+    };
   }, []);
 
   const guarded = async (label: string, f: () => Promise<void>) => {

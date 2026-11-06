@@ -2,20 +2,42 @@
 // memory only (nothing is saved): it grinds the counter, rebuilds the public Merkle tree from the device, and verifies
 // every signature the device returns. Clear signing: the browser sends the message itself, never a bare hash; the
 // device rebuilds the hash and shows the text on its screen before the button can approve it.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVES, TREE_HEIGHT, WITNESS_BYTES } from "@lifeboat/pq";
 import { messageRequest } from "@lifeboat/core";
 import { LuggageTag, Pill } from "./ui";
+import { portReleased, trackRelease } from "./serialDevice";
 
 type Info = { next: number; pubSeed: string; root: string; pinSet: boolean; locked: boolean } | null;
 const pinHex = (pin: string) => Array.from(new TextEncoder().encode(pin), (b) => b.toString(16).padStart(2, "0")).join("");
 // minimal Web Serial typing (not in every TS DOM lib)
 type SerialPortLike = {
   open(o: { baudRate: number; bufferSize?: number }): Promise<void>;
+  close(): Promise<void>;
   setSignals?(s: { dataTerminalReady?: boolean; requestToSend?: boolean }): Promise<void>;
   readable: ReadableStream<Uint8Array>;
   writable: WritableStream<Uint8Array>;
 };
+type Link = { port: SerialPortLike; writer: WritableStreamDefaultWriter<Uint8Array>; reader: ReadableStreamDefaultReader<string>; piped: Promise<void> };
+
+/** Closes the port this signer opened, so the Protect tab (or the next connect) can open it. */
+const closeLink = (l: Link) =>
+  trackRelease(
+    (async () => {
+      try {
+        await l.reader.cancel();
+      } catch {
+        // already gone
+      }
+      await l.piped;
+      try {
+        l.writer.releaseLock();
+      } catch {
+        // already released
+      }
+      await l.port.close().catch(() => {});
+    })(),
+  );
 
 function buildLevels(pubSeed: Uint8Array, leafHashes: Uint8Array[]) {
   const levels: Uint8Array[][] = [leafHashes];
@@ -37,8 +59,20 @@ export default function HardwareSigner() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<{ ok: boolean; leaf: number; tries: number; text: string } | null>(null);
   const writer = useRef<WritableStreamDefaultWriter<Uint8Array> | null>(null);
+  const link = useRef<Link | null>(null);
   const waiters = useRef<((line: string) => boolean)[]>([]);
   const leafHashes = useRef<Uint8Array[]>([]);
+
+  // leaving the tab releases the port (before, it stayed open and only a page reload freed it)
+  useEffect(
+    () => () => {
+      const l = link.current;
+      link.current = null;
+      writer.current = null;
+      if (l) void closeLink(l);
+    },
+    [],
+  );
 
   const push = (l: string) => setLog((x) => [...x.slice(-7), l.length > 90 ? l.slice(0, 90) + "…" : l]);
   const send = async (line: string) => {
@@ -66,22 +100,41 @@ export default function HardwareSigner() {
   const connect = async () => {
     try {
       const port = (await (navigator as unknown as { serial: { requestPort(): Promise<SerialPortLike> } }).serial.requestPort()) as SerialPortLike;
+      // connecting again: close the port this signer already holds first
+      const old = link.current;
+      link.current = null;
+      writer.current = null;
+      if (old) await closeLink(old);
+      await portReleased(); // the Protect tab's device may still be closing it
       await port.open({ baudRate: 115200, bufferSize: 1 << 16 }); // the cached tree arrives in a ~20 KB burst; the 255-byte default drops lines
       await port.setSignals?.({ dataTerminalReady: false, requestToSend: false }); // don't auto-reset the ESP32
-      writer.current = port.writable.getWriter();
-      const reader = port.readable.pipeThrough(new TextDecoderStream() as unknown as ReadableWritablePair<string, Uint8Array>).getReader();
+      const decoder = new TextDecoderStream();
+      const piped = port.readable.pipeTo(decoder.writable as unknown as WritableStream<Uint8Array>).catch(() => {});
+      const l: Link = { port, writer: port.writable.getWriter(), reader: decoder.readable.getReader(), piped };
+      link.current = l;
+      writer.current = l.writer;
       (async () => {
         let buf = "";
-        for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buf += value;
-          let i;
-          while ((i = buf.indexOf("\n")) >= 0) {
-            onLine(buf.slice(0, i).trim());
-            buf = buf.slice(i + 1);
+        try {
+          for (;;) {
+            const { value, done } = await l.reader.read();
+            if (done) break;
+            buf += value;
+            let i;
+            while ((i = buf.indexOf("\n")) >= 0) {
+              onLine(buf.slice(0, i).trim());
+              buf = buf.slice(i + 1);
+            }
           }
+        } catch {
+          // the cable was pulled or the port closed
         }
+        if (link.current !== l) return; // closed here on purpose
+        link.current = null;
+        writer.current = null;
+        setInfo(null);
+        setStatus("disconnected: plug the device in and connect again");
+        void closeLink(l);
       })();
       setStatus("connected");
       const i = await refresh();
@@ -229,7 +282,7 @@ export default function HardwareSigner() {
           <button onClick={guard(fetchTree)} disabled={!info}>
             re-read public tree
           </button>
-          <button onClick={() => signTest(`Lifeboat test ${new Date().toISOString()}`)} disabled={!info || info.locked || !leafHashes.current.length}>
+          <button onClick={guard(() => signTest(`Lifeboat test ${new Date().toISOString()}`))} disabled={!info || info.locked || !leafHashes.current.length}>
             3 · sign a test message
           </button>
           {info?.pinSet && !info.locked && (

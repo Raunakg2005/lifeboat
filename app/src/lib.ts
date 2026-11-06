@@ -93,7 +93,7 @@ export const arkiv = arkivPublicClient({ chain: rabdi({ accessKey: "" }), transp
 /** A plain sentence for a failed Arkiv read. */
 export const arkivErrorText = (e: unknown) => {
   const err = e as { shortMessage?: string; message?: string; details?: string; status?: number };
-  if (err?.status === 429 || /429|COST_LIMITED|budget exhausted/i.test(`${err?.details ?? ""} ${err?.message ?? ""}`)) return "the free public query quota is used up for a few minutes. Reload shortly.";
+  if (err?.status === 429 || /429|COST_LIMITED|budget exhausted/i.test(`${err?.details ?? ""} ${err?.message ?? ""}`)) return "the free public query quota is used up for a few minutes. Try again shortly.";
   return String(err?.shortMessage ?? err?.message ?? e).slice(0, 200);
 };
 

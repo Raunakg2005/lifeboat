@@ -197,13 +197,17 @@ type Board = {
 function RegistryBoard({ onGo }: { onGo: (t: Tab) => void }) {
   const [d, setD] = useState<Board | null>(null);
   const [failed, setFailed] = useState("");
+  const [attempt, setAttempt] = useState(0); // "try again" reads Arkiv again, without a page reload
   useEffect(() => {
+    let live = true;
+    setFailed("");
     Promise.all([
       arkiv.select({ $key: true, $createdAt: true, address: true, chainId: true }).from(ExposureSchema).withCount().where(eq("status", "exposed")).ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(100).fetch(),
       arkiv.select({ $key: true, $expiresAt: true, from: true, kind: true }).from(Aboard).withCount().ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(3).fetch(),
       arkiv.select({ $key: true, $createdAt: true, name: true, chainId: true }).from(NameCheck).withCount().ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(100).fetch(),
     ])
       .then(([e, a, n]) => {
+        if (!live) return;
         // Re-checks write new entities: count each key and each name once (its newest reading).
         const keys = newestPer(e.entities.map((x) => ({ createdAt: x.$createdAt, id: `${x.address.value.toLowerCase()}:${x.chainId.value}` })), (x) => x.id).length;
         const names = newestPer(n.entities.map((x) => ({ createdAt: x.$createdAt, id: `${x.name.value}:${x.chainId.value}` })), (x) => x.id).length;
@@ -217,8 +221,11 @@ function RegistryBoard({ onGo }: { onGo: (t: Tab) => void }) {
           block: a.blockNumber,
         });
       })
-      .catch((e) => setFailed(arkivErrorText(e)));
-  }, []);
+      .catch((e) => live && setFailed(arkivErrorText(e)));
+    return () => {
+      live = false;
+    };
+  }, [attempt]);
   return (
     <aside className="board">
       <div className="board-head">
@@ -246,7 +253,14 @@ function RegistryBoard({ onGo }: { onGo: (t: Tab) => void }) {
           {d && <div className="sub">names · {String(d.nameRecords)} readings</div>}
         </div>
       </div>
-      {failed && <div className="board-row note">Arkiv didn't answer: {failed}</div>}
+      {failed && (
+        <div className="board-row note">
+          Arkiv didn't answer: {failed}{" "}
+          <button className="link-btn" onClick={() => setAttempt((x) => x + 1)}>
+            try again
+          </button>
+        </div>
+      )}
       {d && d.newest.length > 0 && (
         <div className="board-row label" style={{ paddingBottom: 0, borderBottom: 0 }}>
           Newest aboard

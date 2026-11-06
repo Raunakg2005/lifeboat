@@ -5,6 +5,7 @@ import HarbourView from "./HarbourView";
 import DiscoverView from "./DiscoverView";
 import HomeView from "./HomeView";
 import ProtectView from "./ProtectView";
+import TabBoundary from "./TabBoundary";
 import { REPO } from "./lib";
 import { WaveBand } from "./ui";
 
@@ -54,12 +55,15 @@ export default function App() {
       </header>
       <WaveBand />
       <main className="wrap">
-        {tab === "home" && <HomeView onGo={go} />}
-        {tab === "check" && <CheckView onGo={go} />}
-        {tab === "discover" && <DiscoverView />}
-        {tab === "escape" && <EscapeView />}
-        {tab === "protect" && <ProtectView />}
-        {tab === "harbour" && <HarbourView />}
+        {/* keyed by tab: an error stays inside its tab, and switching tabs starts the next one clean */}
+        <TabBoundary key={tab} name={TABS.find((t) => t.id === tab)!.label}>
+          {tab === "home" && <HomeView onGo={go} />}
+          {tab === "check" && <CheckView onGo={go} />}
+          {tab === "discover" && <DiscoverView />}
+          {tab === "escape" && <EscapeView />}
+          {tab === "protect" && <ProtectView />}
+          {tab === "harbour" && <HarbourView />}
+        </TabBoundary>
       </main>
       <footer>
         <div className="hazard" />
