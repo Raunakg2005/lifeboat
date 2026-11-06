@@ -28,7 +28,8 @@
     "monitor": "tsx --env-file=../.env src/monitor.ts",
     "e2e-protect": "tsx --env-file=../.env src/e2e-protect.ts",
     "gen-device-vectors": "tsx src/gen-device-vectors.ts",
-    "hw-clear-test": "tsx src/hw-clear-test.ts"
+    "hw-clear-test": "tsx src/hw-clear-test.ts",
+    "hw-screen": "tsx src/hw-screen.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",

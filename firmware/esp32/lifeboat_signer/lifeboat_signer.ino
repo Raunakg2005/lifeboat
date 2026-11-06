@@ -24,6 +24,7 @@
 //        -> WOTS|SIG|<k>/64|<chain value> x64 -> WOTS|DONE|<leaf>|<keccak of sigs>     or WOTS|ERR|<reason>
 //   WOTS|SIGN|…  (a bare hash) is refused: WOTS|ERR|blind-signing-off
 //   WOTS|EFUSE                         -> WOTS|EFUSE|<coding scheme of BLOCK3> (read-only, never burns)
+//   WOTS|I2C                           -> WOTS|I2C|<addresses that answer>|oled=<addr or none>; re-starts the screen if found
 //   WOTS|BENCH                         -> WOTS|BENCH|single_core_est_ms|<n>|dual_core_ms|<n>
 //   (keygen and tree export use both cores; the public tree is cached in NVS, so LEAVES is instant after the first time)
 // Libraries: SSD1306Ascii (Bill Greiman). Preferences is built into the ESP32 core.
@@ -74,7 +75,73 @@ static bool unhex(const String& s, uint8_t* out, size_t n) {
   }
   return true;
 }
+static uint8_t oled_addr = 0;  // 0x3C or 0x3D, whichever answers (0 = no screen found)
+
+/**
+ * Probes the two addresses an SSD1306 can have (0x3C, 0x3D), reports which one answers, and (re)starts the screen.
+ * Only two probes with a short timeout: a miswired or stuck bus must not stall the signer.
+ */
+static void scan_i2c() {
+  oled_addr = 0;
+  int code3c = -1, code3d = -1;
+  Wire.beginTransmission(0x3C);
+  code3c = Wire.endTransmission();
+  if (code3c == 0) oled_addr = 0x3C;
+  else {
+    Wire.beginTransmission(0x3D);
+    code3d = Wire.endTransmission();
+    if (code3d == 0) oled_addr = 0x3D;
+  }
+  if (oled_addr) {
+    oled.begin(&Adafruit128x64, oled_addr);
+    oled.setFont(System5x7);
+  }
+  // endTransmission codes: 0 ok, 2 no answer (nothing at that address), 4/5 bus error or timeout (check SDA/SCL wiring)
+  Serial.print("WOTS|I2C|0x3C=");
+  Serial.print(code3c);
+  Serial.print("|0x3D=");
+  Serial.print(code3d);
+  Serial.print("|oled=");
+  Serial.println(oled_addr == 0x3C ? "0x3C" : oled_addr == 0x3D ? "0x3D" : "none");
+}
+
+/**
+ * Wiring finder: tries the SSD1306 addresses on every pair of safe GPIOs and reports where a screen answers.
+ * Skips the flash pins (6-11), the USB serial pins (1, 3), the boot strapping pins (0, 2, 12, 15) and the
+ * input-only pins (34-39). Restores the normal pins (SDA 21, SCL 22) afterwards.
+ */
+static void pin_scan() {
+  static const uint8_t P[] = {4, 5, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
+  int hits = 0;
+  for (uint8_t a : P)
+    for (uint8_t b : P) {
+      if (a == b) continue;
+      Wire.end();
+      Wire.begin(a, b);
+      Wire.setTimeOut(10);
+      for (uint8_t addr : {0x3C, 0x3D}) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+          char l[64];
+          snprintf(l, sizeof l, "WOTS|PINSCAN|sda=GPIO%u|scl=GPIO%u|addr=0x%02X", a, b, addr);
+          Serial.println(l);
+          hits++;
+        }
+      }
+    }
+  Wire.end();
+  for (uint8_t p : P) pinMode(p, INPUT);
+  pinMode(PIN_APPROVE, INPUT_PULLUP);
+  pinMode(PIN_REJECT, INPUT_PULLUP);
+  Wire.begin(21, 22);
+  Wire.setClock(100000L);
+  Wire.setTimeOut(30);
+  Serial.print("WOTS|PINSCAN|done|");
+  Serial.println(hits);
+}
+
 static void show(const char* l1, const char* l2 = "", const char* l3 = "", const char* l4 = "") {
+  if (!oled_addr) return;  // no screen found: keep signing over serial, never touch an absent device
   oled.clear();
   oled.set2X();
   oled.println(l1);
@@ -198,6 +265,7 @@ static int pages_of(const cs::Screen& sc) { return sc.n == 0 ? 1 : (sc.n + PAGE_
 
 /** Page p of the request: title, 5 lines, and what the button does now. */
 static void show_page(const cs::Screen& sc, int p, uint32_t leaf) {
+  if (!oled_addr) return;
   int pages = pages_of(sc);
   oled.clear();
   oled.set2X();
@@ -330,10 +398,11 @@ void setup() {
   pinMode(PIN_APPROVE, INPUT_PULLUP);
   pinMode(PIN_REJECT, INPUT_PULLUP);
   pinMode(PIN_BOOT, INPUT_PULLUP);
+  Serial.println("WOTS|BOOT");
   Wire.begin(21, 22);
-  Wire.setClock(400000L);
-  oled.begin(&Adafruit128x64, 0x3C);
-  oled.setFont(System5x7);
+  Wire.setClock(100000L);  // 100 kHz: more forgiving of long breadboard wires
+  Wire.setTimeOut(30);     // ms: a stuck bus fails fast instead of stalling
+  scan_i2c();  // finds the screen at 0x3C or 0x3D and reports it over serial
   prefs.begin("lifeboat", false);
   load_key();
   char l2[24];
@@ -377,5 +446,10 @@ void loop() {
     Serial.println("WOTS|ERR|blind-signing-off");
   } else if (cmd == "EFUSE") cmd_efuse();
   else if (cmd == "BENCH") cmd_bench();
+  else if (cmd == "PINSCAN") pin_scan();
+  else if (cmd == "I2C") {
+    scan_i2c();
+    show_idle();
+  }
   else Serial.println("WOTS|ERR|unknown");
 }
