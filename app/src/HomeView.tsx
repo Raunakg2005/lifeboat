@@ -1,8 +1,10 @@
 import snapshot from "../../evidence/discovery/councils.json";
 import survey from "../../evidence/ens/survey.json";
 import guardEv from "../../evidence/guard/quantum-guard.json";
-import { REPO, explorerTx, sepoliaTx, short, swarmUrl } from "./lib";
+import { useState } from "react";
+import { REPO, explorerTx, findExposureRecords, sepoliaTx, short, swarmUrl, type EvidenceRecord } from "./lib";
 import { Boat, LuggageTag } from "./ui";
+import EvidenceDrawer, { EvidenceButton } from "./EvidenceDrawer";
 import { quantumHardwareRuns } from "./QuantumPanel";
 
 type Tab = "home" | "check" | "discover" | "escape" | "harbour";
@@ -17,19 +19,20 @@ const COUNCIL_SWARM = "cf5693936d6583e069e069a9a1095dcac6333685994bc965423589fcd
 const ROUTE: { n: number; title: string; line: string; proof: string; tab: Tab; cta: string }[] = [
   { n: 1, title: "Detect", line: "Recover public keys from multisig signatures, not just from sent transactions.", proof: "Optimism council: 4 → 13 of 13", tab: "discover", cta: "Discover" },
   { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: `${survey.verdicts.hijackable.toLocaleString("en-US")} of ${survey.checked.toLocaleString("en-US")} real names exposed`, tab: "check", cta: "Helm check" },
-  { n: 3, title: "Escape", line: "A post-quantum account that checks a hash-based signature in the transaction itself.", proof: "52,369 gas · block 403,931", tab: "escape", cta: "Escape" },
-  { n: 4, title: "Rescue", line: "A staked sponsor pays gas for wallets with tokens but no ETH, and is repaid in USDC.", proof: "❌ ❌ ✅ · block 404,050", tab: "escape", cta: "The rescue" },
+  { n: 3, title: "Escape", line: "A post-quantum account that checks a hash-based signature in the transaction itself.", proof: "52,367 gas · block 2,159", tab: "escape", cta: "Escape" },
+  { n: 4, title: "Rescue", line: "A staked sponsor pays gas for wallets with tokens but no ETH, and is repaid in USDC.", proof: "❌ ❌ ✅ · block 2,174", tab: "escape", cta: "The rescue" },
   { n: 5, title: "Sign safely", line: "A device that saves its counter before signing, so a one-time key is used once.", proof: "ESP32-signed · block 406,887", tab: "escape", cta: "Hardware" },
   { n: 6, title: "Publish", line: "Every finding re-checked on-chain, then published to Arkiv, with full evidence on Swarm.", proof: "leaf ledger: 'signed twice' caught", tab: "harbour", cta: "Harbour" },
 ];
 
-const PROOF: { what: string; net: string; at: string; href: string }[] = [
-  { what: "First post-quantum frame transaction (WOTS+C, no ECDSA)", net: "EIP-8141 devnet", at: "block 403,931", href: explorerTx("0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0") },
-  { what: "Sponsored rescue, admitted only by the staked alt mempool", net: "EIP-8141 devnet", at: "block 404,050", href: explorerTx("0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3") },
-  { what: "Forgery from 12 reused fee bumps, accepted by VERIFY", net: "EIP-8141 devnet", at: "block 405,633", href: explorerTx("0x8dc6c9fbbadd0e4345557d938f4333a35c726ebbb753493c5edc1726fee6d890") },
-  { what: "Transaction signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 406,887", href: explorerTx("0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213") },
+// `swarm`: the row is a Swarm file; `via` finds the Arkiv records that name it (the council scan is written with via = safe-signature).
+const PROOF: { what: string; net: string; at: string; href: string; swarm?: { ref: string; via: string } }[] = [
+  { what: "First post-quantum frame transaction (WOTS+C, no ECDSA)", net: "EIP-8141 devnet", at: "block 2,159", href: explorerTx("0x115659a935d1fe86a81a445f05d2c20ced792bec617ba43ff0fab4ce07345784") },
+  { what: "Sponsored rescue, admitted only by the staked alt mempool", net: "EIP-8141 devnet", at: "block 2,174", href: explorerTx("0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3") },
+  { what: "Forgery from 12 reused fee bumps, accepted by VERIFY", net: "EIP-8141 devnet", at: "block 2,191", href: explorerTx("0xa70bda46414caaadb53430ae8e26ed27fc2f4f8a2c2a0e3be44b2f33988929cb") },
+  { what: "Transaction signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 406,887 (before the 6 Nov devnet reset)", href: explorerTx("0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213") },
   { what: "ENS name handed over to a post-quantum wallet", net: "Sepolia ENSv2", at: short("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a", 6), href: sepoliaTx("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a") },
-  { what: "Council deep scan, every signer, stored on Swarm", net: "Swarm testnet", at: short(COUNCIL_SWARM, 6), href: swarmUrl(COUNCIL_SWARM) },
+  { what: "Council deep scan, every signer, stored on Swarm", net: "Swarm testnet", at: short(COUNCIL_SWARM, 6), href: swarmUrl(COUNCIL_SWARM), swarm: { ref: COUNCIL_SWARM, via: "safe-signature" } },
   ...guardEv.steps
     .filter((s) => s.what.startsWith("attack") || s.what.startsWith("pay 0.001 ETH to the treasury"))
     .map((s) => ({
@@ -61,8 +64,16 @@ const WHO: { tone: "bad" | "good" | "neutral" | "unknown"; verdict: string; id: 
 ];
 
 export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
+  const [ev, setEv] = useState<{ ref: string; title: string; records: EvidenceRecord[] | null } | null>(null);
+  const openSwarm = (what: string, s: { ref: string; via: string }) => {
+    setEv({ ref: s.ref, title: what, records: null });
+    findExposureRecords(s.ref, s.via)
+      .then((records) => setEv((e) => (e && e.ref === s.ref ? { ...e, records } : e)))
+      .catch(() => setEv((e) => (e && e.ref === s.ref ? { ...e, records: [] } : e)));
+  };
   return (
     <>
+      {ev && <EvidenceDrawer swarmRef={ev.ref} records={ev.records} title={ev.title} onClose={() => setEv(null)} />}
       <section className="landing-hero">
         <div>
           <div className="label">Q-Day readiness for Ethereum · built from scratch at ETHGlobal Mumbai 2026</div>
@@ -115,7 +126,7 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
           <div className="ticket-row">
             <div className="k">A one-time key re-signed 12 times</div>
             <div className="v">
-              <b>0.1 s</b>
+              <b>0.2 s</b>
               <small> to forge a valid signature</small>
             </div>
           </div>
@@ -194,6 +205,12 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
                       <a href={p.href} target="_blank" rel="noreferrer">
                         {p.at} ↗
                       </a>
+                      {p.swarm && (
+                        <>
+                          {" · "}
+                          <EvidenceButton onOpen={() => openSwarm(p.what, p.swarm!)} />
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

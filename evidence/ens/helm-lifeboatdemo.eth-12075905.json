@@ -1,0 +1,181 @@
+{
+  "name": "lifeboatdemo.eth",
+  "checkedAt": "2026-11-06T10:14:07.578Z",
+  "block": "12075905",
+  "parentRegistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+  "tokenId": "83244072154316062149374930924300160808839034141795020560140560977679395848193",
+  "resource": "83244072154316062149374930924300160808839034141795020560140560977679395848192",
+  "owner": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+  "resolver": "0x294bd7c69BaA11ed8a51e195bE66cb354FC4Ec35",
+  "entries": [
+    {
+      "path": 1,
+      "title": "owner",
+      "holder": {
+        "address": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+        "exposure": "exposed",
+        "detail": "EOA, 67 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "owns the name token"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4"
+    },
+    {
+      "path": 2,
+      "title": "delegate",
+      "holder": {
+        "address": "0xE8Af54d7bCFcFB7Ae380FD3Be1DAbcD6453642F6",
+        "exposure": "exposed",
+        "detail": "EOA, 1 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "SET_RESOLVER"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, resource 83244072154316062149374930924300160808839034141795020560140560977679395848192"
+    },
+    {
+      "path": 3,
+      "title": "operator",
+      "holder": {
+        "address": "0xBE6512BBE9f0884f1f1A2f1A2881949A8fE1e630",
+        "exposure": "exposed",
+        "detail": "EOA, 1 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "transfer the name (ERC-1155 approved for all)"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4"
+    },
+    {
+      "path": 4,
+      "title": "resolver admin",
+      "holder": {
+        "address": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+        "exposure": "exposed",
+        "detail": "EOA, 67 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "SET_ADDRESS",
+        "SET_ADDRESS_ADMIN",
+        "SET_TEXT",
+        "SET_TEXT_ADMIN",
+        "SET_CONTENTHASH",
+        "SET_CONTENTHASH_ADMIN",
+        "SET_ABI",
+        "SET_ABI_ADMIN",
+        "SET_INTERFACE",
+        "SET_INTERFACE_ADMIN",
+        "SET_NAME",
+        "SET_NAME_ADMIN",
+        "SET_DATA",
+        "SET_DATA_ADMIN",
+        "LINK",
+        "LINK_ADMIN",
+        "CAN_NAME",
+        "CAN_NAME_ADMIN",
+        "UPGRADE",
+        "UPGRADE_ADMIN"
+      ],
+      "where": "resolver 0x294bd7c69BaA11ed8a51e195bE66cb354FC4Ec35, resource root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+        "exposure": "exposed",
+        "detail": "EOA, 4252 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "REGISTRAR_ADMIN",
+        "REGISTER_RESERVED_ADMIN",
+        "SET_PARENT",
+        "SET_PARENT_ADMIN",
+        "RENEW_ADMIN",
+        "SET_URI",
+        "SET_URI_ADMIN",
+        "CAN_NAME",
+        "CAN_NAME_ADMIN"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x2a35B94DF22cc7354570be2284655E2CDC0e64A2",
+        "exposure": "contract",
+        "detail": "contract (6532 bytes)"
+      },
+      "power": [
+        "REGISTER_RESERVED"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0xf2ece44980778966b8a0FccB3A9E339440f6e045",
+        "exposure": "contract",
+        "detail": "contract (6979 bytes)"
+      },
+      "power": [
+        "RENEW"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x6029a063d69b09D23c52a754a90E4FE43aDac3A8",
+        "exposure": "contract",
+        "detail": "contract (7774 bytes)"
+      },
+      "power": [
+        "REGISTER_RESERVED"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0xf633e7FC17e2bbE0D0965D18ec1821dcB754a3d3",
+        "exposure": "contract",
+        "detail": "contract (8037 bytes)"
+      },
+      "power": [
+        "REGISTRAR",
+        "RENEW"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    }
+  ],
+  "completeness": [
+    {
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+      "resource": "83244072154316062149374930924300160808839034141795020560140560977679395848192",
+      "rebuilt": "97409655027181761882228017414928043058157060096",
+      "onChain": "97409655027181761882228017414928043058157060096",
+      "complete": true
+    },
+    {
+      "where": "resolver 0x294bd7c69BaA11ed8a51e195bE66cb354FC4Ec35",
+      "resource": "0",
+      "rebuilt": "7719472615821079694904732333912527190217998977709370935963838933860875309329",
+      "onChain": "7719472615821079694904732333912527190217998977709370935963838933860875309329",
+      "complete": true
+    }
+  ],
+  "hijackablePaths": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "systemicExposed": 1,
+  "verdict": "hijackable"
+}

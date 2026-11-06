@@ -13,6 +13,7 @@ export const Exposure = defineSchema("lifeboat.exposure.v1", {
   evidence: str(),
   checker: str(),
   swarmRef: str().optional(),
+  evidenceHash: str().optional(), // keccak256 of the Swarm file's bytes: the app re-checks it after fetching
 });
 
 /** A verified move from an exposed key to a post-quantum account. Audit trail. */
@@ -26,6 +27,7 @@ export const Aboard = defineSchema("lifeboat.aboard.v1", {
   txHash: str(),
   note: str(),
   swarmRef: str().optional(),
+  evidenceHash: str().optional(), // keccak256 of the Swarm file's bytes: the app re-checks it after fetching
 });
 
 /** Leaf ledger: one entry per use (or sighting) of a one-time WOTS+C leaf. Readonly, anyone can extend. */
@@ -47,6 +49,7 @@ export const NameCheck = defineSchema("lifeboat.name.v1", {
   paths: str(),
   checkedBlock: u64(),
   swarmRef: str().optional(),
+  evidenceHash: str().optional(), // keccak256 of the Swarm file's bytes: the app re-checks it after fetching
 });
 
 /** Monitor: something being watched (public infrastructure, or a target its owner asked to watch). */

@@ -1,24 +1,53 @@
 import { useEffect, useState } from "react";
+import { desc, eq } from "@arkiv-network/sdk/query";
 import { Alert, PUBLISHER, Watch } from "@lifeboat/core";
-import { REPO, arkiv, short } from "./lib";
+import { REPO, arkiv, arkivErrorText, expiresIn, short } from "./lib";
+import { ArkivLink } from "./EvidenceDrawer";
 
-type Row = { key: string; target: string; kind: string; chainId: string; event: string; severity: string; detail: string; block: string };
+type Row = { key: string; expiresAt: bigint; target: string; kind: string; chainId: string; event: string; severity: string; detail: string; block: string };
+type Sev = "all" | "high" | "medium" | "info";
+const SEVERITIES = ["high", "medium", "info"] as const;
+const PAGE = 30;
 const net = (c: string) => (c === "1" ? "Ethereum (read-only)" : c === "11155111" ? "Sepolia" : `chain ${c}`);
 
 /** Monitor alerts and the watch list, read from Arkiv (lifeboat.alert.v1 / lifeboat.watch.v1). */
 export default function AlertsBoard() {
+  const [sev, setSev] = useState<Sev>("all");
   const [rows, setRows] = useState<Row[] | null>(null);
-  const [watching, setWatching] = useState<number | null>(null);
+  const [total, setTotal] = useState<bigint | null>(null);
+  const [block, setBlock] = useState(0n);
+  const [counts, setCounts] = useState<Record<string, bigint> | null>(null);
+  const [watching, setWatching] = useState<bigint | null>(null);
+  const [err, setErr] = useState("");
+
+  // Totals from the node's count projection: the watch list, and alerts per severity.
   useEffect(() => {
-    Promise.all([
-      arkiv.select({ $key: true, target: true, kind: true, chainId: true, event: true, severity: true, detail: true, checkedBlock: true }).from(Alert).ownedBy(PUBLISHER).limit(100).fetch(),
-      arkiv.select({ $key: true }).from(Watch).ownedBy(PUBLISHER).limit(100).fetch(),
-    ])
-      .then(([a, w]) => {
+    Promise.all([arkiv.count().from(Watch).ownedBy(PUBLISHER).fetch(), ...SEVERITIES.map((s) => arkiv.count().from(Alert).where(eq("severity", s)).ownedBy(PUBLISHER).fetch())])
+      .then(([w, ...c]) => {
+        setWatching(w);
+        setCounts(Object.fromEntries(SEVERITIES.map((s, i) => [s, c[i] ?? 0n])));
+      })
+      .catch((e) => console.warn("Monitor board: Arkiv count failed", e));
+  }, []);
+
+  // The list itself: filtered by severity on the node, newest first.
+  useEffect(() => {
+    let live = true;
+    setRows(null);
+    setErr("");
+    const q = arkiv.select({ $key: true, $expiresAt: true, target: true, kind: true, chainId: true, event: true, severity: true, detail: true, checkedBlock: true }).from(Alert).withCount().ownedBy(PUBLISHER);
+    (sev === "all" ? q : q.where(eq("severity", sev)))
+      .orderBy(desc("$expiresAt"))
+      .limit(PAGE)
+      .fetch()
+      .then((a) => {
+        if (!live) return;
+        setBlock(a.blockNumber);
+        setTotal(a.count);
         setRows(
-          a.entities
-            .map((e) => ({
+          a.entities.map((e) => ({
             key: e.$key,
+            expiresAt: e.$expiresAt,
             target: e.target.value,
             kind: e.kind.value,
             chainId: String(e.chainId.value),
@@ -26,18 +55,21 @@ export default function AlertsBoard() {
             severity: e.severity.value,
             detail: e.detail.value,
             block: String(e.checkedBlock.value),
-          }))
-            .sort((x, y) => (x.severity === y.severity ? 0 : x.severity === "high" ? -1 : 1))
-            .slice(0, 30),
+          })),
         );
-        setWatching(w.entities.length);
       })
       .catch((e) => {
+        if (!live) return;
         console.warn("Monitor board: Arkiv query failed", e);
+        setErr(arkivErrorText(e));
         setRows([]);
-        setWatching(0);
       });
-  }, []);
+    return () => {
+      live = false;
+    };
+  }, [sev]);
+
+  const all = counts ? SEVERITIES.reduce((n, s) => n + (counts[s] ?? 0n), 0n) : null;
 
   return (
     <div className="board">
@@ -45,10 +77,26 @@ export default function AlertsBoard() {
         <h3>Monitor</h3>
         <span className="label">{watching === null ? "reading Arkiv…" : `${watching} targets watched · alerts expire after 30 days`}</span>
       </div>
+      <div className="board-sub">
+        <div className="chips" role="group" aria-label="Severity">
+          {(["all", ...SEVERITIES] as const).map((s) => {
+            const n = s === "all" ? all : (counts?.[s] ?? null);
+            return (
+              <button key={s} type="button" aria-pressed={sev === s} className={s} onClick={() => setSev(s)}>
+                {s === "all" ? "All" : s}
+                {n !== null && <b>{String(n)}</b>}
+              </button>
+            );
+          })}
+        </div>
+        <span style={{ marginLeft: "auto" }}>{total !== null && rows ? (BigInt(rows.length) < total ? `newest ${rows.length} of ${total}` : `${total} on Arkiv`) : ""}</span>
+      </div>
       {rows === null ? (
         <div className="board-note">reading Arkiv…</div>
+      ) : err ? (
+        <div className="board-note">Arkiv didn't answer: {err}</div>
       ) : rows.length === 0 ? (
-        <div className="board-note">No alerts yet.</div>
+        <div className="board-note">{sev === "all" ? "No alerts yet." : `No ${sev} alerts.`}</div>
       ) : (
         <div className="table-wrap">
           <table className="manifest">
@@ -58,6 +106,7 @@ export default function AlertsBoard() {
                 <th>What changed</th>
                 <th>Target</th>
                 <th>Network</th>
+                <th>Record</th>
               </tr>
             </thead>
             <tbody>
@@ -73,6 +122,12 @@ export default function AlertsBoard() {
                   <td className="m">{r.kind === "name" ? r.target : short(r.target)}</td>
                   <td className="m">
                     {net(r.chainId)} · block {Number(r.block).toLocaleString("en-US")}
+                  </td>
+                  <td>
+                    <div className="rec-meta">
+                      <span>{expiresIn(r.expiresAt, block)}</span>
+                      <ArkivLink entityKey={r.key} />
+                    </div>
                   </td>
                 </tr>
               ))}

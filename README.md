@@ -22,20 +22,21 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 - **Optimism Security Council (10 of 13):** 4 public keys by nonce → **13 of 13** counting signatures. **Base's nested 8-of-11 council: 0 → 11.** Two of four council Safes look safe by nonce and aren't. → [docs/discovery.md](docs/discovery.md)
 - **Real ENSv2 names (Sepolia, one per owner, our own excluded):** **902 of 1,011** (89%) can be steered on Q-Day, 863 of them through their resolver. Our own test name `lifeboatpq.eth` shows the way out: handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
 - **Quantum Guard on a real Safe:** a payment signed by the owners only was **refused on-chain**; the post-quantum co-signed one went through, and ERC-1271 (Permit2) now needs the PQ key too. → [docs/quantum-guard.md](docs/quantum-guard.md)
-- **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.1 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
+- **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.2 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
 
 ## EF: Frame Transaction Alternative Mempool
-- **PQ account in Yul** verifying **WOTS+C** in the VERIFY frame: **52,369 gas** for the whole frame, 44,870 for the check itself (constant), 2,336-byte witness in an ARBITRARY signature entry, 256 one-time leaves with an on-chain leaf floor. First tx [`0xd999725a…`](https://explorer.altmempool.wtf/tx/0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 403,931.
+_The devnet was reset on 6 Nov at 11:59 IST. We re-ran every demo on the fresh chain the same afternoon, and the blocks below are from that re-run. The first runs are kept in [`evidence/ef/before-reset/`](evidence/ef/before-reset/)._
+- **PQ account in Yul** verifying **WOTS+C** in the VERIFY frame: **52,367 gas** for the whole frame, 44,870 for the check itself (constant), 2,336-byte witness in an ARBITRARY signature entry, 256 one-time leaves with an on-chain leaf floor. First tx [`0x115659a9…`](https://explorer.altmempool.wtf/tx/0x115659a935d1fe86a81a445f05d2c20ced792bec617ba43ff0fab4ce07345784?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 2,159.
 - **Why the alt mempool:** a **staked rescue paymaster** pays gas for exposed wallets that hold tokens but no ETH, and is repaid in USDC in the same transaction. Its VERIFY reads shared state (its registry, and a token balance through a proxy):
 
   | Route | Result |
   |---|---|
   | public mempool | ❌ `StorageReadNonSender` |
   | alt, unstaked | ❌ `unstaked payer accessed payer slot …` |
-  | alt, staked | ✅ [included in block 404,050](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
+  | alt, staked | ✅ [included in block 2,174](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
 
   It refuses 5 attack variants (underpaying, paying someone else, an undoable batched repayment, sweeping first, an unregistered sender).
-- **Forgery demo:** [`0x8dc6c9fb…`](https://explorer.altmempool.wtf/tx/0x8dc6c9fbbadd0e4345557d938f4333a35c726ebbb753493c5edc1726fee6d890?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 405,633: a signature forged from 12 reused fee bumps, accepted by VERIFY, wallet drained.
+- **Forgery demo:** [`0xa70bda46…`](https://explorer.altmempool.wtf/tx/0xa70bda46414caaadb53430ae8e26ed27fc2f4f8a2c2a0e3be44b2f33988929cb?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 2,191: a signature forged from 12 reused fee bumps, accepted by VERIFY, wallet drained.
 - Docs: [pq-account.md](docs/pq-account.md) (design, gas, trade-offs, forgery costs) · [rescue-paymaster.md](docs/rescue-paymaster.md) (admission demo, guards, devnet feedback).
 
 ## ENS: Best Use of ENSv2
@@ -48,18 +49,30 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 - **Draft ENSIP** for `pq.*` text records: [pq-records.md](docs/pq-records.md). Every tx hash: [helm-check.md](docs/helm-check.md).
 
 ## Arkiv: Build on Arkiv (+ Swarm)
-- **Four schemas:** exposure (24 h), aboard (readonly audit trail), name verdicts, and a **leaf ledger** that anyone can write to. Two digests for one leaf raise **"signed twice"**, which the ledger caught for the naive wallet.
-- **A publisher that re-verifies every claim on-chain** before batch-writing.
+- **Six schemas** ([schema](arkiv/schema.md)):
+  - exposure readings and name verdicts (24 h, updated in place on every re-check);
+  - aboard moves and a one-time-key **leaf ledger** (readonly, 180 days, anyone can extend). Anyone can write to the ledger, and two digests for one leaf raise **"signed twice"**, which caught our naive test wallet;
+  - Monitor watches and alerts (30 days).
+- **In the app (Harbour, Check, Monitor):**
+  - only records our publisher signed (`ownedBy`), so nobody can plant a fake "moved to safety";
+  - true totals from the count API, and "newest" and "most at risk" ordering;
+  - the whole ledger, paged by key;
+  - severity filters in the query;
+  - "expires in" countdowns, and readonly stamps read from each entity's creation flags;
+  - an explorer link on every row.
+- **A publisher that re-verifies every claim on-chain** before writing. A re-check patches and extends the same record in one `executeBatch`, so keys stay stable.
 - **Writer wallet:** `0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a` (Rabdi, chain 7794095).
-- **Runnable query** (no access key needed):
+- **Runnable query** (no access key, no `.env`): exposed keys plus the "signed twice" check.
   ```bash
   pnpm install && node scripts/arkiv-query-public.mjs
   ```
-- **Swarm:** 8 evidence bundles uploaded by our own Bee light node (batch `d65b35d8…7bae`) and referenced from Arkiv entities via `swarmRef`. 8 of 8 open on the public testnet gateway.
+- **Swarm:** full evidence files (Helm reports, rescue, forgery, council scan) uploaded and pinned by our own Bee light node (batch `d65b35d8…7bae`). Arkiv records carry `swarmRef` and `evidenceHash`, and the app's **open evidence** downloads the file, hashes it in the browser and shows "Swarm file matches the Arkiv record" → [swarm](arkiv/swarm.md).
+- **Lifetimes at judging:** readings live 24 h and are re-published daily (`pnpm --filter @lifeboat/scripts refresh`). The ledger and aboard records live 180 days, so the query is never empty.
+- **Public read quota:** keyless reads share a per-IP quota. If Harbour says it's used up, wait a few minutes.
 - Docs: [schema](arkiv/schema.md) · [why Arkiv](arkiv/why-arkiv.md) · [how we use it](arkiv/how-you-use-arkiv.md) · [reach](arkiv/reach.md) · [friction](arkiv/friction.md) · [swarm](arkiv/swarm.md)
 
 ## Hardware
-ESP32 signer, **live**: it generated its own key and signed a frame transaction that was included on chain 1337 ([`0x69c1eaec…`](https://explorer.altmempool.wtf/tx/0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 406,887) after the BOOT button was pressed on the device. The secret seed and the leaf counter stay on the device. It shows each request on an OLED, needs the Approve button, saves the counter **before** signing, and refuses a counter that doesn't match its own digest. Its crypto core is verified byte for byte against the TypeScript signer (`node tools/firmware-check.mjs`). → [docs/hardware.md](docs/hardware.md)
+ESP32 signer, **live**: it generated its own key and signed a frame transaction that was included on chain 1337 ([`0x69c1eaec…`](https://explorer.altmempool.wtf/tx/0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc), block 406,887, before the devnet's 6 Nov reset) after the BOOT button was pressed on the device. The secret seed and the leaf counter stay on the device. **Clear signing:** it never signs a bare hash. It gets the request itself (a message, a post-quantum wallet action such as an ENS record, a Safe co-signature, or a frame transaction), rebuilds the hash from it, and shows it in words on its OLED: amounts, full recipient, ENS name, `! DELEGATECALL`. It needs the Approve button on the last page, saves the counter **before** signing, and refuses a counter that doesn't match its own digest. Its crypto core is verified byte for byte against the TypeScript signer (`node tools/firmware-check.mjs`). → [docs/hardware.md](docs/hardware.md)
 
 ## Repo
 | Folder | What | Tests |
@@ -69,7 +82,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 | `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, **Quantum Guard + factory**, mock USDC | 36 (Foundry, TypeScript vectors) |
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked; Protect tab end to end on Sepolia (`e2e-protect`, evidence in `evidence/e2e/`) |
-| `firmware/esp32` | the signer | host test vs TypeScript vectors |
+| `firmware/esp32` | the signer, with clear signing | 22 host checks vs TypeScript vectors (`node tools/firmware-check.mjs`) |
 | `quantum` | Shor's algorithm for the elliptic-curve discrete log on toy curves: simulators and IBM quantum hardware | ideal + noisy simulation; hardware run → [docs/quantum-demo.md](docs/quantum-demo.md) |
 | `video` | the narrated walkthrough: offline TTS, scripted recording, MP4 + subtitles | renders in about 10 minutes |
 

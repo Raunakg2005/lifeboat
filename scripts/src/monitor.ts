@@ -3,18 +3,23 @@
 //     recovered or has a recovery pending, a name that can be steered on Q-Day)
 //   * later passes: changes (more keys exposed, a recovery started, the guard removed, a verdict changed)
 // An alert is raised once per state (deduplicated in scripts/.monitor-state.json).
+// Evidence health: the Swarm postage batch's TTL (Bee /stamps) and whether every known evidence reference is still
+// retrievable (Bee /stewardship/<ref>); under 24 h or not retrievable raises `evidence-at-risk` (medium). Skipped
+// quietly when the Bee node isn't reachable.
 // Alerts go to Arkiv (public, 30 days, lifeboat.alert.v1), to stdout, and to an optional webhook
 // (MONITOR_WEBHOOK_URL in .env: Discord or Slack style; it stays private). Mainnet is only ever read.
+// Without DEV_PRIVATE_KEY the pass runs read-only and prints the alerts it would write.
 // Usage: pnpm --filter @lifeboat/scripts monitor [--every 600] [--no-arkiv]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createPublicClient, getAddress, type Address, type PublicClient } from "viem";
 import { mainnet } from "viem/chains";
 import { u64 } from "@arkiv-network/sdk/schema";
-import { eq } from "@arkiv-network/sdk/query";
 import { GUARD_SLOT, RPCS, helmCheck, quantumGuardAbi, rpcTransport, scanSafe, slotAddress } from "@lifeboat/core";
 import { argValue, hasFlag, repoPath } from "./lib/env.js";
-import { Alert, EXPIRY, PUBLISHER, Watch, arkivPublic, arkivWallet } from "./lib/arkiv.js";
+import { Aboard, Alert, EXPIRY, Exposure, NameCheck, PUBLISHER, Watch, arkivPublic, arkivWallet, hasWriterKey } from "./lib/arkiv.js";
 import { sepoliaClient, sepoliaLogsClient } from "./lib/ens.js";
+import { liveEntities } from "./lib/publish.js";
+import { beeHealth, isRetrievable, stamps } from "./lib/swarm.js";
 
 type Target = { kind: "safe" | "guard" | "name"; chainId: number; target: string; label: string };
 type Raised = { target: string; kind: string; chainId: number; event: string; severity: "high" | "medium" | "info"; detail: string; block: bigint };
@@ -75,6 +80,64 @@ async function check(t: Target): Promise<Raised[]> {
   return out;
 }
 
+const readJson = (...p: string[]) => (existsSync(repoPath(...p)) ? JSON.parse(readFileSync(repoPath(...p), "utf8")) : null);
+const SWARM_REF = /^[0-9a-f]{64}$/;
+
+/** Swarm evidence health: the postage batch TTL and the retrievability of every evidence reference we know. */
+async function evidenceHealth(): Promise<Raised[]> {
+  const health = await beeHealth();
+  if (!health) {
+    console.log("Swarm evidence: Bee node not reachable, skipped");
+    return [];
+  }
+  const out: Raised[] = [];
+  const block = await sep.getBlockNumber().catch(() => 0n); // postage batches live on Sepolia
+  const raise = (target: string, detail: string) => out.push({ target, kind: "swarm", chainId: 11155111, event: "evidence-at-risk", severity: "medium", detail: detail.slice(0, 128), block });
+
+  // the batch the evidence was uploaded with (evidence/swarm/swarm.json), else the usable one with the most time left
+  const swarmRecord = readJson("evidence", "swarm", "swarm.json");
+  const all = await stamps();
+  const wanted: string | undefined = swarmRecord?.postageBatch?.id;
+  const batch = wanted ? all.find((s) => s.batchID === wanted) : all.filter((s) => s.usable).sort((a, b) => b.batchTTL - a.batchTTL)[0];
+  if (!batch) {
+    console.log(`  ⚠️ postage batch ${wanted ?? "(none)"} not on our Bee node`);
+    raise(wanted ?? "postage-batch", `Swarm postage batch ${(wanted ?? "none").slice(0, 8)} not found: evidence uploaded with it may stop being served`);
+  } else {
+    const h = batch.batchTTL / 3600;
+    console.log(`  postage batch ${batch.batchID.slice(0, 8)}: TTL ${h.toFixed(1)} h${batch.usable ? "" : " (not usable)"}`);
+    if (batch.batchTTL < 24 * 3600) {
+      console.log(`  ⚠️ postage batch ${batch.batchID.slice(0, 8)} has under 24 h left`);
+      raise(batch.batchID, `Swarm postage batch ${batch.batchID.slice(0, 8)}: under 24 h of storage left; top it up or the evidence files stop being served`);
+    }
+  }
+
+  // references: the local upload records plus every swarmRef on the publisher's live Arkiv entities
+  const refs = new Set<string>();
+  for (const r of Object.values((swarmRecord?.refs ?? {}) as Record<string, { reference: string }>)) refs.add(r.reference);
+  const disc = readJson("evidence", "discovery", "arkiv-publish.json");
+  if (disc?.swarmRef) refs.add(disc.swarmRef);
+  const pub = arkivPublic();
+  for (const schema of [Exposure, NameCheck, Aboard]) {
+    try {
+      for (const e of await liveEntities(pub, schema, PUBLISHER, ["swarmRef"])) if (e.swarmRef?.value) refs.add(String(e.swarmRef.value));
+    } catch (e) {
+      console.log(`  could not list ${schema.name} swarmRefs (${String((e as Error).message).split("\n")[0]!.slice(0, 80)})`);
+    }
+  }
+  const list = [...refs].map((r) => r.toLowerCase()).filter((r) => SWARM_REF.test(r));
+  const results = await Promise.allSettled(list.map((r) => isRetrievable(r)));
+  let ok = 0;
+  results.forEach((res, i) => {
+    const ref = list[i]!;
+    if (res.status === "rejected") return console.log(`  stewardship ${ref.slice(0, 8)}…: check failed (${String(res.reason?.message ?? res.reason).slice(0, 80)}); will retry next pass`);
+    if (res.value) return ok++;
+    console.log(`  ⚠️ Swarm ref ${ref} is not retrievable`);
+    raise(ref, `Swarm evidence ${ref.slice(0, 12)}… is not retrievable from the network: re-upload it`);
+  });
+  console.log(`  ${ok}/${list.length} evidence references retrievable`);
+  return out;
+}
+
 async function pass() {
   const raised: Raised[] = [];
   for (const t of config.targets) {
@@ -86,7 +149,21 @@ async function pass() {
       console.log(`${t.label}: check failed (${String((e as Error).message).split("\n")[0]!.slice(0, 100)}); will retry next pass`);
     }
   }
+  try {
+    console.log("Swarm evidence:");
+    const a = await evidenceHealth();
+    raised.push(...a);
+    if (a.length) console.log(`Swarm evidence: ${a.map((x) => `${x.severity.toUpperCase()} ${x.event}`).join(", ")}`);
+  } catch (e) {
+    console.log(`Swarm evidence: check failed (${String((e as Error).message).split("\n")[0]!.slice(0, 100)}); will retry next pass`);
+  }
   const fresh = raised.filter((r) => !state.alerted.includes(`${r.target.toLowerCase()}:${r.event}:${r.detail}`));
+  if (!hasFlag("--no-arkiv") && !hasWriterKey()) {
+    // read-only: report, but leave the state alone so a later pass with the key still raises these
+    console.log(`read-only (no DEV_PRIVATE_KEY): ${fresh.length} new alert(s), not written to Arkiv, state not saved`);
+    for (const r of fresh) console.log(`  ${r.severity.toUpperCase()} ${r.event} ${r.target}: ${r.detail}`);
+    return;
+  }
   for (const r of fresh) state.alerted.push(`${r.target.toLowerCase()}:${r.event}:${r.detail}`);
   saveState();
   if (!fresh.length) return console.log("no new alerts");
@@ -112,7 +189,6 @@ async function pass() {
     console.log(`Arkiv batch ${res.txHash}: ${watches.length} watch entries, ${alerts.length} alerts`);
     writeFileSync(repoPath("evidence", "monitor", "last-pass.json"), JSON.stringify({ at: new Date().toISOString(), arkivTx: res.txHash, alerts: fresh }, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2));
   }
-  void eq;
 }
 
 const every = Number(argValue("--every") ?? 0);

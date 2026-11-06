@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { getAddress, isAddress, parseAbi, type Address } from "viem";
 import { normalize } from "viem/ens";
-import { eq } from "@arkiv-network/sdk/query";
-import { addr } from "@arkiv-network/sdk/schema";
+import { desc, eq } from "@arkiv-network/sdk/query";
+import { addr, u64 } from "@arkiv-network/sdk/schema";
 import { Aboard, COUNCILS, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, registeredNames, scanSafe, type ChainExposure, type HelmReport } from "@lifeboat/core";
-import { OUR_TEST_ACCOUNTS, SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
+import { OUR_TEST_ACCOUNTS, SEPOLIA_PQ_WALLETS, arkiv, arkivErrorText, chainName, expiresIn, mainnetClient, newestPer, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl, exposureEvidence, type EvidenceRecord, type Flags } from "./lib";
+import EvidenceDrawer, { ArkivLink, EvidenceButton, FlagStamp, TestTag } from "./EvidenceDrawer";
 import { SafeProof, SafeTag, type SafeRow } from "./SafeTag";
 import survey from "../../evidence/ens/survey.json";
 import { HelmWheel, LuggageTag, Pill, Radar, Rubber, STATUS_FILL, Steps, type SpokeState } from "./ui";
@@ -183,16 +184,40 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
 }
 
 /** Right-hand board: live counts from the public Q-Day registry on Arkiv. */
+type Board = {
+  exposed: string;
+  exposedRecords: bigint;
+  aboard: bigint;
+  names: string;
+  nameRecords: bigint;
+  newest: { key: string; a: string; kind: string; expiresAt: bigint }[];
+  block: bigint;
+};
+
 function RegistryBoard({ onGo }: { onGo: (t: Tab) => void }) {
-  const [d, setD] = useState<{ exposed: number; aboard: number; names: number; newest: { a: string; kind: string }[] } | null>(null);
+  const [d, setD] = useState<Board | null>(null);
+  const [failed, setFailed] = useState("");
   useEffect(() => {
     Promise.all([
-      arkiv.select({ $key: true }).from(ExposureSchema).where(eq("status", "exposed")).ownedBy(PUBLISHER).limit(100).fetch(),
-      arkiv.select({ $key: true, from: true, kind: true }).from(Aboard).ownedBy(PUBLISHER).limit(100).fetch(),
-      arkiv.select({ $key: true }).from(NameCheck).ownedBy(PUBLISHER).limit(100).fetch(),
+      arkiv.select({ $key: true, $createdAt: true, address: true, chainId: true }).from(ExposureSchema).withCount().where(eq("status", "exposed")).ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(100).fetch(),
+      arkiv.select({ $key: true, $expiresAt: true, from: true, kind: true }).from(Aboard).withCount().ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(3).fetch(),
+      arkiv.select({ $key: true, $createdAt: true, name: true, chainId: true }).from(NameCheck).withCount().ownedBy(PUBLISHER).orderBy(desc("$expiresAt")).limit(100).fetch(),
     ])
-      .then(([e, a, n]) => setD({ exposed: e.entities.length, aboard: a.entities.length, names: n.entities.length, newest: a.entities.slice(0, 3).map((x) => ({ a: x.from.value, kind: x.kind.value })) }))
-      .catch(() => setD({ exposed: 0, aboard: 0, names: 0, newest: [] }));
+      .then(([e, a, n]) => {
+        // Re-checks write new entities: count each key and each name once (its newest reading).
+        const keys = newestPer(e.entities.map((x) => ({ createdAt: x.$createdAt, id: `${x.address.value.toLowerCase()}:${x.chainId.value}` })), (x) => x.id).length;
+        const names = newestPer(n.entities.map((x) => ({ createdAt: x.$createdAt, id: `${x.name.value}:${x.chainId.value}` })), (x) => x.id).length;
+        setD({
+          exposed: `${keys}${BigInt(e.entities.length + e.skipped) < e.count ? "+" : ""}`,
+          exposedRecords: e.count,
+          aboard: a.count,
+          names: `${names}${BigInt(n.entities.length + n.skipped) < n.count ? "+" : ""}`,
+          nameRecords: n.count,
+          newest: a.entities.map((x) => ({ key: x.$key, a: x.from.value, kind: x.kind.value, expiresAt: x.$expiresAt })),
+          block: a.blockNumber,
+        });
+      })
+      .catch((e) => setFailed(arkivErrorText(e)));
   }, []);
   return (
     <aside className="board">
@@ -207,23 +232,37 @@ function RegistryBoard({ onGo }: { onGo: (t: Tab) => void }) {
       <div className="stats">
         <div>
           <div className="label">Exposed</div>
-          <div className="v">{d ? d.exposed : "…"}</div>
+          <div className="v">{d ? d.exposed : failed ? "–" : "…"}</div>
+          {d && <div className="sub">keys · {String(d.exposedRecords)} readings</div>}
         </div>
         <div>
           <div className="label">Aboard</div>
-          <div className="v green">{d ? d.aboard : "…"}</div>
+          <div className="v green">{d ? String(d.aboard) : failed ? "–" : "…"}</div>
+          {d && <div className="sub">moves</div>}
         </div>
         <div>
           <div className="label">Names</div>
-          <div className="v ink">{d ? d.names : "…"}</div>
+          <div className="v ink">{d ? d.names : failed ? "–" : "…"}</div>
+          {d && <div className="sub">names · {String(d.nameRecords)} readings</div>}
         </div>
       </div>
+      {failed && <div className="board-row note">Arkiv didn't answer: {failed}</div>}
+      {d && d.newest.length > 0 && (
+        <div className="board-row label" style={{ paddingBottom: 0, borderBottom: 0 }}>
+          Newest aboard
+        </div>
+      )}
       {d?.newest.map((n) => (
-        <div className="board-row" key={n.a + n.kind}>
+        <div className="board-row" key={n.key} style={{ flexWrap: "wrap" }}>
           <span className="sq" style={{ background: "#1d8a5b" }} />
           <span className="mono">{short(n.a)}</span>
+          <TestTag account={n.a} />
           <span className="note" style={{ marginLeft: "auto" }}>
             {n.kind === "rescue-sweep" ? "rescued" : n.kind === "ens-handover" ? "name handed over" : n.kind}
+          </span>
+          <span className="rec-meta" style={{ flexBasis: "100%", paddingLeft: 24 }}>
+            <span>{expiresIn(n.expiresAt, d.block)}</span>
+            <ArkivLink entityKey={n.key} />
           </span>
         </div>
       ))}
@@ -249,7 +288,9 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
   const [err, setErr] = useState("");
   const [step, setStep] = useState(0);
   const [active, setActive] = useState<number | null>(null);
-  const [published, setPublished] = useState<{ verdict: string; block: string; key: string; swarmRef?: string }[] | null>(null);
+  const [published, setPublished] = useState<{ verdict: string; block: string; key: string; expiresAt: bigint; ev?: EvidenceRecord }[] | null>(null);
+  const [arkivBlock, setArkivBlock] = useState(0n);
+  const [ev, setEv] = useState<EvidenceRecord | null>(null);
   const [secs, setSecs] = useState(0);
 
   useEffect(() => {
@@ -259,13 +300,28 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
       .then((r) => live && (setReport(r), setSecs((Date.now() - t0) / 1000)))
       .catch((e) => live && setErr(String(e?.shortMessage ?? e?.message ?? e).slice(0, 240)))
       .finally(() => live && onDone());
+    // Only the Lifeboat publisher's verdicts count: anyone can write a lifeboat.name.v1 entity.
     arkiv
-      .select({ $key: true, verdict: true, checkedBlock: true, swarmRef: true })
+      .select({ $key: true, $expiresAt: true, verdict: true, checkedBlock: true, swarmRef: true, evidenceHash: true })
       .from(NameCheck)
-      .where(eq("name", name))
+      .where(eq("name", name), eq("chainId", u64(11155111n)))
+      .ownedBy(PUBLISHER)
+      .orderBy(desc("$expiresAt"))
       .limit(5)
       .fetch()
-      .then((res) => live && setPublished(res.entities.map((e) => ({ verdict: e.verdict.value, block: String(e.checkedBlock.value), key: e.$key, swarmRef: e.swarmRef?.value }))))
+      .then((res) => {
+        if (!live) return;
+        setArkivBlock(res.blockNumber);
+        setPublished(
+          res.entities.map((e) => ({
+            verdict: e.verdict.value,
+            block: String(e.checkedBlock.value),
+            key: e.$key,
+            expiresAt: e.$expiresAt,
+            ev: e.swarmRef ? { key: e.$key, kind: "name" as const, swarmRef: e.swarmRef.value, evidenceHash: e.evidenceHash?.value, name, verdict: e.verdict.value, block: String(e.checkedBlock.value) } : undefined,
+          })),
+        );
+      })
       .catch(() => live && setPublished([]));
     return () => {
       live = false;
@@ -385,49 +441,90 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
           ) : published.length === 0 ? (
             <p className="note">No published verdict for this name yet.</p>
           ) : (
-            published.map((p) => (
+            published.map((p, i) => (
               <div key={p.key} style={{ marginTop: 8 }}>
-                <Pill status={p.verdict === "protected" ? "pq" : "exposed"}>{p.verdict}</Pill> <span className="muted">at Sepolia block {p.block}</span>
-                <div className="note mono">
-                  Arkiv entity {short(p.key, 8)}
-                  {p.swarmRef && (
+                <Pill status={p.verdict === "protected" ? "pq" : p.verdict === "unknown" ? "not-seen" : "exposed"}>{p.verdict}</Pill>{" "}
+                <span className="muted">at Sepolia block {Number(p.block).toLocaleString("en-US")}</span> {i === 0 && <span className="test-tag latest">latest</span>}
+                <div className="rec-meta" style={{ marginTop: 2 }}>
+                  <span>{expiresIn(p.expiresAt, arkivBlock)}</span>
+                  <ArkivLink entityKey={p.key} />
+                  {p.ev && (
                     <>
-                      {" · "}
-                      <a href={swarmUrl(p.swarmRef)} target="_blank" rel="noreferrer">
-                        full report on Swarm ↗
+                      <a className="arkiv-link" href={swarmUrl(p.ev.swarmRef)} target="_blank" rel="noreferrer">
+                        Swarm ↗
                       </a>
+                      <EvidenceButton onOpen={() => setEv(p.ev!)} />
                     </>
                   )}
                 </div>
               </div>
             ))
           )}
+          {published && published.length > 0 && (
+            <p className="note" style={{ marginBottom: 0 }}>
+              Signed by the Lifeboat publisher, newest first.
+            </p>
+          )}
         </div>
       </div>
+      {ev && <EvidenceDrawer swarmRef={ev.swarmRef} records={[ev]} title={`Helm check · ${name}`} onClose={() => setEv(null)} />}
     </div>
   );
 }
 
 function AddressPanel({ address, onDone }: { address: Address; onDone: () => void }) {
   const [rows, setRows] = useState<ChainExposure[] | null>(null);
-  const [records, setRecords] = useState<{ ico: string; text: string }[] | null>(null);
+  const [records, setRecords] = useState<{ key: string; ico: string; text: string; expiresAt: bigint; flags?: Flags; ev?: EvidenceRecord }[] | null>(null);
+  const [arkivBlock, setArkivBlock] = useState(0n);
+  const [ev, setEv] = useState<EvidenceRecord | null>(null);
 
   useEffect(() => {
     let live = true;
     checkExposure(address)
       .then((r) => live && setRows(r))
       .finally(() => live && onDone());
+    // Only the Lifeboat publisher's records are shown as fact: anyone can write an entity with these schemas.
+    const aboard = (side: "from" | "to") =>
+      arkiv
+        .select({ $key: true, $expiresAt: true, $creationFlags: true, from: true, to: true, kind: true, txHash: true, swarmRef: true, evidenceHash: true })
+        .from(Aboard)
+        .where(eq(side, addr(address)))
+        .ownedBy(PUBLISHER)
+        .orderBy(desc("$expiresAt"))
+        .limit(10)
+        .fetch();
     Promise.all([
-      arkiv.select({ $key: true, status: true, chainId: true, via: true }).from(ExposureSchema).where(eq("address", addr(address))).limit(10).fetch(),
-      arkiv.select({ $key: true, from: true, to: true, kind: true }).from(Aboard).where(eq("from", addr(address))).limit(10).fetch(),
-      arkiv.select({ $key: true, from: true, to: true, kind: true }).from(Aboard).where(eq("to", addr(address))).limit(10).fetch(),
+      arkiv
+        .select({ $key: true, $createdAt: true, $expiresAt: true, address: true, status: true, chainId: true, via: true, checkedBlock: true, swarmRef: true, evidenceHash: true })
+        .from(ExposureSchema)
+        .where(eq("address", addr(address)))
+        .ownedBy(PUBLISHER)
+        .orderBy(desc("$expiresAt"))
+        .limit(30)
+        .fetch(),
+      aboard("from"),
+      aboard("to"),
     ])
       .then(([ex, outgoing, incoming]) => {
         if (!live) return;
+        setArkivBlock(ex.blockNumber);
+        // Re-checks write new entities: the newest reading per network.
+        const readings = newestPer(
+          ex.entities.map((e) => ({ createdAt: e.$createdAt, e })),
+          (x) => String(x.e.chainId.value),
+        );
+        const aboardEv = (e: (typeof outgoing.entities)[number]): EvidenceRecord | undefined =>
+          e.swarmRef ? { key: e.$key, kind: "aboard", swarmRef: e.swarmRef.value, evidenceHash: e.evidenceHash?.value, txHash: e.txHash.value } : undefined;
         setRecords([
-          ...ex.entities.map((e) => ({ ico: "📌", text: `${e.status.value} on chain ${e.chainId.value} (found via ${e.via.value})` })),
-          ...outgoing.entities.map((e) => ({ ico: "🛟", text: `moved to post-quantum account ${short(e.to.value)} (${e.kind.value})` })),
-          ...incoming.entities.map((e) => ({ ico: "🛟", text: `is a post-quantum account; received from ${short(e.from.value)} (${e.kind.value})` })),
+          ...readings.map(({ e }) => ({
+            key: e.$key,
+            ico: "📌",
+            text: `${e.status.value} on ${chainName(String(e.chainId.value))} (found via ${e.via.value}, block ${Number(e.checkedBlock.value).toLocaleString("en-US")})`,
+            expiresAt: e.$expiresAt,
+            ev: e.swarmRef ? exposureEvidence(e.$key, e) : undefined,
+          })),
+          ...outgoing.entities.map((e) => ({ key: e.$key, ico: "🛟", text: `moved to post-quantum account ${short(e.to.value)} (${e.kind.value})`, expiresAt: e.$expiresAt, flags: e.$creationFlags, ev: aboardEv(e) })),
+          ...incoming.entities.map((e) => ({ key: e.$key, ico: "🛟", text: `is a post-quantum account; received from ${short(e.from.value)} (${e.kind.value})`, expiresAt: e.$expiresAt, flags: e.$creationFlags, ev: aboardEv(e) })),
         ]);
       })
       .catch(() => live && setRecords([]));
@@ -496,13 +593,28 @@ function AddressPanel({ address, onDone }: { address: Address; onDone: () => voi
         ) : records.length === 0 ? (
           <span className="note">Nothing published for this key yet.</span>
         ) : (
-          records.map((r, i) => (
-            <div key={i}>
+          records.map((r) => (
+            <div key={r.key} style={{ marginTop: 4 }}>
               {r.ico} {r.text}
+              <div className="rec-meta" style={{ paddingLeft: 24 }}>
+                {r.flags && <FlagStamp flags={r.flags} />}
+                <span>{expiresIn(r.expiresAt, arkivBlock)}</span>
+                <ArkivLink entityKey={r.key} />
+                {r.ev && (
+                  <>
+                    <a className="arkiv-link" href={swarmUrl(r.ev.swarmRef)} target="_blank" rel="noreferrer">
+                      Swarm ↗
+                    </a>
+                    <EvidenceButton onOpen={() => setEv(r.ev!)} />
+                  </>
+                )}
+              </div>
             </div>
           ))
         )}
+        {records && records.length > 0 && <div className="note">Signed by the Lifeboat publisher · newest reading per network.</div>}
       </div>
+      {ev && <EvidenceDrawer swarmRef={ev.swarmRef} records={[ev]} title={`Public registry · ${short(address)}`} onClose={() => setEv(null)} />}
     </LuggageTag>
   );
 }

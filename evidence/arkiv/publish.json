@@ -1,7 +1,46 @@
 {
   "writer": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
-  "txHash": "0x1d0dc48a20423f992c3537ae408ed8106ec96a9e587c63271c63228d1ed180fd",
-  "entities": [
+  "txHash": "0x5f3af277ae026b93a5a6807e71ea2ed1485ea63e1baaab1863686f9f734e4b74",
+  "created": [
+    {
+      "schema": "lifeboat.leaf.v1",
+      "id": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e:2:0x5664f3af8b515c37f88ba59ac5e52b0366e1f3c39e47f230541072b7adaea6a5",
+      "key": "0x9c72a214c49875392cc1b6322ac3081147e8768af4050f3570ff93cb4a951ab5"
+    }
+  ],
+  "updated": [
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0x555b4f232d65ed910f30f8897fa83705e35824dc:1337",
+      "key": "0x9a8a527dddfee713addce67884e4a79848c1e1ee7f338987ed51b8a5479a4db5"
+    },
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0x9fb5ba369c59a94f51969d76502a9283fed253e5:1337",
+      "key": "0x83ca7a4d10421304b2a6ccb92a5baa637092c68bf33c7ded064aabc6641a60f4"
+    },
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f:11155111",
+      "key": "0xdde9ae131bbd7eecde745625387367fe7f527da553e8a1969d276abcc4951101"
+    },
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0xe8af54d7bcfcfb7ae380fd3be1dabcd6453642f6:11155111",
+      "key": "0x3c66067099c830ee10f8ba1fac3949eaabdb8780013551e5daee40fe4a61772c"
+    },
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0xbe6512bbe9f0884f1f1a2f1a2881949a8fe1e630:11155111",
+      "key": "0xfb6a76a0c71b8190655b2a03dd398ffeb2de6f60793ea26c5decedf4ec791e10"
+    },
+    {
+      "schema": "lifeboat.exposure.v1",
+      "id": "0xbac277e47dd7b95c04bb3517b76c1dd9151a054a:11155111",
+      "key": "0x6f5a59938af15c0edf670be974fcc4abb45da1605ab7322b8e0a7f9e154f203f"
+    }
+  ],
+  "extended": [
     "0x9a8a527dddfee713addce67884e4a79848c1e1ee7f338987ed51b8a5479a4db5",
     "0x83ca7a4d10421304b2a6ccb92a5baa637092c68bf33c7ded064aabc6641a60f4",
     "0xdde9ae131bbd7eecde745625387367fe7f527da553e8a1969d276abcc4951101",
@@ -9,16 +48,38 @@
     "0xfb6a76a0c71b8190655b2a03dd398ffeb2de6f60793ea26c5decedf4ec791e10",
     "0x6f5a59938af15c0edf670be974fcc4abb45da1605ab7322b8e0a7f9e154f203f"
   ],
-  "checks": [
+  "unchanged": [
     {
-      "claim": "frame tx with leaf 1 landed",
-      "ok": true,
-      "detail": "0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0 on chain 1337"
+      "schema": "lifeboat.leaf.v1",
+      "id": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e:0:0x7177b2a8080aff0bb221ed4d586837aed9c2ec73ce5e10863ce9fcb68ff8205e",
+      "key": "0xb9030446825b61b096f5d790deffa331ec3cf9fe2419c16c420f96660bce2ee6"
     },
     {
-      "claim": "on-chain leaf floor is past leaf 1",
+      "schema": "lifeboat.aboard.v1",
+      "id": "0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3:*",
+      "key": "0x1f1720fc1290711ba113ef5655d20e30c55741c5604e11142858c98078a479d1"
+    },
+    {
+      "schema": "lifeboat.leaf.v1",
+      "id": "0x66e62586006341ac1446701f79124740ea0e333b6a456414a014d7647825c015:0:0x7fb11bc36ce4402b7a95b7dbbea5e7dd0b8ad6b0ac352eb2f2160dabcec62ebf",
+      "key": "0x3fced31a6769635466e3c5e36df985b20d43c720f5b23992cf2faf1bb02ac5dc"
+    },
+    {
+      "schema": "lifeboat.aboard.v1",
+      "id": "0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a:*",
+      "key": "0x45a712d70c982122061c19f993488ef4109f99cb7e572b8807fe9e5f6355b587"
+    }
+  ],
+  "checks": [
+    {
+      "claim": "frame tx with leaf 2 landed",
       "ok": true,
-      "detail": "slot 2 = 3 (lowest usable leaf 2)"
+      "detail": "0x115659a935d1fe86a81a445f05d2c20ced792bec617ba43ff0fab4ce07345784 on chain 1337"
+    },
+    {
+      "claim": "on-chain leaf floor is past leaf 2",
+      "ok": true,
+      "detail": "slot 2 = 4 (lowest usable leaf 3)"
     },
     {
       "claim": "rescue sweep landed",
@@ -43,8 +104,8 @@
     {
       "claim": "fresh Helm check of lifeboatpq.eth",
       "ok": true,
-      "detail": "verdict protected, owner 0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F, block 12071986"
+      "detail": "verdict protected, owner 0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F, block 12075903"
     }
   ],
-  "publishedAt": "2026-11-05T20:56:56.870Z"
+  "publishedAt": "2026-11-06T10:13:58.113Z"
 }
