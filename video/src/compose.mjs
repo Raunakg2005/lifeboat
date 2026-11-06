@@ -3,7 +3,7 @@
 //   --script submission: the silent real-voice cut, plus out/teleprompter.html to read along while it plays.
 // Set VIDEO_PYTHON to choose the Python; the default is the local faster-whisper venv.
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +16,15 @@ const name = { rehearsal: "lifeboat-walkthrough", submission: "lifeboat-submissi
 const candidates = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean);
 const py = candidates.find((c) => c === "python" || existsSync(c));
 execFileSync(py, ["-I", join(ROOT, "src", "compose.py"), cache, join(ROOT, "out"), name], { stdio: "inherit" });
+
+// the real ESP32 footage over the hardware beat, when the clip is there (video/clips/, kept out of git)
+const clip = join(ROOT, "clips", "esp32-ens.mp4");
+if (SUBMISSION && existsSync(clip)) {
+  const appOnly = join(ROOT, "out", `${name}-app-only.mp4`);
+  renameSync(join(ROOT, "out", `${name}.mp4`), appOnly);
+  execFileSync(py, ["-I", join(ROOT, "src", "hardware_insert.py"), appOnly, clip, join(ROOT, "out", `${name}.mp4`), join(cache, "timeline.json")], { stdio: "inherit" });
+}
+if (SUBMISSION) execFileSync(process.execPath, [join(ROOT, "src", "script-doc.mjs")], { stdio: "inherit" });
 
 if (SUBMISSION) {
   const tl = JSON.parse(readFileSync(join(cache, "timeline.json"), "utf8"));
