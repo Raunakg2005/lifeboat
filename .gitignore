@@ -40,6 +40,9 @@ tmp-build/
 # walkthrough video: cached TTS, frames and renders
 video/cache/
 video/out/
+# your own recordings: the phone clip of the device and the voice-over stay local
+video/clips/
+video/voice/
 
 # Monitor worker state (what it has seen and already alerted)
 scripts/.monitor-state.json
