@@ -6,7 +6,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SEGMENTS, spoken } from "./narration.mjs";
+const argScript = process.argv.indexOf("--script");
+const SCRIPT = argScript > 0 ? process.argv[argScript + 1] : "rehearsal";
+const { SEGMENTS, spoken } = await import({ rehearsal: "./narration.mjs", ens: "./ens-story.mjs" }[SCRIPT] ?? "./narration.mjs");
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE = join(ROOT, "cache", "tts");
@@ -62,6 +64,7 @@ console.log(`${todo.length} new lines to synthesise, ${plan.flatMap((s) => s.lin
 sapi(todo.map((l) => ({ text: l.say, out: l.file })));
 
 const timeline = plan.map((s) => ({ id: s.id, lines: s.lines.map((l) => ({ text: l.text, file: l.file, seconds: Number(wavSeconds(readFileSync(l.file)).toFixed(3)) })) }));
-writeFileSync(join(ROOT, "cache", "timeline-audio.json"), JSON.stringify({ voice: `sapi:${voice}`, segments: timeline }, null, 2));
+mkdirSync(join(ROOT, "cache", SCRIPT === "rehearsal" ? "" : SCRIPT), { recursive: true });
+writeFileSync(join(ROOT, "cache", SCRIPT === "rehearsal" ? "" : SCRIPT, "timeline-audio.json"), JSON.stringify({ voice: `sapi:${voice}`, segments: timeline }, null, 2));
 const total = timeline.flatMap((s) => s.lines).reduce((n, l) => n + l.seconds, 0);
 console.log(`narration: ${total.toFixed(1)} s of speech in ${timeline.length} beats`);

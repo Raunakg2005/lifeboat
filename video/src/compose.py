@@ -104,7 +104,7 @@ def ts(s, sep=","):
 with open(os.path.join(OUT, f"{NAME}.srt"), "w", encoding="utf-8") as f:
     for i, line in enumerate(tl["lines"], 1):
         f.write(f"{i}\n{ts(line['t'])} --> {ts(line['t'] + line['seconds'])}\n{line['text']}\n\n")
-with open(os.path.join(OUT, f"{NAME}-chapters.txt" if SILENT else "chapters.txt"), "w", encoding="utf-8") as f:
+with open(os.path.join(OUT, "chapters.txt" if NAME == "lifeboat-walkthrough" else f"{NAME}-chapters.txt"), "w", encoding="utf-8") as f:
     for c in tl["chapters"]:
         m, s = divmod(int(max(0, c["t"])), 60)
         f.write(f"{m}:{s:02} {c['title']}\n")

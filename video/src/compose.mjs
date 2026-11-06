@@ -8,9 +8,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SUBMISSION = process.argv.includes("submission");
-const cache = SUBMISSION ? join(ROOT, "cache", "submission") : join(ROOT, "cache");
-const name = SUBMISSION ? "lifeboat-submission-silent" : "lifeboat-walkthrough";
+const argScript = process.argv.indexOf("--script");
+const SCRIPT = argScript > 0 ? process.argv[argScript + 1] : "rehearsal";
+const SUBMISSION = SCRIPT === "submission";
+const cache = SCRIPT === "rehearsal" ? join(ROOT, "cache") : join(ROOT, "cache", SCRIPT);
+const name = { rehearsal: "lifeboat-walkthrough", submission: "lifeboat-submission-silent", ens: "lifeboat-ens-explained" }[SCRIPT] ?? `lifeboat-${SCRIPT}`;
 const candidates = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean);
 const py = candidates.find((c) => c === "python" || existsSync(c));
 execFileSync(py, ["-I", join(ROOT, "src", "compose.py"), cache, join(ROOT, "out"), name], { stdio: "inherit" });

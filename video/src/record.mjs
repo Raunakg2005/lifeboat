@@ -7,15 +7,16 @@
 //   person needs to say it (~2.4 words a second), and the output goes to cache/submission/ for the teleprompter.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
 const argScript = process.argv.indexOf("--script");
 const SCRIPT = argScript > 0 ? process.argv[argScript + 1] : "rehearsal";
 const SUBMISSION = SCRIPT === "submission";
-const { SEGMENTS } = await import(SUBMISSION ? "./submission.mjs" : "./narration.mjs");
+const MODULES = { rehearsal: "./narration.mjs", submission: "./submission.mjs", ens: "./ens-story.mjs" };
+const { SEGMENTS } = await import(MODULES[SCRIPT] ?? "./narration.mjs");
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CACHE = SUBMISSION ? join(ROOT, "cache", "submission") : join(ROOT, "cache");
+const CACHE = SCRIPT === "rehearsal" ? join(ROOT, "cache") : join(ROOT, "cache", SCRIPT);
 const FRAMES = join(CACHE, "frames");
 const argUrl = process.argv.indexOf("--url");
 const URL0 = (argUrl > 0 ? process.argv[argUrl + 1] : "http://localhost:5173").replace(/\/+$/, "");
@@ -104,6 +105,23 @@ const p = {
   async scrollBy(dy) {
     const y = await page.evaluate(() => window.scrollY);
     await this.scrollTo(y + dy);
+  },
+  async explainer(n) {
+    const url = pathToFileURL(join(ROOT, "src", "ens-explainer.html")).href;
+    if (!page.url().startsWith(url)) {
+      await page.goto(`${url}#${n}`);
+      await page.evaluate(() => document.fonts.ready);
+    }
+    await page.evaluate((k) => window.scene(k), n);
+    await sleep(0.4);
+  },
+  async run(code) {
+    await page.evaluate(code);
+  },
+  async goApp(hash) {
+    await page.goto(`${URL0}/#${hash}`);
+    await page.evaluate(() => document.fonts.ready);
+    await sleep(0.8);
   },
   async scrollToSel(selector, offset = -80) {
     const loc = page.locator(selector).first();
