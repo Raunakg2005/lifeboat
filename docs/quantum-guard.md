@@ -34,7 +34,18 @@ Safe [`0x94E8…51B8`](https://sepolia.etherscan.io/address/0x94E8Da267c6356B8f5
 | The PQ key approves that message (leaf 2), relayed by anyone | ✅ block 12,074,465 | [`0xf1ca…9a51`](https://sepolia.etherscan.io/tx/0xf1caeb757568e1caaecce8012ae00eda292b43c2031b4570238276b81b829a51) |
 | ERC-1271 after the approval, owner's signature | **valid** | — |
 
-Each leaf was reserved and saved to disk before it signed. Three of 256 are used.
+Each leaf was reserved and saved to disk before it signed. Three of 256 were used in this run.
+
+### Against Uniswap's real Permit2 (Sepolia, 6 Nov 2026)
+Permit2 checks a contract's signature with ERC-1271, so it asks the Safe, which asks Quantum Guard. Same Safe, same guard; [Permit2](https://sepolia.etherscan.io/address/0x000000000022D473030F116dDEE9F6B43aC78BA3) is Uniswap's canonical deployment. The permit lets the dev wallet spend 1 USDC ([Circle's Sepolia USDC](https://sepolia.etherscan.io/address/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238)) from the Safe for 30 days.
+
+| Step | Result | Tx |
+|---|---|---|
+| `Permit2.permit` with the owners' signature only | ❌ **refused by Permit2** (`InvalidContractSignature`), block 12,077,800 | [`0x3324…6300`](https://sepolia.etherscan.io/tx/0x332438afa72e317222b584bc9d8d3efe057a57954745d1d3b73115191b4b6300) |
+| The PQ key approves that permit (leaf 3), relayed by anyone | ✅ block 12,077,801 | [`0x24eb…6a89`](https://sepolia.etherscan.io/tx/0x24eb16694f5b096cbd038344b985415f78f963a0b3df0d39d3a81937c8b36a89) |
+| The same `Permit2.permit` call, same owner signature | ✅ **accepted**: allowance 1 USDC, Permit2 nonce 0 → 1, block 12,077,802 | [`0xa77c…c0e8`](https://sepolia.etherscan.io/tx/0xa77c08800c605f2047585ef9f7c42f6e1867691e075750649615f7850256c0e8) |
+
+Before anything was sent, the script checked that Permit2's EIP-712 domain separator matches ours, that the guard is the Safe's fallback handler, and that the local PQ key is the guard's. Raw evidence: [`evidence/guard/permit2.json`](../evidence/guard/permit2.json). Run it: `pnpm --filter @lifeboat/scripts guard-permit2`.
 
 ## Tests (Foundry, real WOTS+C signatures)
 The tests use a minimal Safe with Safe 1.4.1's order of checks in `execTransaction`: owners checked, nonce moves on, then the guard.

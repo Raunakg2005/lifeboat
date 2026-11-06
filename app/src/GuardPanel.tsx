@@ -10,6 +10,12 @@ const cosigned = find("pay 0.001 ETH to the treasury");
 const handler = find("Safe tx: setFallbackHandler");
 const approve = find("PQ key approves");
 const ok1271 = (v: string) => v === "0x1626ba7e";
+// the same Safe against Uniswap's real Permit2 (scripts/src/guard-permit2.ts → evidence/guard/permit2.json)
+const p2Files = import.meta.glob<{ default: { steps: Step[]; permitRevertOwnersOnly?: string; allowanceAfter?: { amount: string } } }>("../../evidence/guard/permit2.json", { eager: true });
+const p2 = Object.values(p2Files)[0]?.default;
+const p2Refused = p2?.steps.find((s) => s.what.startsWith("Permit2.permit") && s.status !== "success");
+const p2Approve = p2?.steps.find((s) => s.what.startsWith("PQ key approves"));
+const p2Accepted = p2?.steps.find((s) => s.what.startsWith("Permit2.permit") && s.status === "success");
 
 function TxLink({ s }: { s?: Step }) {
   if (!s) return null;
@@ -76,6 +82,21 @@ export default function GuardPanel() {
             <TxLink s={approve} />
           </div>
         </div>
+        {p2Refused && p2Accepted && (
+          <div className="qg-row">
+            <div>
+              <div className="qg-who">Uniswap's Permit2, for real</div>
+              <div className="note">a 1 USDC permit from the Safe, checked by Permit2 itself</div>
+            </div>
+            <div className="qg-chips">
+              <span className="pill pq">owners only: refused{p2.permitRevertOwnersOnly ? ` (${p2.permitRevertOwnersOnly})` : ""}</span>
+              <span className="pill pq">+ PQ approval: accepted</span>
+            </div>
+            <div className="qg-proof">
+              <TxLink s={p2Refused} /> <TxLink s={p2Approve} /> <TxLink s={p2Accepted} />
+            </div>
+          </div>
+        )}
         <div className="board-note">
           The guard was installed with the owners' signatures, then made the Safe's signature handler in its first co-signed transaction (<TxLink s={handler} />). Each one-time leaf is spent on-chain
           before the signature is checked: {ev.leavesUsed} of 256 used. Credit: the co-signer guard pattern comes from Safe Research. ·{" "}

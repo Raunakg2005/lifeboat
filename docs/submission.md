@@ -38,7 +38,7 @@ The tools and data are free; protocols pay for monitoring and help migrating.
 
 ## How it's made
 ```
-Contracts. The post-quantum account and the rescue paymaster are pure Yul, using verbatim for the EIP-8141 opcodes (APPROVE, SIGPARAM, SIGDATACOPY, TXPARAM, FRAMEPARAM, FRAMEDATALOAD). The WOTS+C core is templated so the account and a Foundry harness compile the same code; a generator unrolls the hash-chain walk (68k → 45k gas) and the digit sum uses SWAR. VERIFY costs 52,367 gas for a 2,336-byte witness. Quantum Guard (Solidity, via-IR for one file) is a Safe 1.4.1 transaction guard plus ERC-1271 handler with a leaf bitmap, key rotation and a timelocked recovery the PQ key can veto; a CREATE2 factory installs it in one MultiSendCallOnly transaction. 36 Foundry tests run against vectors from the TypeScript signer.
+Contracts. The post-quantum account and the rescue paymaster are pure Yul, using verbatim for the EIP-8141 opcodes (APPROVE, SIGPARAM, SIGDATACOPY, TXPARAM, FRAMEPARAM, FRAMEDATALOAD). The WOTS+C core is templated so the account and a Foundry harness compile the same code; a generator unrolls the hash-chain walk (68k → 45k gas) and the digit sum uses SWAR. VERIFY costs 52,367 gas for a 2,336-byte witness. Quantum Guard (Solidity, via-IR for one file) is a Safe 1.4.1 transaction guard plus ERC-1271 handler with a leaf bitmap, key rotation and a timelocked recovery the PQ key can veto; a CREATE2 factory installs it in one MultiSendCallOnly transaction. Against Uniswap's real Permit2 on Sepolia, a permit signed by the owners alone is refused (InvalidContractSignature) and the same permit is accepted after the PQ approval. 36 Foundry tests run against vectors from the TypeScript signer.
 
 Frame transactions are built with @forshtat/hegota-support, dry-run with ethrex_simulateFrameTransaction and sent through the ERC-8421 alt mempool. The rescue shows the same signed transaction rejected by the public mempool (StorageReadNonSender) and by the unstaked alt mempool, then included once the paymaster is staked; five attack variants are refused.
 
@@ -69,7 +69,7 @@ Quantum: Shor's algorithm for the elliptic-curve discrete log in Qiskit, on toy 
 | Web frameworks | React, Vite |
 | Databases | Arkiv (type it if it isn't listed); storage: Swarm |
 | Design tools | none |
-| Other | ENSv2, Safe, ESP32 (Arduino), Web Serial, Docker, Playwright, Qiskit, IBM Quantum (ibm_fez), WOTS+C |
+| Other | ENSv2, Safe, Uniswap Permit2, ESP32 (Arduino), Web Serial, Docker, Playwright, Qiskit, IBM Quantum (ibm_fez), WOTS+C |
 
 ## Prizes
 - **Finalist + partner prizes**, with these three partner picks:
@@ -95,7 +95,7 @@ Arkiv is Lifeboat's public Q-Day registry: exposure readings that expire after 2
 ```
 
 ### The prize form, per partner (short "why", code link, feedback)
-Track: **Building from Scratch**. Submission type: **Top 10 Finalist & Partner Prizes** (live judging Sat 7 Nov, 09:30 IST). Other partners' technologies: none beyond these three. Ease ratings are the team's call; the numbers below are only a suggestion.
+Track: **Building from Scratch**. Submission type: **Top 10 Finalist & Partner Prizes** (live judging Sat 7 Nov, 09:30 IST). Other partners' technologies: **Uniswap Foundation** (Quantum Guard is tested against Uniswap's real Permit2 on Sepolia: blocks 12,077,800 refused, 12,077,802 accepted; `scripts/src/guard-permit2.ts`). Ease ratings are the team's call; the numbers below are only a suggestion.
 
 **Arkiv** · code: https://github.com/Raunakg2005/lifeboat/blob/0fc9eaf09f90f851200b8fb1b6a0f37135520aab/scripts/src/lib/publish.ts#L205 · ease: 7
 ```

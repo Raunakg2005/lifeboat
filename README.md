@@ -21,7 +21,7 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 ## Findings (block-stamped, lower bounds)
 - **Optimism Security Council (10 of 13):** 4 public keys by nonce → **13 of 13** counting signatures. **Base's nested 8-of-11 council: 0 → 11.** Two of four council Safes look safe by nonce and aren't. → [docs/discovery.md](docs/discovery.md)
 - **Real ENSv2 names (Sepolia, one per owner, our own excluded):** **902 of 1,011** (89%) can be steered on Q-Day, 863 of them through their resolver. Our own test name `lifeboatpq.eth` shows the way out: handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
-- **Quantum Guard on a real Safe:** a payment signed by the owners only was **refused on-chain**; the post-quantum co-signed one went through, and ERC-1271 (Permit2) now needs the PQ key too. → [docs/quantum-guard.md](docs/quantum-guard.md)
+- **Quantum Guard on a real Safe:** a payment signed by the owners only was **refused on-chain**; the post-quantum co-signed one went through. Signed messages need the PQ key too: **Uniswap's Permit2 refused a permit signed by the owners only** (block 12,077,800) and accepted the same permit after the PQ approval. → [docs/quantum-guard.md](docs/quantum-guard.md)
 - **Shor's algorithm on a real IBM quantum computer** (ibm_fez, 156 qubits) recovered our toy curve's private key from its public key: 69% of the votes went to the right key (25% by chance), 3 s of QPU time. It's a 2-bit toy key; real keys are 256-bit and safe today. → [docs/quantum-demo.md](docs/quantum-demo.md)
 - **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.2 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
 
@@ -97,6 +97,7 @@ pnpm --filter @lifeboat/app dev                       # the web app
 pnpm --filter @lifeboat/scripts helm lifeboatpq.eth   # any ENSv2 name on Sepolia
 pnpm --filter @lifeboat/scripts ens-survey           # real names, one per owner (aggregates only)
 pnpm --filter @lifeboat/scripts quantum-guard        # Quantum Guard on a real Safe (needs .env)
+pnpm --filter @lifeboat/scripts guard-permit2        # the same Safe against Uniswap's real Permit2 (needs .env)
 pnpm --filter @lifeboat/scripts guard-lifecycle      # v2: install, co-sign, veto, timelocked recovery (Sepolia)
 pnpm --filter @lifeboat/scripts monitor              # one Monitor pass (alerts to Arkiv + optional webhook)
 pnpm --filter @lifeboat/scripts e2e-protect          # Protect tab in a real browser with a test wallet (app on :5173)

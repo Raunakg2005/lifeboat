@@ -1,0 +1,58 @@
+{
+  "chainId": 11155111,
+  "startedAt": "2026-11-06T16:40:22.845Z",
+  "permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+  "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+  "safe": "0x94E8Da267c6356B8f5D292e6668252b79c3951B8",
+  "guard": "0xcba2dc40f216ed382994917add851a1a7f7e55af",
+  "steps": [
+    {
+      "what": "Permit2.permit for the Safe with the owners' signature only",
+      "hash": "0x332438afa72e317222b584bc9d8d3efe057a57954745d1d3b73115191b4b6300",
+      "block": "12077800",
+      "status": "reverted",
+      "gasUsed": "39832"
+    },
+    {
+      "what": "PQ key approves the Permit2 message (leaf 3), relayed by anyone",
+      "hash": "0x24eb16694f5b096cbd038344b985415f78f963a0b3df0d39d3a81937c8b36a89",
+      "block": "12077801",
+      "status": "success",
+      "gasUsed": "242513"
+    },
+    {
+      "what": "Permit2.permit for the Safe, owners + post-quantum approval",
+      "hash": "0xa77c08800c605f2047585ef9f7c42f6e1867691e075750649615f7850256c0e8",
+      "block": "12077802",
+      "status": "success",
+      "gasUsed": "163318"
+    }
+  ],
+  "permit": {
+    "details": {
+      "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "amount": "1000000",
+      "expiration": 1796575225,
+      "nonce": 0
+    },
+    "spender": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+    "sigDeadline": "1793990425"
+  },
+  "permitDigest": "0xc2d9d976a943e319fa868b9acc99c4307b6d98a05f967441717dd47aba393de0",
+  "safeMessageHash": "0x1e3fc3d3176d653aa3abd51f522fc6963b0738f514eca1b39d6673cc08465ea5",
+  "allowanceBefore": {
+    "amount": "0",
+    "expiration": 0,
+    "nonce": 0
+  },
+  "erc1271OwnersOnly": "0xffffffff",
+  "permitRevertOwnersOnly": "InvalidContractSignature",
+  "pqLeaf": 3,
+  "erc1271WithPQ": "0x1626ba7e",
+  "allowanceAfter": {
+    "amount": "1000000",
+    "expiration": 1796575225,
+    "nonce": 1
+  },
+  "finishedAt": "2026-11-06T16:41:02.232Z"
+}
