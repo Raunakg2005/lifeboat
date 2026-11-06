@@ -6,7 +6,8 @@ import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVE
 import type { DeviceRequest } from "@lifeboat/core";
 import type { Hex } from "viem";
 
-export type DeviceInfo = { next: number; pubSeed: Hex; root: Hex };
+export type DeviceInfo = { next: number; pubSeed: Hex; root: Hex; pinSet: boolean; locked: boolean };
+const pinHex = (pin: string) => Array.from(new TextEncoder().encode(pin), (b) => b.toString(16).padStart(2, "0")).join("");
 export type SignedWitness = { leaf: number; counter: number; tries: number; witness: Hex };
 
 // minimal Web Serial typing (not in every TS DOM lib)
@@ -43,6 +44,11 @@ const REASONS: Record<string, string> = {
   disconnected: "The device disconnected. Plug it in and connect again.",
   "no-reply": "The device didn't answer. Check the cable, then connect again.",
   busy: "The device is still working on the previous request.",
+  locked: "The device is locked: enter its PIN first.",
+  "bad-pin": "Wrong PIN. After 3 wrong tries in a row the device makes you wait longer each time.",
+  "bad-pin-format": "A PIN is 4 to 32 plain characters.",
+  "chain-not-allowed": "This device signs for Sepolia and the EIP-8141 devnet only.",
+  "no-pin": "This device has no PIN set.",
 };
 export class DeviceError extends Error {
   reason: string;
@@ -212,8 +218,19 @@ export class SerialDevice {
     await this.send("WOTS|INFO");
     const parts = (await w.promise).split("|");
     if (parts[2] === "NOKEY") return (this.info = null);
-    this.info = { next: Number(parts[2]), pubSeed: `0x${parts[3]}` as Hex, root: `0x${parts[4]}` as Hex };
+    this.info = { next: Number(parts[2]), pubSeed: `0x${parts[3]}` as Hex, root: `0x${parts[4]}` as Hex, pinSet: parts.includes("pin=1"), locked: parts.includes("locked=1") };
     return this.info;
+  }
+
+  /** WOTS|UNLOCK: the PIN goes over USB to the device only; this page doesn't keep it. */
+  unlock(pin: string): Promise<DeviceInfo | null> {
+    return this.exclusive(async () => {
+      const w = this.waitFor((l) => l === "WOTS|UNLOCKED" || l.startsWith("WOTS|ERR|"), 15 * 60_000); // waits grow after wrong tries
+      await this.send(`WOTS|UNLOCK|${pinHex(pin)}`);
+      const r = await w.promise;
+      if (r !== "WOTS|UNLOCKED") throw new DeviceError(r.split("|")[2] ?? "unknown");
+      return this.infoNow();
+    });
   }
 
   /** WOTS|LEAVES: the 256 public leaf hashes; the tree is rebuilt here and must end in the device's root. */

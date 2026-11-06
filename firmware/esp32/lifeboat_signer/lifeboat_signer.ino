@@ -23,6 +23,13 @@
 //        -> WOTS|HASH|<sigHash the device computed> -> WOTS|ASK|<leaf> (waits for the button)
 //        -> WOTS|SIG|<k>/64|<chain value> x64 -> WOTS|DONE|<leaf>|<keccak of sigs>     or WOTS|ERR|<reason>
 //   WOTS|SIGN|…  (a bare hash) is refused: WOTS|ERR|blind-signing-off
+//   Only Sepolia (11155111) and the EIP-8141 devnet (1337) are signed for: WOTS|ERR|chain-not-allowed otherwise
+// PIN lock (pin.h): the seed is stored encrypted and the device is locked after power-on until the PIN is entered:
+//   WOTS|SETPIN|<pin hex>   -> (screen + BOOT) -> WOTS|PINSET        encrypts the seed; the plaintext copy is erased
+//   WOTS|UNLOCK|<pin hex>   -> WOTS|UNLOCKED  or WOTS|ERR|bad-pin|<wrong tries in a row> (waits grow after 3)
+//   WOTS|LOCK               -> WOTS|LOCKED    (the seed is wiped from memory)
+//   WOTS|WIPE               -> (hold BOOT 5 s) -> WOTS|WIPED   erases the key for good
+//   INFO ends with |pin=0/1|locked=0/1
 //   WOTS|EFUSE                         -> WOTS|EFUSE|<coding scheme of BLOCK3> (read-only, never burns)
 //   WOTS|I2C                           -> WOTS|I2C|<addresses that answer>|oled=<addr or none>; re-starts the screen if found
 //   WOTS|BENCH                         -> WOTS|BENCH|single_core_est_ms|<n>|dual_core_ms|<n>
@@ -35,6 +42,7 @@
 #include "SSD1306AsciiWire.h"
 #include "wots.h"
 #include "clear.h"
+#include "pin.h"
 #if __has_include("bootloader_random.h")
 #include "bootloader_random.h"
 #define LB_HAVE_BOOTLOADER_RANDOM 1
@@ -52,6 +60,8 @@ static const uint32_t ASK_TIMEOUT_MS = 90000;
 Preferences prefs;
 SSD1306AsciiWire oled;
 static bool have_key = false;
+static bool pin_set = false;  // the seed is stored encrypted (skx)
+static bool locked = false;   // pin_set and not unlocked since power-on: nothing can be signed
 static uint8_t sk_seed[32], pub_seed[32], root[32];
 static uint8_t leaves[lb::LEAVES][32];  // public, only needed during keygen / re-export
 static uint8_t sigs[lb::LEN][32];
@@ -184,7 +194,7 @@ static uint32_t next_leaf() { return prefs.getUInt("next", 0); }
 static void show_idle() {
   char l3[24];
   snprintf(l3, sizeof l3, have_key ? "next leaf %lu/256" : "no key yet", (unsigned long)next_leaf());
-  show("LIFEBOAT", "post-quantum signer", l3, have_key ? "clear signing on" : "");
+  show(locked ? "LOCKED" : "LIFEBOAT", locked ? "enter the PIN" : "post-quantum signer", l3, !have_key ? "" : pin_set ? (locked ? "on the laptop" : "PIN on, unlocked") : "clear signing on");
 }
 
 static void random_bytes(uint8_t* out, size_t n) {
@@ -198,7 +208,17 @@ static void random_bytes(uint8_t* out, size_t n) {
 }
 
 static void load_key() {
-  have_key = prefs.getBool("keyok", false) && prefs.getBytes("sk", sk_seed, 32) == 32 && prefs.getBytes("pub", pub_seed, 32) == 32 && prefs.getBytes("root", root, 32) == 32;
+  pin_set = prefs.getBool("pinset", false);
+  bool pub_ok = prefs.getBool("keyok", false) && prefs.getBytes("pub", pub_seed, 32) == 32 && prefs.getBytes("root", root, 32) == 32;
+  if (pin_set) {
+    // encrypted at rest: the seed only exists in memory after UNLOCK
+    have_key = pub_ok && prefs.getBytesLength("skx") == 32 && prefs.getBytesLength("salt") == 16 && prefs.getBytesLength("kchk") == 8;
+    memset(sk_seed, 0, sizeof sk_seed);
+    locked = true;
+  } else {
+    have_key = pub_ok && prefs.getBytes("sk", sk_seed, 32) == 32;
+    locked = false;
+  }
 }
 
 // ---- leaf computation on both cores ----
@@ -240,6 +260,7 @@ static uint32_t compute_leaves(const char* title) {
 static void stream_leaves_and_root(bool store) {
   bool cached = !store && prefs.getBytesLength("leaves") == sizeof leaves && prefs.getBytes("leaves", leaves, sizeof leaves) == sizeof leaves;
   if (!cached) {
+    if (locked) return (void)Serial.println("WOTS|ERR|locked");  // recomputing the tree needs the seed
     uint32_t ms = compute_leaves(store ? "KEYGEN" : "TREE");
     prefs.putBytes("leaves", leaves, sizeof leaves);  // public data: cache it so the next export is instant
     Serial.print("WOTS|TIME|leaves|");
@@ -338,8 +359,142 @@ static int ask(const cs::Screen& sc, uint32_t leaf) {
   return 0;
 }
 
+
+static bool hold_boot(uint32_t ms) {
+  uint32_t t0 = millis();
+  while (millis() - t0 < ms) {
+    if (!approve_pressed()) return false;
+    delay(10);
+  }
+  return true;
+}
+
+static void cmd_setpin(const String& hex) {
+  if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  if (locked) return (void)Serial.println("WOTS|ERR|locked");
+  uint8_t p[pin::MAX_LEN];
+  size_t n = 0;
+  cs::Field f = {hex.c_str(), hex.length()};
+  if (!cs::parse_hex(f, p, sizeof p, &n) || !pin::valid(p, n)) return (void)Serial.println("WOTS|ERR|pin-4-to-32-plain-characters");
+  screen.reset(pin_set ? "NEW PIN?" : "SET PIN?");
+  screen.add("The key will be stored");
+  screen.add("encrypted. After power");
+  screen.add("-on it stays locked");
+  screen.add("until the PIN is given.");
+  int b = ask(screen, next_leaf());
+  if (b <= 0) {
+    memset(p, 0, sizeof p);
+    show_idle();
+    return (void)Serial.println(b < 0 ? "WOTS|ERR|rejected" : "WOTS|ERR|timeout");
+  }
+  show("SETTING PIN", "stretching the PIN", "a few seconds");
+  uint8_t salt[16], key[32], tag[8], skx[32];
+  random_bytes(salt, 16);
+  pin::derive(p, n, salt, key, []() { yield(); });
+  pin::check_tag(key, tag);
+  memcpy(skx, sk_seed, 32);
+  pin::xor_seed(key, skx);
+  prefs.putBytes("skx", skx, 32);
+  prefs.putBytes("salt", salt, 16);
+  prefs.putBytes("kchk", tag, 8);
+  prefs.putUInt("pinfails", 0);
+  // the encrypted copy must decrypt back before the plaintext copy goes
+  uint8_t back[32];
+  bool ok = prefs.getBytes("skx", back, 32) == 32;
+  pin::xor_seed(key, back);
+  ok = ok && memcmp(back, sk_seed, 32) == 0;
+  memset(back, 0, sizeof back);
+  memset(key, 0, sizeof key);
+  memset(p, 0, sizeof p);
+  if (!ok) {
+    show("ERROR", "PIN not set", "key unchanged");
+    return (void)Serial.println("WOTS|ERR|persist");
+  }
+  prefs.putBool("pinset", true);
+  prefs.remove("sk");
+  pin_set = true;
+  locked = false;
+  show_idle();
+  Serial.println("WOTS|PINSET");
+}
+
+static void cmd_unlock(const String& hex) {
+  if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  if (!pin_set) return (void)Serial.println("WOTS|ERR|no-pin");
+  if (!locked) return (void)Serial.println("WOTS|UNLOCKED");
+  uint8_t p[pin::MAX_LEN];
+  size_t n = 0;
+  cs::Field f = {hex.c_str(), hex.length()};
+  if (!cs::parse_hex(f, p, sizeof p, &n) || !pin::valid(p, n)) return (void)Serial.println("WOTS|ERR|bad-pin-format");
+  uint32_t fails = prefs.getUInt("pinfails", 0);
+  for (uint32_t i = pin::backoff_seconds(fails); i > 0; i--) {  // enforced here; the count survives a reboot
+    char l2[24];
+    snprintf(l2, sizeof l2, "wait %lu s", (unsigned long)i);
+    show("LOCKED", "too many wrong PINs", l2);
+    delay(1000);
+  }
+  show("UNLOCKING", "stretching the PIN", "a few seconds");
+  uint8_t salt[16], key[32], tag[8], want[8];
+  prefs.getBytes("salt", salt, 16);
+  prefs.getBytes("kchk", want, 8);
+  pin::derive(p, n, salt, key, []() { yield(); });
+  memset(p, 0, sizeof p);
+  pin::check_tag(key, tag);
+  if (memcmp(tag, want, 8) != 0) {
+    memset(key, 0, sizeof key);
+    prefs.putUInt("pinfails", fails + 1);
+    char l2[24];
+    snprintf(l2, sizeof l2, "%lu wrong in a row", (unsigned long)(fails + 1));
+    show("WRONG PIN", l2, "still locked");
+    Serial.print("WOTS|ERR|bad-pin|");
+    return (void)Serial.println(fails + 1);
+  }
+  prefs.getBytes("skx", sk_seed, 32);
+  pin::xor_seed(key, sk_seed);
+  memset(key, 0, sizeof key);
+  prefs.putUInt("pinfails", 0);
+  locked = false;
+  show_idle();
+  Serial.println("WOTS|UNLOCKED");
+}
+
+static void cmd_lock() {
+  if (!pin_set) return (void)Serial.println("WOTS|ERR|no-pin");
+  memset(sk_seed, 0, sizeof sk_seed);
+  locked = true;
+  show_idle();
+  Serial.println("WOTS|LOCKED");
+}
+
+/** Erases the key for good. Needs BOOT held for 5 s within 30 s of the request. */
+static void cmd_wipe() {
+  if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  show("WIPE KEY?", "hold BOOT 5 s to", "erase it for good", "else wait 30 s");
+  uint32_t t0 = millis();
+  while (approve_pressed() && millis() - t0 < 2000) delay(5);  // a press that started before the request doesn't count
+  bool held = false;
+  while (!held && millis() - t0 < 30000) {
+    if (approve_pressed() && hold_boot(5000)) held = true;
+    delay(10);
+  }
+  if (!held) {
+    show_idle();
+    return (void)Serial.println("WOTS|ERR|timeout");
+  }
+  for (const char* k : {"sk", "skx", "salt", "kchk", "pinset", "pinfails", "pub", "root", "leaves", "keyok"}) prefs.remove(k);
+  prefs.putUInt("next", 0);
+  memset(sk_seed, 0, sizeof sk_seed);
+  have_key = pin_set = locked = false;
+  show("WIPED", "the key is gone");
+  Serial.println("WOTS|WIPED");
+}
+
 static void cmd_request(const String& line) {
   if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  if (locked) {
+    show("LOCKED", "enter the PIN", "on the laptop first", "nothing signed");
+    return (void)Serial.println("WOTS|ERR|locked");
+  }
   uint32_t leaf = next_leaf();
   if (leaf >= (uint32_t)lb::LEAVES) return (void)Serial.println("WOTS|ERR|exhausted");
   uint8_t sig_hash[32];
@@ -399,6 +554,7 @@ static void cmd_request(const String& line) {
 /** Times one core vs both, on the real key's (public) leaves. Touches no secret state and no counter. */
 static void cmd_bench() {
   if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
+  if (locked) return (void)Serial.println("WOTS|ERR|locked");
   uint8_t tmp[32];
   uint32_t t0 = millis();
   for (uint32_t l = 0; l < 8; l++) lb::leaf_hash(sk_seed, pub_seed, l, tmp, []() { yield(); });
@@ -461,9 +617,14 @@ void loop() {
       hexout(pub_seed, 32);
       Serial.print("|");
       hexout(root, 32);
-      Serial.println();
+      Serial.print(pin_set ? "|pin=1" : "|pin=0");
+      Serial.println(locked ? "|locked=1" : "|locked=0");
     }
   } else if (cmd == "KEYGEN") cmd_keygen(rest);
+  else if (cmd == "SETPIN") cmd_setpin(rest);
+  else if (cmd == "UNLOCK") cmd_unlock(rest);
+  else if (cmd == "LOCK") cmd_lock();
+  else if (cmd == "WIPE") cmd_wipe();
   else if (cmd == "LEAVES") {
     if (have_key) {
       stream_leaves_and_root(false);

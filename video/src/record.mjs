@@ -137,6 +137,15 @@ const p = {
     await sleep(0.3);
     await page.keyboard.press("Enter");
   },
+  /** Types into any input like a person, then presses Enter (submits its form). */
+  async typeIn(selector, text) {
+    const box = page.locator(selector).first();
+    await box.click();
+    await box.fill("");
+    await box.pressSequentially(text, { delay: 70 });
+    await sleep(0.3);
+    await page.keyboard.press("Enter");
+  },
   async scrollToText(text, offset = -80) {
     let loc = page.getByText(text, { exact: true }).first();
     if (!(await loc.count())) loc = page.getByText(text).first();

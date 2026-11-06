@@ -202,6 +202,8 @@ export default function NameProtect() {
   /** the block of our last receipt: later reads and estimates never come from a node behind it */
   const lastBlock = useRef(0n);
   const [devInfo, setDevInfo] = useState<DeviceInfo | null>(null);
+  const [devLocked, setDevLocked] = useState(false); // PIN-locked device: connected, waiting for the PIN
+  const [pinInput, setPinInput] = useState("");
   const [treeReady, setTreeReady] = useState(false);
   const [treeProgress, setTreeProgress] = useState(0);
   const [devLog, setDevLog] = useState<string[]>([]);
@@ -314,12 +316,30 @@ export default function NameProtect() {
       };
       const info = await d.readInfo();
       if (!info) throw new DeviceError("no-key");
-      setDevInfo(info);
-      setBusy("Reading the device's public tree");
-      await d.readTree(setTreeProgress);
-      setTreeReady(true);
-      setBusy("Looking up its post-quantum wallet on Sepolia");
-      setWs(await readWalletState(pqWalletAddress(info.root, info.pubSeed), info.next));
+      setDevLocked(info.locked);
+      if (!info.locked) await afterUnlock(d, info);
+    });
+
+  /** Once the device can sign: its public tree (memory only) and its post-quantum wallet on Sepolia. */
+  const afterUnlock = async (d: SerialDevice, info: DeviceInfo) => {
+    setDevInfo(info);
+    setBusy("Reading the device's public tree");
+    await d.readTree(setTreeProgress);
+    setTreeReady(true);
+    setBusy("Looking up its post-quantum wallet on Sepolia");
+    setWs(await readWalletState(pqWalletAddress(info.root, info.pubSeed), info.next));
+  };
+
+  const unlockDevice = () =>
+    guarded("Unlocking the ESP32 (it stretches the PIN for a few seconds)", async () => {
+      const d = dev.current;
+      if (!d) throw new DeviceError("disconnected");
+      const pin = pinInput;
+      setPinInput("");
+      const info = await d.unlock(pin);
+      if (!info) throw new DeviceError("no-key");
+      setDevLocked(false);
+      await afterUnlock(d, info);
     });
 
   const createWallet = () =>
@@ -627,6 +647,26 @@ export default function NameProtect() {
             <div className="label">1 · Hardware key (ESP32)</div>
             {!supported ? (
               <p className="note">Web Serial needs Chrome or Edge on a desktop. Open this page there to connect the device.</p>
+            ) : devLocked && !devInfo ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  unlockDevice();
+                }}
+              >
+                <p style={{ marginTop: 6 }}>
+                  <b>This device is PIN-locked.</b> Its key is stored encrypted; enter the PIN to unlock it until it's unplugged.
+                </p>
+                <div className="passenger" style={{ marginTop: 6 }}>
+                  <input type="password" aria-label="Device PIN" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="PIN" autoComplete="off" />
+                  <button type="submit" disabled={!!busy || pinInput.length < 4}>
+                    Unlock
+                  </button>
+                </div>
+                <p className="note" style={{ marginBottom: 0 }}>
+                  The PIN goes over USB to the device only; this page doesn't keep it.
+                </p>
+              </form>
             ) : !devInfo ? (
               <>
                 <button className="cta" onClick={connectDevice} disabled={!!busy}>

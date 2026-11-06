@@ -44,6 +44,16 @@ let p = until((l) => l.startsWith("WOTS|INFO|"), 10_000);
 await send("WOTS|INFO");
 const info = (await p).split("|");
 if (info[2] === "NOKEY") throw new Error("the device has no key yet: generate one in the app first");
+if (info.includes("locked=1")) {
+  // PIN-locked: unlock with DEVICE_PIN from .env (sent over USB to the device only, never printed)
+  const pin = process.env.DEVICE_PIN;
+  if (!pin) throw new Error("the device is PIN-locked: put DEVICE_PIN=<your PIN> in .env");
+  const u = until((l) => l === "WOTS|UNLOCKED" || l.startsWith("WOTS|ERR|"), 15 * 60_000);
+  await send(`WOTS|UNLOCK|${Buffer.from(pin, "utf8").toString("hex")}`);
+  const r = await u;
+  if (r !== "WOTS|UNLOCKED") throw new Error(`unlock refused: ${r.slice(9)}`);
+  console.log("device unlocked with its PIN");
+}
 const next = Number(info[2]);
 const pubSeed = fromHex("0x" + info[3]);
 const root = fromHex("0x" + info[4]);

@@ -80,6 +80,7 @@ bad("non-canonical calls", 5, parts.join("|"), "calls-not-canonical");
 const signedTx: FrameTx = { ...tx, signatures: [{ scheme: 0, signer: "0x", msg: "0x", signature: "0xdeadbeef" }] };
 bad("frame tx with signature bytes left in", 2, `WOTS|FRAME|0|${encodeTx(profile, signedTx).slice(2)}`, "signature-not-elided");
 bad("message with a hidden control character", 2, `WOTS|MSG|0|${Buffer.from("pay me\nall").toString("hex")}`, "msg-not-plain-text");
+bad("a request for Ethereum mainnet (testnet-only signer)", 5, pqWalletRequest({ chainId: 1, wallet: WALLET, leaf: 5, deadline: DEADLINE, calls: ensCalls }).line(0), "chain-not-allowed");
 bad("a bare hash", 2, `WOTS|SIGN|${keccak256("0x01").slice(2)}|0|label`, "blind-signing-off");
 
 mkdirSync(repoPath("firmware", "esp32", "test"), { recursive: true });

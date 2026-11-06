@@ -227,6 +227,12 @@ static void units(const uint8_t v[32], int decimals, char* out, size_t cap) {
   memcpy(out, r, k);
   out[k] = 0;
 }
+/**
+ * This signer is testnet-only: it refuses any other chain, whatever the host asks. A production build would list the
+ * chains its owner enables, and changing that list would need the button.
+ */
+static bool chain_allowed(uint64_t id) { return id == 11155111 || id == 1337; }
+
 static void chain_name(uint64_t id, char* out, size_t cap) {
   if (id == 11155111) snprintf(out, cap, "Sepolia testnet");
   else if (id == 1337) snprintf(out, cap, "EIP-8141 devnet 1337");
@@ -499,6 +505,7 @@ static const char* req_pqw(Field* f, int nf, Screen& sc, uint8_t out[32], uint32
   size_t n;
   if (nf != 8 || !parse_u64(f[3], &chain) || !parse_addr(f[4], wallet) || !parse_u64(f[5], &leaf) || !parse_u64(f[6], &deadline) || !parse_hex(f[7], g_buf, MAX_BYTES, &n))
     return "usage";
+  if (!chain_allowed(chain)) return "chain-not-allowed";
   if (leaf != device_leaf) return "leaf-mismatch";
   Call calls[4];
   int nc = decode_calls(g_buf, n, calls, 4);
@@ -538,6 +545,7 @@ static const char* req_safe(Field* f, int nf, Screen& sc, uint8_t out[32]) {
       !parse_hex(f[8], g_buf, MAX_BYTES, &n) || !parse_u64(f[9], &op) || op > 1 || !parse_u64(f[10], &safe_gas) || !parse_u64(f[11], &base_gas) ||
       !parse_u256(f[12], gas_price) || !parse_addr(f[13], gas_token) || !parse_addr(f[14], refund) || !parse_u64(f[15], &nonce))
     return "usage";
+  if (!chain_allowed(chain)) return "chain-not-allowed";
   // Safe 1.4.1 getTransactionHash (EIP-712)
   static const char DOMAIN[] = "EIP712Domain(uint256 chainId,address verifyingContract)";
   static const char SAFE_TX[] =
@@ -661,6 +669,7 @@ static const char* req_frame(Field* f, int nf, Screen& sc, uint8_t out[32], uint
   int nfr = rlp_children(it[4], frames, 8), nsig = rlp_children(it[5], sigs, 4);
   if (!rlp_u64(it[0], &chain) || !rlp_u64(it[2], &nonce) || it[3].list || it[3].n != 20 || nfr < 1 || nsig < 1 || rlp_children(it[6], fees, 3) != 3 || !rlp_u256(fees[1], fee))
     return "bad-rlp";
+  if (!chain_allowed(chain)) return "chain-not-allowed";
   // every signature entry this hash covers must have its signature bytes elided
   for (int i = 0; i < nsig; i++) {
     Rlp e[4];

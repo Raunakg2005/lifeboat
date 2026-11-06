@@ -127,11 +127,27 @@ export const SEGMENTS = [
     },
   },
   {
+    id: "ens-hw",
+    label: "Protect · ENS name",
+    title: "A name on the device",
+    lines: [
+      "Names work the same way. Our test name is now owned by a post-quantum wallet whose key exists only on that device.",
+      "The wallet's address follows from the device's public key, so nothing is saved, and every change to the name is shown on the device before it signs.",
+    ],
+    act: async (p, at) => {
+      await p.tab("Protect");
+      await p.run(`[...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "ENS name")?.click()`);
+      await p.scrollToSel('input[placeholder="name.eth"]', -220);
+      await p.typeIn('input[placeholder="name.eth"]', "lifeboathw.eth");
+      await at(0.62, () => p.scrollToText("Already protected", -250));
+    },
+  },
+  {
     id: "close",
     label: "Harbour",
     title: "Publish, and the close",
     lines: [
-      "Every finding is re-checked and published to a public registry on Arkiv, signed by our publisher, with an expiry and a link to each record.",
+      "Every finding is re-checked and published to Arkiv, signed by our publisher, with an expiry.",
       "The full evidence sits on Swarm, and the app downloads it, hashes it in your browser, and shows that it matches the Arkiv record.",
       "The tools and data are free. Protocols pay for monitoring and help migrating.",
       "Lifeboat: get off before Q-Day.",

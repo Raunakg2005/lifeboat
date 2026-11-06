@@ -6,7 +6,8 @@ import { ReadlineParser } from "@serialport/parser-readline";
 import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVES, TREE_HEIGHT, WITNESS_BYTES } from "@lifeboat/pq";
 import type { DeviceRequest } from "@lifeboat/core";
 
-export type DeviceInfo = { next: number; pubSeed: Uint8Array; root: Uint8Array };
+export type DeviceInfo = { next: number; pubSeed: Uint8Array; root: Uint8Array; pinSet: boolean; locked: boolean };
+const pinHex = (pin: string) => Buffer.from(pin, "utf8").toString("hex");
 
 export async function openDevice(portPath = "COM5") {
   const port = new SerialPort({ path: portPath, baudRate: 115200, hupcl: false, autoOpen: false });
@@ -32,7 +33,44 @@ export async function openDevice(portPath = "COM5") {
     await send("WOTS|INFO");
     const parts = (await p).split("|");
     if (parts[2] === "NOKEY") throw new Error("the device has no key yet");
-    return { next: Number(parts[2]), pubSeed: fromHex("0x" + parts[3]), root: fromHex("0x" + parts[4]) };
+    return { next: Number(parts[2]), pubSeed: fromHex("0x" + parts[3]), root: fromHex("0x" + parts[4]), pinSet: parts.includes("pin=1"), locked: parts.includes("locked=1") };
+  }
+
+  /** Unlocks a PIN-locked device (the PIN goes over USB to the device only; it is never printed or saved here). */
+  async function unlock(pin: string) {
+    const p = until((l) => l === "WOTS|UNLOCKED" || l.startsWith("WOTS|ERR|"), 15 * 60_000);
+    await send(`WOTS|UNLOCK|${pinHex(pin)}`);
+    const r = await p;
+    if (r !== "WOTS|UNLOCKED") throw new Error(r.startsWith("WOTS|ERR|bad-pin") ? `wrong PIN (${r.split("|")[3]} wrong in a row; waits grow after 3)` : `unlock refused: ${r.slice(9)}`);
+  }
+  /** Unlocks with DEVICE_PIN from the environment if the device is locked. */
+  async function ensureUnlocked(i: DeviceInfo) {
+    if (!i.locked) return i;
+    const pin = process.env.DEVICE_PIN;
+    if (!pin) throw new Error("the device is PIN-locked: put DEVICE_PIN=<your PIN> in .env");
+    await unlock(pin);
+    return info();
+  }
+  /** Sets (or changes) the PIN: the device asks for BOOT first. */
+  async function setPin(pin: string, onAsk: () => void) {
+    const p = until((l) => {
+      if (l.startsWith("WOTS|ASK|")) onAsk();
+      return l === "WOTS|PINSET" || l.startsWith("WOTS|ERR|");
+    }, 150_000);
+    await send(`WOTS|SETPIN|${pinHex(pin)}`);
+    const r = await p;
+    if (r !== "WOTS|PINSET") throw new Error(`PIN not set: ${r.slice(9)}`);
+  }
+  async function lock() {
+    const p = until((l) => l === "WOTS|LOCKED" || l.startsWith("WOTS|ERR|"), 10_000);
+    await send("WOTS|LOCK");
+    return p;
+  }
+  /** Sends one raw line and returns the first WOTS|ERR / WOTS|ASK / WOTS|HASH reply (for refusal checks). */
+  async function raw(line: string) {
+    const p = until((l) => l.startsWith("WOTS|ERR|") || l.startsWith("WOTS|ASK|") || l.startsWith("WOTS|HASH|"), 20_000);
+    await send(line);
+    return p;
   }
 
   /** The public Merkle tree, rebuilt here and checked against the device's root (memory only). */
@@ -80,6 +118,7 @@ export async function openDevice(portPath = "COM5") {
       await send(req.line(g.counter));
       const end = await p;
       if (end === "WOTS|ERR|timeout") continue;
+      if (end === "WOTS|ERR|locked") throw new Error("the device is locked: unlock it with its PIN first");
       if (end.startsWith("WOTS|ERR|")) throw new Error(`device refused: ${end.slice(9)}`);
       if (deviceHash !== req.sigHash) throw new Error(`the device rebuilt ${deviceHash}, expected ${req.sigHash}`);
       if (leaf !== i.next) throw new Error(`device signed leaf ${leaf}, expected ${i.next}`);
@@ -90,5 +129,5 @@ export async function openDevice(portPath = "COM5") {
     throw new Error("nobody pressed BOOT in time (no leaf used)");
   }
 
-  return { info, tree, sign, close: () => port.close() };
+  return { info, tree, sign, unlock, ensureUnlocked, setPin, lock, raw, close: () => port.close() };
 }

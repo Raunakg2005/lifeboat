@@ -40,6 +40,21 @@ const info = async () => {
   if (parts[2] === "NOKEY") throw new Error("the device has no key");
   return { next: Number(parts[2]), pubSeed: fromHex("0x" + parts[3]), root: fromHex("0x" + parts[4]) };
 };
+{
+  const p0 = until((l) => l.startsWith("WOTS|INFO|"), 10_000);
+  await send("WOTS|INFO");
+  const raw0 = (await p0).split("|");
+  if (raw0.includes("locked=1")) {
+    // PIN-locked: unlock with DEVICE_PIN from .env (sent over USB to the device only, never printed)
+    const pin = process.env.DEVICE_PIN;
+    if (!pin) throw new Error("the device is PIN-locked: put DEVICE_PIN=<your PIN> in .env");
+    const u = until((l) => l === "WOTS|UNLOCKED" || l.startsWith("WOTS|ERR|"), 15 * 60_000);
+    await send(`WOTS|UNLOCK|${Buffer.from(pin, "utf8").toString("hex")}`);
+    const r = await u;
+    if (r !== "WOTS|UNLOCKED") throw new Error(`unlock refused: ${r.slice(9)}`);
+    console.log("device unlocked with its PIN");
+  }
+}
 const before = await info();
 console.log(`device key ${toHex(before.root).slice(0, 12)}…, next leaf ${before.next}`);
 

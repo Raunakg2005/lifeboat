@@ -97,7 +97,7 @@ async function check(when: string, wallet: Address): Promise<HelmReport> {
 
 // 0. the device and its wallet
 const device = await openDevice(argValue("--port") ?? "COM5");
-let info = await device.info();
+let info = await device.ensureUnlocked(await device.info());
 console.log(`device key ${toHex(info.root).slice(0, 12)}…, next leaf ${info.next}; reading its public tree…`);
 const levels = await device.tree(info);
 const rootHex = toHex(info.root) as Hex;

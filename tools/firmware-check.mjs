@@ -18,7 +18,7 @@ const sigsHex = w.slice(64, 64 + 64 * 64);
 
 const requests = JSON.parse(readFileSync(new URL("../firmware/esp32/test/requests.json", import.meta.url), "utf8")).cases;
 const input = requests.map((r) => `${r.deviceLeaf} ${r.line}`).join("\n") + "\n";
-const cmd = `apk add --no-cache g++ >/dev/null 2>&1 && cd /src/firmware/esp32/test && g++ -O2 -std=c++17 -Wall -I ../lifeboat_signer host_test.cpp -o /tmp/host_test && /tmp/host_test ${leaf} ${c.sigHash} ${counter} && /tmp/host_test requests`;
+const cmd = `apk add --no-cache g++ >/dev/null 2>&1 && cd /src/firmware/esp32/test && g++ -O2 -std=c++17 -Wall -I ../lifeboat_signer host_test.cpp -o /tmp/host_test && /tmp/host_test ${leaf} ${c.sigHash} ${counter} && /tmp/host_test requests && /tmp/host_test pin`;
 const out = execFileSync("docker", ["run", "--rm", "-i", "-v", `${repo}:/src:ro`, "alpine:3.20", "sh", "-c", cmd], { encoding: "utf8", input, maxBuffer: 16 << 20 });
 const kv = Object.fromEntries(out.trim().split(/\r?\n/).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
 
@@ -29,6 +29,13 @@ const checks = [
   ["64 chain values match the TypeScript signature byte for byte", kv.sigs === sigsHex],
   ["a wrong counter is refused", kv.wrong_counter_refused === "1"],
 ];
+checks.push(
+  ["PIN lock: the sealed seed differs from the seed", kv["pin.sealed_differs"] === "1"],
+  ["PIN lock: the right PIN opens the seed exactly", kv["pin.roundtrip"] === "1"],
+  ["PIN lock: a wrong PIN is told apart before anything is decrypted", kv["pin.wrong_pin_refused"] === "1"],
+  ["PIN lock: a 3-character PIN is refused", kv["pin.short_pin_refused"] === "1"],
+  ["PIN lock: waits grow after 3 wrong tries (0, 5, 20 s, capped at 640 s)", kv["pin.backoff"] === "0,5,20,640"],
+);
 requests.forEach((r, i) => {
   const err = kv[`case${i}.err`];
   if (r.error) return checks.push([`clear signing refuses: ${r.name} (${r.error})`, err === r.error]);

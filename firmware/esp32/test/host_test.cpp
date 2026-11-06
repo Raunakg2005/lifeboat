@@ -9,6 +9,7 @@
 #include <cstring>
 #include "wots.h"
 #include "clear.h"
+#include "pin.h"
 #include <iostream>
 #include <string>
 
@@ -45,7 +46,33 @@ static int run_requests() {
   return 0;
 }
 
+static int run_pin() {
+  // seal a seed with a PIN, open it with the right PIN, and check a wrong PIN is told apart (tag) and decrypts to junk
+  uint8_t seed[32], sealed[32], salt[16], key[32], tag[8], tag2[8];
+  for (int i = 0; i < 32; i++) seed[i] = (uint8_t)(i * 7 + 1);
+  for (int i = 0; i < 16; i++) salt[i] = (uint8_t)(0xa0 + i);
+  const char* good = "harbour-2026";
+  const char* bad = "harbour-2027";
+  pin::derive((const uint8_t*)good, strlen(good), salt, key);
+  pin::check_tag(key, tag);
+  memcpy(sealed, seed, 32);
+  pin::xor_seed(key, sealed);
+  printf("pin.sealed_differs=%d\n", memcmp(sealed, seed, 32) != 0 ? 1 : 0);
+  uint8_t opened[32];
+  memcpy(opened, sealed, 32);
+  pin::derive((const uint8_t*)good, strlen(good), salt, key);
+  pin::xor_seed(key, opened);
+  printf("pin.roundtrip=%d\n", memcmp(opened, seed, 32) == 0 ? 1 : 0);
+  pin::derive((const uint8_t*)bad, strlen(bad), salt, key);
+  pin::check_tag(key, tag2);
+  printf("pin.wrong_pin_refused=%d\n", memcmp(tag, tag2, 8) != 0 ? 1 : 0);
+  printf("pin.short_pin_refused=%d\n", pin::valid((const uint8_t*)"123", 3) ? 0 : 1);
+  printf("pin.backoff=%u,%u,%u,%u\n", pin::backoff_seconds(2), pin::backoff_seconds(3), pin::backoff_seconds(5), pin::backoff_seconds(30));
+  return 0;
+}
+
 int main(int argc, char** argv) {
+  if (argc > 1 && !strcmp(argv[1], "pin")) return run_pin();
   if (argc > 1 && !strcmp(argv[1], "requests")) return run_requests();
   uint8_t empty[32];
   lb::keccak256(nullptr, 0, empty);

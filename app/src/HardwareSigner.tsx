@@ -7,7 +7,8 @@ import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVE
 import { messageRequest } from "@lifeboat/core";
 import { LuggageTag, Pill } from "./ui";
 
-type Info = { next: number; pubSeed: string; root: string } | null;
+type Info = { next: number; pubSeed: string; root: string; pinSet: boolean; locked: boolean } | null;
+const pinHex = (pin: string) => Array.from(new TextEncoder().encode(pin), (b) => b.toString(16).padStart(2, "0")).join("");
 // minimal Web Serial typing (not in every TS DOM lib)
 type SerialPortLike = {
   open(o: { baudRate: number; bufferSize?: number }): Promise<void>;
@@ -30,6 +31,7 @@ function buildLevels(pubSeed: Uint8Array, leafHashes: Uint8Array[]) {
 export default function HardwareSigner() {
   const supported = typeof navigator !== "undefined" && "serial" in navigator;
   const [status, setStatus] = useState("not connected");
+  const [pin, setPin] = useState(""); // typed here, sent over USB to the device, then cleared: never kept
   const [info, setInfo] = useState<Info>(null);
   const [log, setLog] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
@@ -83,7 +85,7 @@ export default function HardwareSigner() {
       })();
       setStatus("connected");
       const i = await refresh();
-      if (i) await fetchTree();
+      if (i && !i.locked) await fetchTree();
     } catch (e) {
       setStatus(`couldn't connect: ${(e as Error).message}`);
     }
@@ -100,11 +102,39 @@ export default function HardwareSigner() {
       setStatus("connected · no key on the device yet");
       return null;
     }
-    const i = { next: Number(parts[2]), pubSeed: "0x" + parts[3], root: "0x" + parts[4] };
+    const i = { next: Number(parts[2]), pubSeed: "0x" + parts[3], root: "0x" + parts[4], pinSet: parts.includes("pin=1"), locked: parts.includes("locked=1") };
     setInfo(i);
     const have = treeRoot.current === i.root && leafHashes.current.length === LEAVES;
-    setStatus(`connected · key ${i.root.slice(0, 10)}… · next leaf ${i.next}${have ? "" : " · public tree not read yet"}`);
+    const lock = i.locked ? " · LOCKED: enter the PIN" : i.pinSet ? " · PIN on" : " · no PIN";
+    setStatus(`connected · key ${i.root.slice(0, 10)}… · next leaf ${i.next}${lock}${have || i.locked ? "" : " · public tree not read yet"}`);
     return i;
+  };
+
+  // PIN lock: unlock a locked device, set or change the PIN (the device asks for BOOT), or lock it again
+  const unlock = async () => {
+    const p = until((l) => l === "WOTS|UNLOCKED" || l.startsWith("WOTS|ERR|"), 15 * 60_000);
+    setStatus("unlocking: the device stretches the PIN for a few seconds…");
+    await send(`WOTS|UNLOCK|${pinHex(pin)}`);
+    setPin("");
+    const r = await p;
+    if (r !== "WOTS|UNLOCKED") return setStatus(r.startsWith("WOTS|ERR|bad-pin") ? `wrong PIN (${r.split("|")[3]} in a row; waits grow after 3)` : `unlock refused: ${r.slice(9)}`);
+    const i = await refresh();
+    if (i && treeRoot.current !== i.root) await fetchTree();
+  };
+  const setDevicePin = async () => {
+    const p = until((l) => l === "WOTS|PINSET" || l.startsWith("WOTS|ERR|"), 150_000);
+    setStatus("the ESP32 asks SET PIN?: read it, BOOT for each page, then BOOT to confirm");
+    await send(`WOTS|SETPIN|${pinHex(pin)}`);
+    setPin("");
+    const r = await p;
+    if (r !== "WOTS|PINSET") return setStatus(`PIN not set: ${r.slice(9)}`);
+    await refresh();
+  };
+  const lockDevice = async () => {
+    const p = until((l) => l === "WOTS|LOCKED" || l.startsWith("WOTS|ERR|"), 10_000);
+    await send("WOTS|LOCK");
+    await p;
+    await refresh();
   };
 
   const collectTree = async (cmd: string) => {
@@ -199,10 +229,40 @@ export default function HardwareSigner() {
           <button onClick={guard(fetchTree)} disabled={!info}>
             re-read public tree
           </button>
-          <button onClick={() => signTest(`Lifeboat test ${new Date().toISOString()}`)} disabled={!info || !leafHashes.current.length}>
+          <button onClick={() => signTest(`Lifeboat test ${new Date().toISOString()}`)} disabled={!info || info.locked || !leafHashes.current.length}>
             3 · sign a test message
           </button>
+          {info?.pinSet && !info.locked && (
+            <button onClick={guard(lockDevice)} disabled={!writer.current}>
+              lock
+            </button>
+          )}
         </div>
+      )}
+      {supported && info && (
+        <form
+          className="passenger"
+          style={{ marginTop: 10 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            guard(info.locked ? unlock : setDevicePin)();
+          }}
+        >
+          <input type="password" aria-label="Device PIN" value={pin} onChange={(e) => setPin(e.target.value)} placeholder={info.locked ? "PIN" : info.pinSet ? "new PIN" : "choose a PIN (4-32)"} autoComplete="new-password" />
+          <button type="submit" disabled={pin.length < 4}>
+            {info.locked ? "Unlock" : info.pinSet ? "Change PIN" : "Set a PIN"}
+          </button>
+        </form>
+      )}
+      {supported && info && (
+        <p className="note" style={{ marginBottom: 0 }}>
+          {info.locked
+            ? "Locked: the key is stored encrypted and nothing can be signed until the PIN is entered."
+            : info.pinSet
+              ? "PIN on: the key is stored encrypted, and the device locks itself again when it's unplugged."
+              : "Set a PIN to store the key encrypted: after every power-on the device stays locked until the PIN is entered."}{" "}
+          The PIN goes over USB to the device only; this page doesn't keep it.
+        </p>
       )}
       {progress > 0 && progress < LEAVES && <p className="note">public tree: {progress}/256 leaves</p>}
       {result && (
