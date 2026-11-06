@@ -15,7 +15,7 @@ import { fromHex, sign, toHex as pqHex } from "@lifeboat/pq";
 import { repoPath } from "./lib/env.js";
 import { ALL_ROLES, ENS, REGISTRY_ROLES, dnsEncode, factoryAbi, mainnetClient, registryAbi, resolverAbi, sepoliaClient, sepoliaDevWallet, sepoliaLogsClient, withStaleRetry } from "./lib/ens.js";
 import { helmCheck, printReport, type HelmReport } from "@lifeboat/core";
-import { loadOrCreateKey, reserveLeaf } from "./lib/pqkey.js";
+import { loadOrCreateKey, reserveLeaf, syncWithChain } from "./lib/pqkey.js";
 import { pqWalletAbi, walletDigest, type Call } from "./lib/pqwallet.js";
 
 const dep = JSON.parse(readFileSync(repoPath("deployments", "sepolia.json"), "utf8"));
@@ -130,6 +130,7 @@ evidence.ownerAfter = owner;
 // 7. the PQ wallet acts with a one-time WOTS+C signature (dev wallet only relays)
 const calls: Call[] = [{ target: newResolver, value: 0n, data: encodeFunctionData({ abi: resolverAbi, functionName: "setText", args: [dns, "pq.checked", `${new Date().toISOString()} signed by the PQ key`] }) }];
 const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+syncWithChain(key, { usedBitmap: (await pub.readContract({ address: pqWallet, abi: [{ type: "function", name: "usedLeaves", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }], functionName: "usedLeaves" })) as bigint });
 const leaf = key.nextLeaf;
 const digest = walletDigest(11155111n, pqWallet, BigInt(leaf), deadline, calls);
 if (reserveLeaf(key, `ENS setText pq.checked on ${name}`, digest) !== leaf) throw new Error("leaf changed");

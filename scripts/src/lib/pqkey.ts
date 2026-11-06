@@ -57,5 +57,23 @@ export function reserveLeaf(file: KeyFile, purpose: string, sigHash: string): nu
   return leaf;
 }
 
+/**
+ * Brings a key file up to what the chain already knows, before a leaf is chosen. A key file restored from an old
+ * backup, or copied to a second machine, must never pick a leaf that already signed on-chain.
+ *   floor: the lowest leaf an EIP-8141 LifeboatAccount still accepts (every leaf below it is spent)
+ *   usedBitmap: spent leaves of a QuantumGuard or LifeboatPQWallet (bit i = leaf i)
+ */
+export function syncWithChain(file: KeyFile, chain: { floor?: bigint; usedBitmap?: bigint }): number {
+  let leaf = file.nextLeaf;
+  if (chain.floor !== undefined && BigInt(leaf) < chain.floor) leaf = Number(chain.floor);
+  if (chain.usedBitmap !== undefined) while (leaf < LEAVES && (chain.usedBitmap >> BigInt(leaf)) & 1n) leaf++;
+  if (leaf !== file.nextLeaf) {
+    console.warn(`key "${file.label}": the chain is ahead of this key file (next leaf ${file.nextLeaf} -> ${leaf}); skipping spent leaves`);
+    file.nextLeaf = leaf;
+    saveKeyFile(file);
+  }
+  return leaf;
+}
+
 /** Public part only (safe to print or commit). */
 export const publicView = (file: KeyFile) => ({ label: file.label, root: file.root, pubSeed: file.pubSeed, nextLeaf: file.nextLeaf, account: file.account });

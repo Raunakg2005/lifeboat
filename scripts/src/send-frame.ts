@@ -7,7 +7,7 @@ import { explainRejection, toWire } from "@forshtat/hegota-support/rpc";
 import { WITNESS_BYTES, fromHex, sign, toHex, verify } from "@lifeboat/pq";
 import { argValue, hasFlag } from "./lib/env.js";
 import { GATEWAY_URL, MINER_SIDECAR_URL, NODE_URL, devWallet, explorerTx, profile, publicClient, saveEvidence } from "./lib/devnet.js";
-import { loadOrCreateKey, publicView, reserveLeaf } from "./lib/pqkey.js";
+import { loadOrCreateKey, publicView, reserveLeaf, syncWithChain } from "./lib/pqkey.js";
 import { rpc, RpcCallError } from "./lib/rpc.js";
 
 const label = argValue("--label") ?? "demo";
@@ -30,6 +30,8 @@ console.log(`account ${account}: ${formatEther(balance)} ETH, nonce ${nonce}; bl
 
 // The leaf goes into the SENDER frame data (so the account raises its leaf floor), which the sigHash covers.
 // So reserve it first: it is written to disk before anything is signed or sent.
+// never below what the account already spent (slot 2 = lowest accepted leaf + 1)
+syncWithChain(file, { floor: BigInt((await pub.getStorageAt({ address: account, slot: "0x2" })) ?? "0x1") - 1n });
 const leaf = file.nextLeaf;
 const executeData = (l: number): Hex => concat([pad(numberToHex(l), { size: 32 }), pad(to, { size: 32 }), pad(numberToHex(value), { size: 32 })]);
 

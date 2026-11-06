@@ -30,7 +30,7 @@ import {
 import { repoPath } from "./lib/env.js";
 import { forgeBytecode } from "./lib/deployments.js";
 import { sepoliaClient, sepoliaDevWallet, withStaleRetry } from "./lib/ens.js";
-import { loadOrCreateKey, reserveLeaf, saveKeyFile } from "./lib/pqkey.js";
+import { loadOrCreateKey, reserveLeaf, saveKeyFile, syncWithChain } from "./lib/pqkey.js";
 
 const CHAIN = 11155111;
 const DELAY = 120n;
@@ -96,7 +96,8 @@ const nonce = async () => {
   return localNonce++;
 };
 const ownerSig = async (h: Hex) => (await owner.sign({ hash: h })) as Hex;
-const cosign = (kind: number, h: Hex, purpose: string) => {
+const cosign = async (kind: number, h: Hex, purpose: string) => {
+  syncWithChain(key, { usedBitmap: (await pub.readContract({ address: g.guard, abi: quantumGuardAbi, functionName: "usedLeaves" })) as bigint });
   const d = guardDigest(CHAIN, g.guard, safe, kind, h);
   const leaf = reserveLeaf(key, purpose, d); // saved before the signature exists
   return { leaf, witness: toHex(sign(pair, leaf, fromHex(d)).witness) as Hex };
@@ -123,7 +124,7 @@ console.log(`installed: guard ${ev.installed.guard}, handler ${ev.installed.hand
 if (!g.paid) {
   const t = simpleSafeTx(owner.address, parseEther("0.001"), "0x", await nonce());
   const h = safeTxHash(CHAIN, safe, t);
-  const { leaf, witness } = cosign(GUARD_KIND.tx, h, "co-signed payment");
+  const { leaf, witness } = await cosign(GUARD_KIND.tx, h, "co-signed payment");
   await send(`co-signed payment (PQ leaf ${leaf})`, { to: safe, data: execTransactionData(t, concat([await ownerSig(h), witness])), gas: 600_000n });
   g.paid = true;
   save();
@@ -142,6 +143,7 @@ if (!g.vetoed) {
   const r = await send("owners start a recovery (no PQ signature: what a quantum attacker could do)", { to: safe, data: await ownersCall("startRecovery"), gas: 400_000n });
   const { nonce: n } = started(r);
   await settle();
+  syncWithChain(key, { usedBitmap: (await pub.readContract({ address: guard, abi: quantumGuardAbi, functionName: "usedLeaves" })) as bigint });
   const d = guardDigest(CHAIN, guard, safe, GUARD_KIND.cancelRecovery, cancelRecoveryHash(n));
   const leaf = reserveLeaf(key, `cancel recovery ${n}`, d);
   const witness = toHex(sign(pair, leaf, fromHex(d)).witness) as Hex;
