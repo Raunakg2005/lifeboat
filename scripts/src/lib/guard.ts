@@ -51,7 +51,10 @@ export function safeMessageData(chainId: number, safe: Address, dataHash: Hex): 
   return encodePacked(["bytes1", "bytes1", "bytes32", "bytes32"], ["0x19", "0x01", safeDomainSeparator(chainId, safe), inner]);
 }
 
-export const KIND = { tx: 0, message: 1, rotate: 2 } as const;
+export const KIND = { tx: 0, message: 1, rotate: 2, cancelRecovery: 3 } as const;
+
+/** What the PQ key signs to cancel recovery attempt `nonce`: keccak256(abi.encode("CANCEL_RECOVERY", nonce)). */
+export const cancelRecoveryHash = (nonce: bigint): Hex => keccak256(encodeAbiParameters([{ type: "string" }, { type: "uint256" }], ["CANCEL_RECOVERY", nonce]));
 
 /** keccak256(abi.encode("LIFEBOAT_QUANTUM_GUARD_V1", kind, chainid, guard, safe, h)) */
 export const guardDigest = (chainId: number, guard: Address, safe: Address, kind: number, h: Hex): Hex =>

@@ -32,6 +32,9 @@ interface ISafeView {
 ///     valid only if the PQ key approved it AND the owners signed it, which closes the off-chain signature bypass
 ///     that a transaction guard alone leaves open.
 ///   * The PQ key can be rotated with a PQ signature (its 256 leaves run out).
+///   * Lost-key recovery: the owners alone can start a recovery (no PQ signature), which completes only after a
+///     timelock. The PQ key can cancel it at any time before then. A quantum attacker who forged the owners can
+///     start one too, so the PQ key holder must watch for RecoveryStarted (Lifeboat's Monitor alerts on it).
 ///
 /// Prior art, credited: Safe Research's co-signer guard pattern. What's new here: a hash-based co-signer with
 /// on-chain one-time-key accounting, and the ERC-1271 path covered too.
@@ -55,30 +58,43 @@ contract QuantumGuard {
     uint8 public constant KIND_TX = 0;
     uint8 public constant KIND_MESSAGE = 1;
     uint8 public constant KIND_ROTATE = 2;
+    uint8 public constant KIND_CANCEL_RECOVERY = 3;
     bytes32 internal constant SAFE_MSG_TYPEHASH = keccak256("SafeMessage(bytes message)");
 
     address public immutable safe;
     address public immutable verifier;
+    /// seconds between startRecovery and finishRecovery (7 days or more in production)
+    uint256 public immutable recoveryDelay;
     bytes32 public root;
     bytes32 public pubSeed;
     /// bit i set = leaf i spent
     uint256 public usedLeaves;
     /// Safe message hashes (EIP-712, as the Safe's fallback handler computes them) the PQ key approved
     mapping(bytes32 => bool) public approvedMessages;
+    /// lost-key recovery: attempt number, when it can complete (0 = none pending), and whether one completed
+    uint256 public recoveryNonce;
+    uint256 public recoveryReadyAt;
+    bool public recovered;
 
     event PQCoSigned(bytes32 indexed safeTxHash, uint256 leaf);
     event MessageApproved(bytes32 indexed safeMessageHash, uint256 leaf);
     event KeyRotated(bytes32 indexed root, uint256 leaf);
+    event RecoveryStarted(uint256 indexed nonce, uint256 readyAt);
+    event RecoveryCancelled(uint256 indexed nonce, uint256 leaf);
+    event Recovered(uint256 indexed nonce);
 
     error NotTheSafe();
     error MissingPQSignature();
     error LeafOutOfRange(uint256 leaf);
     error LeafUsed(uint256 leaf);
     error BadPQSignature();
+    error NoRecovery();
+    error RecoveryNotReady(uint256 readyAt);
 
-    constructor(address safe_, address verifier_, bytes32 root_, bytes32 pubSeed_) {
+    constructor(address safe_, address verifier_, bytes32 root_, bytes32 pubSeed_, uint256 recoveryDelay_) {
         safe = safe_;
         verifier = verifier_;
+        recoveryDelay = recoveryDelay_;
         root = root_;
         pubSeed = pubSeed_;
     }
@@ -119,6 +135,12 @@ contract QuantumGuard {
         if (msg.sender != safe) revert NotTheSafe();
         // the arguments are one ABI tuple: decode them as a struct (keeps the stack small)
         SafeTx memory t = abi.decode(bytes.concat(bytes32(uint256(32)), msg.data[4:]), (SafeTx));
+        if (recovered) return; // after a completed recovery the owners act alone (to remove or replace this guard)
+        // starting or finishing a recovery needs the owners only: the timelock and the PQ veto protect it
+        if (t.to == address(this) && t.value == 0 && t.operation == 0 && t.data.length == 4) {
+            bytes4 sel = bytes4(t.data);
+            if (sel == this.startRecovery.selector || sel == this.finishRecovery.selector) return;
+        }
         if (t.signatures.length < WITNESS_LENGTH + 65) revert MissingPQSignature();
         bytes32 safeTxHash = ISafeView(safe).getTransactionHash(
             t.to, t.value, t.data, t.operation, t.safeTxGas, t.baseGas, t.gasPrice, t.gasToken, t.refundReceiver, ISafeView(safe).nonce() - 1
@@ -151,7 +173,7 @@ contract QuantumGuard {
         if (msg.sender != safe || signature.length == 0) return 0xffffffff;
         bytes memory data = messageData(dataHash);
         bytes32 h = keccak256(data);
-        if (!approvedMessages[h]) return 0xffffffff;
+        if (!recovered && !approvedMessages[h]) return 0xffffffff;
         try ISafeView(safe).checkSignatures(h, data, signature) {
             return 0x1626ba7e;
         } catch {
@@ -168,6 +190,38 @@ contract QuantumGuard {
         pubSeed = newPubSeed;
         usedLeaves = 0;
         emit KeyRotated(newRoot, leaf);
+    }
+
+    // ------------------------------------------------------------------ lost-key recovery
+
+    /// Only a Safe transaction can call these: it calls with exactly the selector, while a call that reaches the
+    /// guard through the Safe's fallback carries the original caller appended (20 more bytes).
+    function _fromSafeTx() internal view {
+        if (msg.sender != safe || msg.data.length != 4) revert NotTheSafe();
+    }
+
+    function startRecovery() external {
+        _fromSafeTx();
+        recoveryNonce++;
+        recoveryReadyAt = block.timestamp + recoveryDelay;
+        emit RecoveryStarted(recoveryNonce, recoveryReadyAt);
+    }
+
+    /// The PQ key vetoes the pending recovery. Anyone can relay it: the witness is the authorization.
+    function cancelRecovery(bytes calldata witness) external {
+        if (recoveryReadyAt == 0) revert NoRecovery();
+        uint256 leaf = _spendAndVerify(KIND_CANCEL_RECOVERY, keccak256(abi.encode("CANCEL_RECOVERY", recoveryNonce)), witness);
+        recoveryReadyAt = 0;
+        emit RecoveryCancelled(recoveryNonce, leaf);
+    }
+
+    function finishRecovery() external {
+        _fromSafeTx();
+        if (recoveryReadyAt == 0) revert NoRecovery();
+        if (block.timestamp < recoveryReadyAt) revert RecoveryNotReady(recoveryReadyAt);
+        recovered = true;
+        recoveryReadyAt = 0;
+        emit Recovered(recoveryNonce);
     }
 
     // ------------------------------------------------------------------ fallback-handler duties

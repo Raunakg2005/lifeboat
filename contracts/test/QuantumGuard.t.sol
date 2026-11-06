@@ -3,6 +3,7 @@ pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {QuantumGuard} from "../src/QuantumGuard.sol";
+import {QuantumGuardFactory} from "../src/QuantumGuardFactory.sol";
 
 /// A minimal Safe with Safe 1.4.1's order of events in execTransaction (owners checked, nonce moves on, then the
 /// guard), the same EIP-712 hashes, and a fallback that forwards with the caller appended. The owners' check is not
@@ -52,8 +53,13 @@ contract MockSafe {
         checkSignatures(bytes32(0), "", signatures);
         nonce++;
         if (guard != address(0)) QuantumGuard(guard).checkTransaction(to, value, data, 0, 0, 0, 0, address(0), payable(address(0)), signatures, msg.sender);
-        (ok,) = to.call{value: value}(data);
-        require(ok, "call failed");
+        bytes memory ret;
+        (ok, ret) = to.call{value: value}(data);
+        if (!ok) {
+            assembly ("memory-safe") {
+                revert(add(ret, 32), mload(ret))
+            }
+        }
     }
 
     fallback() external {
@@ -78,18 +84,22 @@ contract QuantumGuardTest is Test {
     QuantumGuard guard;
     string json;
     bytes ecdsa = new bytes(65); // stands in for the owners' (forgeable) ECDSA signatures
+    address verifier;
+    uint256 delay;
 
     function setUp() public {
         bytes memory initcode = vm.parseBytes(vm.readFile("yul/out/WotsHarness.initcode.hex"));
-        address verifier;
+        address v;
         assembly {
-            verifier := create(0, add(initcode, 0x20), mload(initcode))
+            v := create(0, add(initcode, 0x20), mload(initcode))
         }
+        verifier = v;
         json = vm.readFile("test/vectors/guard.json");
         address safeAddr = vm.parseJsonAddress(json, ".safe");
         address guardAddr = vm.parseJsonAddress(json, ".guard");
         deployCodeTo("QuantumGuard.t.sol:MockSafe", safeAddr);
-        deployCodeTo("QuantumGuard.sol:QuantumGuard", abi.encode(safeAddr, verifier, vm.parseJsonBytes32(json, ".root"), vm.parseJsonBytes32(json, ".pubSeed")), guardAddr);
+        delay = vm.parseJsonUint(json, ".recoveryDelay");
+        deployCodeTo("QuantumGuard.sol:QuantumGuard", abi.encode(safeAddr, verifier, vm.parseJsonBytes32(json, ".root"), vm.parseJsonBytes32(json, ".pubSeed"), delay), guardAddr);
         safe = MockSafe(payable(safeAddr));
         guard = QuantumGuard(guardAddr);
         vm.deal(safeAddr, 1 ether);
@@ -157,6 +167,56 @@ contract QuantumGuardTest is Test {
         assertEq(IERC1271(address(safe)).isValidSignature(dataHash, ecdsa), bytes4(0x1626ba7e));
         // asked directly instead of through the Safe: refused
         assertEq(guard.isValidSignature(dataHash, ecdsa), bytes4(0xffffffff));
+    }
+
+    function callGuard(bytes4 sel) internal {
+        safe.execTransaction(address(guard), 0, abi.encodePacked(sel), ecdsa); // owners only, no PQ witness
+    }
+
+    function test_lostKeyRecoveryAfterTheTimelock() public {
+        callGuard(QuantumGuard.startRecovery.selector);
+        assertEq(guard.recoveryReadyAt(), block.timestamp + delay);
+        vm.expectRevert(abi.encodeWithSelector(QuantumGuard.RecoveryNotReady.selector, block.timestamp + delay));
+        callGuard(QuantumGuard.finishRecovery.selector);
+        vm.warp(block.timestamp + delay);
+        callGuard(QuantumGuard.finishRecovery.selector);
+        assertTrue(guard.recovered());
+        exec(ecdsa); // the owners act alone again, e.g. to remove the guard
+        assertEq(vm.parseJsonAddress(json, ".recipient").balance, 1000);
+    }
+
+    function test_pqKeyVetoesARecovery() public {
+        callGuard(QuantumGuard.startRecovery.selector); // what a quantum attacker with the owners' keys could do
+        guard.cancelRecovery(vm.parseJsonBytes(json, ".cancelRecovery.witness"));
+        assertEq(guard.recoveryReadyAt(), 0);
+        vm.warp(block.timestamp + delay);
+        vm.expectRevert(QuantumGuard.NoRecovery.selector);
+        callGuard(QuantumGuard.finishRecovery.selector);
+        vm.expectRevert(QuantumGuard.MissingPQSignature.selector);
+        exec(ecdsa);
+    }
+
+    function test_recoveryOnlyThroughASafeTransaction() public {
+        vm.expectRevert(QuantumGuard.NotTheSafe.selector);
+        guard.startRecovery(); // a stranger
+        safe.setFallbackHandler(address(guard));
+        vm.expectRevert("handler reverted");
+        QuantumGuard(address(safe)).startRecovery(); // through the Safe's fallback: the appended caller gives it away
+        // any other call to the guard still needs the PQ key
+        vm.expectRevert(QuantumGuard.MissingPQSignature.selector);
+        safe.execTransaction(address(guard), 0, abi.encodeWithSelector(QuantumGuard.rotate.selector, bytes32(0), bytes32(0), ""), ecdsa);
+    }
+
+    function test_factoryDeploysAtThePredictedAddress() public {
+        QuantumGuardFactory f = new QuantumGuardFactory(verifier);
+        bytes32 r = vm.parseJsonBytes32(json, ".root");
+        bytes32 s = vm.parseJsonBytes32(json, ".pubSeed");
+        address predicted = f.predict(address(safe), r, s, delay);
+        address g = f.deploy(address(safe), r, s, delay);
+        assertEq(g, predicted);
+        assertEq(QuantumGuard(g).safe(), address(safe));
+        assertEq(QuantumGuard(g).recoveryDelay(), delay);
+        assertEq(f.deploy(address(safe), r, s, delay), g); // idempotent
     }
 
     function test_rotateToAFreshKey() public {

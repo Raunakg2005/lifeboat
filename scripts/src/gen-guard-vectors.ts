@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { encodeAbiParameters, keccak256, toBytes, type Address, type Hex } from "viem";
 import { fromHex, generateKeyPair, sign, toHex } from "@lifeboat/pq";
 import { repoPath } from "./lib/env.js";
-import { KIND, guardDigest, safeMessageData, safeTxHash, type SafeTx } from "./lib/guard.js";
+import { KIND, cancelRecoveryHash, guardDigest, safeMessageData, safeTxHash, type SafeTx } from "./lib/guard.js";
 
 const CHAIN = 31337;
 const SAFE: Address = "0x0000000000000000000000000000000000005afe";
@@ -36,7 +36,9 @@ const out = {
   tx: [txCase("nonce 0, leaf 7", 0n, 7), txCase("nonce 1, leaf 7 again (deliberate reuse)", 1n, 7), txCase("nonce 1, leaf 8", 1n, 8)],
   message: { dataHash, messageHash, leaf: 9, witness: cosign(KIND.message, messageHash, 9) },
   rotate: { newRoot: toHex(next.root), newPubSeed: toHex(next.pubSeed), leaf: 10, witness: cosign(KIND.rotate, rotateHash, 10) },
+  cancelRecovery: { nonce: 1, leaf: 11, witness: cosign(KIND.cancelRecovery, cancelRecoveryHash(1n), 11) },
+  recoveryDelay: 7 * 24 * 3600,
 };
 mkdirSync(repoPath("contracts", "test", "vectors"), { recursive: true });
 writeFileSync(repoPath("contracts", "test", "vectors", "guard.json"), JSON.stringify(out, null, 2));
-console.log(`wrote guard vectors: ${out.tx.length} transactions, 1 message, 1 rotation`);
+console.log(`wrote guard vectors: ${out.tx.length} transactions, 1 message, 1 rotation, 1 recovery veto`);
