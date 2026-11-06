@@ -85,7 +85,7 @@ pnpm --filter @lifeboat/scripts swarm-publish
 `--dry-run` does every check and prints the hashes and the planned Arkiv updates without uploading. The real run needs `.env` with the publisher key.
 
 ## Video
-In the submission video, the Harbour beat opens **open evidence** on `lifeboatpq.eth`: the Swarm file is fetched, hashed in the browser and matched to its Arkiv record. The timestamp goes here once the voice-over is recorded.
+**3:21–3:40** in the submission video (chapter "Publish, and the close"). Harbour opens **open evidence** on `lifeboatpq.eth`: the Swarm file is fetched, hashed in the browser, and shown as **"Swarm file matches the Arkiv record"**, with block, verdict and name checked against the record. The narration at **3:29** explains it.
 
 ## What got in our way
 1. **"cannot create batch" (HTTP 500) with no reason.** Bee's log said only `create batch: create failed`. The cause was our blockchain RPC: the public Tenderly gateway (chosen because it keeps full log history for the postage sync) **rate-limits `eth_sendRawTransaction`**. Switching the node's RPC to publicnode after the sync fixed it. *Suggestion:* surface the RPC error in the API response.
