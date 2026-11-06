@@ -1,6 +1,6 @@
 // ENSv2 on Sepolia: addresses, ABIs (Sourcify, abi/ens), role bits (verified RegistryRolesLib /
 // PermissionedResolverLib sources). Browser-safe: no fs, no env.
-import type { Abi, Address, Hex } from "viem";
+import { fallback, http, type Abi, type Address, type Hex, type HttpTransportConfig } from "viem";
 import addresses from "../abi/ens/addresses.json" with { type: "json" };
 import ETHRegistry from "../abi/ens/ETHRegistry.json" with { type: "json" };
 import ETHRegistrar from "../abi/ens/ETHRegistrar.json" with { type: "json" };
@@ -82,3 +82,22 @@ export const PUBLIC_RPC = {
   sepoliaLogs: "https://sepolia.gateway.tenderly.co",
   mainnet: "https://ethereum-rpc.publicnode.com",
 };
+
+/**
+ * Fallback pools, preferred first. One free endpoint rate-limits a busy check; the next one takes over.
+ * Tenderly is the only free provider that serves full-range logs; the others cap the range (publicnode and 1rpc
+ * at 50k blocks), which logsAll handles by splitting the query.
+ */
+export const RPCS = {
+  sepolia: ["https://ethereum-sepolia-rpc.publicnode.com", "https://1rpc.io/sepolia", "https://sepolia.gateway.tenderly.co"],
+  sepoliaLogs: ["https://sepolia.gateway.tenderly.co", "https://ethereum-sepolia-rpc.publicnode.com", "https://1rpc.io/sepolia"],
+  mainnet: ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org", "https://mainnet.gateway.tenderly.co", "https://1rpc.io/eth"],
+  mainnetLogs: ["https://mainnet.gateway.tenderly.co", "https://eth.drpc.org"],
+} as const;
+
+/** A viem transport over a pool: each endpoint gets one retry, then the next one is tried. */
+export const rpcTransport = (urls: readonly string[], opts: { timeout?: number; batch?: HttpTransportConfig["batch"] } = {}) =>
+  fallback(
+    [...new Set(urls)].map((u) => http(u, { timeout: opts.timeout ?? 30_000, retryCount: 1, batch: opts.batch })),
+    { retryCount: 2 },
+  );

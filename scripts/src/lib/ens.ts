@@ -2,16 +2,16 @@
 import { createPublicClient, createWalletClient, http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
-import { PUBLIC_RPC } from "@lifeboat/core";
+import { PUBLIC_RPC, RPCS, rpcTransport } from "@lifeboat/core";
 import { env, envOr } from "./env.js";
 
 export * from "@lifeboat/core";
 
 export const SEPOLIA_RPC = () => envOr("SEPOLIA_RPC_URL", PUBLIC_RPC.sepolia);
 
-export const sepoliaClient = () => createPublicClient({ chain: sepolia, batch: { multicall: true }, transport: http(SEPOLIA_RPC(), { retryCount: 4, timeout: 30_000 }) });
-export const sepoliaLogsClient = () => createPublicClient({ chain: sepolia, transport: http(PUBLIC_RPC.sepoliaLogs, { retryCount: 4, timeout: 60_000 }) });
-export const mainnetClient = () => createPublicClient({ transport: http(envOr("MAINNET_RPC_URL", PUBLIC_RPC.mainnet), { retryCount: 3, timeout: 30_000 }) });
+export const sepoliaClient = () => createPublicClient({ chain: sepolia, batch: { multicall: true }, transport: rpcTransport([SEPOLIA_RPC(), ...RPCS.sepolia]) });
+export const sepoliaLogsClient = () => createPublicClient({ chain: sepolia, transport: rpcTransport(RPCS.sepoliaLogs, { timeout: 60_000 }) });
+export const mainnetClient = () => createPublicClient({ transport: rpcTransport([envOr("MAINNET_RPC_URL", PUBLIC_RPC.mainnet), ...RPCS.mainnet]) });
 
 export function sepoliaDevWallet() {
   const raw = env("DEV_PRIVATE_KEY").trim().replace(/^["']|["']$/g, "");
