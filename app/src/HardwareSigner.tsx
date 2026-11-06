@@ -1,7 +1,10 @@
-// Web Serial bridge to the ESP32 signer (firmware/esp32/lifeboat_signer). The browser holds only public data:
-// it grinds the counter, keeps the public Merkle tree, and verifies every signature the device returns.
+// Web Serial bridge to the ESP32 signer (firmware/esp32/lifeboat_signer). The browser holds only public data, in
+// memory only (nothing is saved): it grinds the counter, rebuilds the public Merkle tree from the device, and verifies
+// every signature the device returns. Clear signing: the browser sends the message itself, never a bare hash; the
+// device rebuilds the hash and shows the text on its screen before the button can approve it.
 import { useRef, useState } from "react";
-import { authPath, encodeWitness, fromHex, grind, keccak, nodeHash, toHex, verify, LEAVES, TREE_HEIGHT, WITNESS_BYTES } from "@lifeboat/pq";
+import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVES, TREE_HEIGHT, WITNESS_BYTES } from "@lifeboat/pq";
+import { messageRequest } from "@lifeboat/core";
 import { LuggageTag, Pill } from "./ui";
 
 type Info = { next: number; pubSeed: string; root: string } | null;
@@ -12,8 +15,6 @@ type SerialPortLike = {
   readable: ReadableStream<Uint8Array>;
   writable: WritableStream<Uint8Array>;
 };
-
-const treeKey = (root: string) => `lifeboat-hw-leaves-${root}`;
 
 function buildLevels(pubSeed: Uint8Array, leafHashes: Uint8Array[]) {
   const levels: Uint8Array[][] = [leafHashes];
@@ -81,22 +82,29 @@ export default function HardwareSigner() {
         }
       })();
       setStatus("connected");
-      await refresh();
+      const i = await refresh();
+      if (i) await fetchTree();
     } catch (e) {
       setStatus(`couldn't connect: ${(e as Error).message}`);
     }
   };
 
-  const refresh = async () => {
+  // the public tree, in memory only: re-read from the device on connect (a few seconds once the device has it cached)
+  const treeRoot = useRef("");
+  const refresh = async (): Promise<Info> => {
     const p = until((l) => l.startsWith("WOTS|INFO|"), 10_000);
     await send("WOTS|INFO");
     const parts = (await p).split("|");
-    if (parts[2] === "NOKEY") return setInfo(null), setStatus("connected · no key on the device yet");
+    if (parts[2] === "NOKEY") {
+      setInfo(null);
+      setStatus("connected · no key on the device yet");
+      return null;
+    }
     const i = { next: Number(parts[2]), pubSeed: "0x" + parts[3], root: "0x" + parts[4] };
     setInfo(i);
-    const cached = localStorage.getItem(treeKey(i.root));
-    leafHashes.current = cached ? (JSON.parse(cached) as string[]).map(fromHex) : [];
-    setStatus(`connected · key ${i.root.slice(0, 10)}… · next leaf ${i.next}${cached ? "" : " · public tree not cached"}`);
+    const have = treeRoot.current === i.root && leafHashes.current.length === LEAVES;
+    setStatus(`connected · key ${i.root.slice(0, 10)}… · next leaf ${i.next}${have ? "" : " · public tree not read yet"}`);
+    return i;
   };
 
   const collectTree = async (cmd: string) => {
@@ -116,9 +124,7 @@ export default function HardwareSigner() {
     const missing = Array.from({ length: LEAVES }, (_, i) => i).filter((i) => !hashes[i]);
     if (missing.length) throw new Error(`missed ${missing.length} of 256 leaf lines (first: ${missing[0]}): click "re-read public tree"`);
     setProgress(LEAVES);
-    const deviceRoot = "0x" + end.split("|")[2];
-    const levels = buildLevels(fromHex(info?.pubSeed ?? "0x" + "00".repeat(32)), hashes);
-    return { hashes, deviceRoot, levels };
+    return { hashes, deviceRoot: "0x" + end.split("|")[2] };
   };
 
   const guard = (fn: () => Promise<void>) => () => fn().catch((e) => setStatus(`error: ${(e as Error).message}`));
@@ -127,17 +133,16 @@ export default function HardwareSigner() {
     const entropy = crypto.getRandomValues(new Uint8Array(32));
     setStatus("generating 256 one-time keys on the device (~40 s)…");
     const { hashes, deviceRoot } = await collectTree(`WOTS|KEYGEN|${toHex(entropy)}`);
-    await refresh();
-    localStorage.setItem(treeKey(deviceRoot), JSON.stringify(hashes.map(toHex)));
     leafHashes.current = hashes;
+    treeRoot.current = deviceRoot;
     await refresh();
   };
 
   const fetchTree = async () => {
-    setStatus("re-reading the public tree from the device (~40 s)…");
+    setStatus("reading the public tree from the device (a few seconds; ~40 s the first time)…");
     const { hashes, deviceRoot } = await collectTree("WOTS|LEAVES");
-    localStorage.setItem(treeKey(deviceRoot), JSON.stringify(hashes.map(toHex)));
     leafHashes.current = hashes;
+    treeRoot.current = deviceRoot;
     await refresh();
   };
 
@@ -146,28 +151,33 @@ export default function HardwareSigner() {
     setResult(null);
     const pub = { root: fromHex(info.root), pubSeed: fromHex(info.pubSeed) };
     const levels = buildLevels(pub.pubSeed, leafHashes.current);
-    if (toHex(levels[TREE_HEIGHT]![0]!) !== info.root) return setStatus("cached tree doesn't match the device root: re-read it");
-    const sigHash = keccak(new TextEncoder().encode(text));
+    if (toHex(levels[TREE_HEIGHT]![0]!) !== info.root) return setStatus("the public tree doesn't match the device root: re-read it");
+    // clear signing: the device gets the text itself and rebuilds this hash from it
+    const req = messageRequest(text);
+    const sigHash = fromHex(req.sigHash);
     const g = grind(pub, info.next, sigHash); // public work, done here
     const sigs: Uint8Array[] = new Array(64);
     let leaf = -1;
+    let deviceHash = "";
     const done = until((l) => {
+      if (l.startsWith("WOTS|HASH|")) deviceHash = "0x" + l.split("|")[2];
       if (l.startsWith("WOTS|SIG|")) {
         const [, , k, h] = l.split("|");
         sigs[Number(k!.split("/")[0]) - 1] = fromHex(h!);
       }
-      if (l.startsWith("WOTS|ASK|")) setStatus(`device is asking: press BOOT on the ESP32 (Approve) to sign with leaf ${l.split("|")[2]}`);
+      if (l.startsWith("WOTS|ASK|")) setStatus(`the ESP32 shows the message on its screen: read it, then press BOOT to sign (leaf ${l.split("|")[2]})`);
       if (l.startsWith("WOTS|DONE|")) leaf = Number(l.split("|")[2]);
       return l.startsWith("WOTS|DONE|") || l.startsWith("WOTS|ERR|");
-    }, 90_000);
-    await send(`WOTS|SIGN|${toHex(sigHash)}|${g.counter}|${text.slice(0, 20)}`);
+    }, 150_000);
+    await send(req.line(g.counter));
     const end = await done;
     if (end.startsWith("WOTS|ERR|")) {
       setStatus(`device refused: ${end.split("|")[2]}`);
-      return refresh();
+      await refresh();
+      return;
     }
     const witness = encodeWitness({ leaf, counter: g.counter, sigs, path: authPath(levels, leaf) });
-    const ok = verify(pub, sigHash, witness) && witness.length === WITNESS_BYTES;
+    const ok = deviceHash === req.sigHash && verify(pub, sigHash, witness) && witness.length === WITNESS_BYTES;
     setResult({ ok, leaf, tries: g.tries, text });
     await refresh();
   };
@@ -175,7 +185,7 @@ export default function HardwareSigner() {
   return (
     <LuggageTag tone={result ? (result.ok ? "good" : "bad") : "neutral"} verdict={result ? (result.ok ? "Signed" : "Invalid") : "Device"} id="Hardware signer (ESP32)" meta={status}>
       <p className="desc">
-        The secret seed and the leaf counter live only on the device. It shows each request on its screen, waits for the physical Approve button, saves the counter <b>before</b> signing, and refuses
+        The secret seed and the leaf counter live only on the device. <b>Clear signing:</b> the device never signs a bare hash. It gets the request itself, rebuilds the hash from it, shows it in words on its screen, waits for the physical Approve button, saves the counter <b>before</b> signing, and refuses
         any counter that doesn't match its own digest. This page holds only public data and checks every signature it gets back.
       </p>
       {!supported ? (

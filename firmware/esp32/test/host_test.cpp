@@ -2,10 +2,15 @@
 // vectors (skSeed = 0x11…, pubSeed = 0x22…): keccak256("") and the Merkle root, then the 64 chain values
 // for one (leaf, sigHash, counter). tools/firmware-check.mjs compares them with contracts/test/vectors/wots.json.
 //   g++ -O2 -std=c++17 -I ../lifeboat_signer host_test.cpp -o host_test && ./host_test <leaf> <sigHashHex> <counter>
+// Clear signing: ./host_test requests  < lines of "<deviceLeaf> <request line>"  prints, per case, the error or the
+// hash the device computed and the screen lines (clear.h, the same code the firmware runs).
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include "wots.h"
+#include "clear.h"
+#include <iostream>
+#include <string>
 
 static void hex(const uint8_t* b, size_t n) {
   for (size_t i = 0; i < n; i++) printf("%02x", b[i]);
@@ -15,7 +20,33 @@ static void unhex(const char* s, uint8_t* out, size_t n) {
   for (size_t i = 0; i < n; i++) sscanf(s + 2 * i, "%2hhx", &out[i]);
 }
 
+static int run_requests() {
+  std::string in;
+  int i = 0;
+  static cs::Screen sc;
+  while (std::getline(std::cin, in)) {
+    size_t sp = in.find(' ');
+    if (sp == std::string::npos) continue;
+    uint32_t leaf = (uint32_t)strtoul(in.substr(0, sp).c_str(), nullptr, 10);
+    std::string line = in.substr(sp + 1);
+    while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) line.pop_back();
+    uint8_t h[32];
+    uint32_t counter = 0;
+    const char* err = cs::build_request(line.c_str(), line.size(), sc, h, &counter, leaf);
+    printf("case%d.err=%s\n", i, err ? err : "");
+    if (!err) {
+      printf("case%d.hash=", i);
+      hex(h, 32);
+      printf("\ncase%d.title=%s\ncase%d.truncated=%d\n", i, sc.title, i, sc.truncated ? 1 : 0);
+      for (int k = 0; k < sc.n; k++) printf("case%d.line%d=%s\n", i, k, sc.lines[k]);
+    }
+    i++;
+  }
+  return 0;
+}
+
 int main(int argc, char** argv) {
+  if (argc > 1 && !strcmp(argv[1], "requests")) return run_requests();
   uint8_t empty[32];
   lb::keccak256(nullptr, 0, empty);
   printf("keccak256_empty=");

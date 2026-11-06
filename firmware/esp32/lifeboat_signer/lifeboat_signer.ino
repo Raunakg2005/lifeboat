@@ -13,9 +13,16 @@
 //   WOTS|INFO                          -> WOTS|INFO|<nextLeaf>|<pubSeed>|<root>   or  WOTS|INFO|NOKEY
 //   WOTS|KEYGEN|<hostEntropy hex32>    -> WOTS|LH|<i>|<leafHash> x256, then WOTS|ROOT|<root>
 //   WOTS|LEAVES                        -> re-streams WOTS|LH lines (public; ~40 s), then WOTS|ROOT
-//   WOTS|SIGN|<sigHash>|<counter>|<label>
-//        -> WOTS|ASK|<leaf>  (waits for a button) -> WOTS|SIG|<k>/64|<chain value> x64 -> WOTS|DONE|<leaf>|<keccak of sigs>
-//        or WOTS|ERR|<reason>
+//   Clear signing (clear.h): the device never signs a bare hash. Each request carries its own fields; the device
+//   rebuilds the hash from them and shows them in words, page by page (BOOT = next page, then BOOT = sign):
+//   WOTS|MSG|<counter>|<text hex>                                   a plain-text message
+//   WOTS|PQW|<counter>|<chainId>|<wallet>|<leaf>|<deadline>|<calls>   a LifeboatPQWallet execute (ENS, payments…)
+//   WOTS|SAFE|<counter>|<chainId>|<guard>|<safe>|<to>|<value>|<data>|<op>|<safeTxGas>|<baseGas>|<gasPrice>|<gasToken>|<refund>|<nonce>
+//                                                                   a Quantum Guard co-signature for a Safe tx
+//   WOTS|FRAME|<counter>|<unsigned tx hex>                          an EIP-8141 frame transaction
+//        -> WOTS|HASH|<sigHash the device computed> -> WOTS|ASK|<leaf> (waits for the button)
+//        -> WOTS|SIG|<k>/64|<chain value> x64 -> WOTS|DONE|<leaf>|<keccak of sigs>     or WOTS|ERR|<reason>
+//   WOTS|SIGN|…  (a bare hash) is refused: WOTS|ERR|blind-signing-off
 //   WOTS|EFUSE                         -> WOTS|EFUSE|<coding scheme of BLOCK3> (read-only, never burns)
 //   WOTS|BENCH                         -> WOTS|BENCH|single_core_est_ms|<n>|dual_core_ms|<n>
 //   (keygen and tree export use both cores; the public tree is cached in NVS, so LEAVES is instant after the first time)
@@ -26,6 +33,7 @@
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
 #include "wots.h"
+#include "clear.h"
 #if __has_include("bootloader_random.h")
 #include "bootloader_random.h"
 #define LB_HAVE_BOOTLOADER_RANDOM 1
@@ -38,7 +46,7 @@
 static const int PIN_APPROVE = 18;  // right-side pins: the only ones with a free breadboard hole on a DevKit V1
 static const int PIN_REJECT = 19;
 static const int PIN_BOOT = 0;  // the board's own BOOT button also approves (no wiring needed); read only after boot
-static const uint32_t ASK_TIMEOUT_MS = 60000;
+static const uint32_t ASK_TIMEOUT_MS = 90000;
 
 Preferences prefs;
 SSD1306AsciiWire oled;
@@ -46,6 +54,7 @@ static bool have_key = false;
 static uint8_t sk_seed[32], pub_seed[32], root[32];
 static uint8_t leaves[lb::LEAVES][32];  // public, only needed during keygen / re-export
 static uint8_t sigs[lb::LEN][32];
+static cs::Screen screen;  // the request in words
 
 static void hexout(const uint8_t* b, size_t n) {
   static const char* H = "0123456789abcdef";
@@ -78,7 +87,7 @@ static uint32_t next_leaf() { return prefs.getUInt("next", 0); }
 static void show_idle() {
   char l3[24];
   snprintf(l3, sizeof l3, have_key ? "next leaf %lu/256" : "no key yet", (unsigned long)next_leaf());
-  show("LIFEBOAT", "post-quantum signer", l3, have_key ? "BOOT = approve" : "");
+  show("LIFEBOAT", "post-quantum signer", l3, have_key ? "clear signing on" : "");
 }
 
 static void random_bytes(uint8_t* out, size_t n) {
@@ -184,13 +193,43 @@ static void cmd_keygen(const String& host_entropy_hex) {
 
 static bool approve_pressed() { return digitalRead(PIN_APPROVE) == LOW || digitalRead(PIN_BOOT) == LOW; }
 
-static int wait_button() {
+static const int PAGE_LINES = 5;
+static int pages_of(const cs::Screen& sc) { return sc.n == 0 ? 1 : (sc.n + PAGE_LINES - 1) / PAGE_LINES; }
+
+/** Page p of the request: title, 5 lines, and what the button does now. */
+static void show_page(const cs::Screen& sc, int p, uint32_t leaf) {
+  int pages = pages_of(sc);
+  oled.clear();
+  oled.set2X();
+  oled.println(sc.title);
+  oled.set1X();
+  for (int i = 0; i < PAGE_LINES; i++) {
+    int k = p * PAGE_LINES + i;
+    oled.println(k < sc.n ? sc.lines[k] : "");
+  }
+  char f[24];
+  if (p == pages - 1) snprintf(f, sizeof f, "leaf %lu  BOOT=SIGN", (unsigned long)leaf);
+  else snprintf(f, sizeof f, "%d/%d  BOOT=next page", p + 1, pages);
+  oled.print(f);
+}
+
+/**
+ * Shows the request page by page. BOOT moves to the next page; only on the last page does it approve, so every
+ * line has been on screen before anything is signed. Returns 1 approved, -1 rejected (D19), 0 timeout.
+ */
+static int ask(const cs::Screen& sc, uint32_t leaf) {
+  int pages = pages_of(sc), p = 0;
+  show_page(sc, 0, leaf);
   uint32_t t0 = millis();
   while (approve_pressed() && millis() - t0 < 2000) delay(5);  // ignore a press that started before the request
   while (millis() - t0 < ASK_TIMEOUT_MS) {
     if (approve_pressed()) {
       delay(30);
-      if (approve_pressed()) return 1;
+      if (approve_pressed()) {
+        if (p == pages - 1) return 1;
+        while (approve_pressed()) delay(5);  // one press, one page
+        show_page(sc, ++p, leaf);
+      }
     }
     if (digitalRead(PIN_REJECT) == LOW) {
       delay(30);
@@ -201,26 +240,32 @@ static int wait_button() {
   return 0;
 }
 
-static void cmd_sign(const String& sig_hash_hex, uint32_t counter, const String& label) {
+static void cmd_request(const String& line) {
   if (!have_key) return (void)Serial.println("WOTS|ERR|no-key");
-  uint8_t sig_hash[32];
-  if (!unhex(sig_hash_hex, sig_hash, 32)) return (void)Serial.println("WOTS|ERR|bad-sighash");
   uint32_t leaf = next_leaf();
   if (leaf >= (uint32_t)lb::LEAVES) return (void)Serial.println("WOTS|ERR|exhausted");
+  uint8_t sig_hash[32];
+  uint32_t counter = 0;
+  // the hash comes from the request's own fields, never from the host
+  const char* err = cs::build_request(line.c_str(), line.length(), screen, sig_hash, &counter, leaf);
+  if (err) {
+    Serial.print("WOTS|ERR|");
+    return (void)Serial.println(err);
+  }
+  if (screen.truncated) return (void)Serial.println("WOTS|ERR|too-long-to-show");
   // check the counter BEFORE asking or spending anything (no secret needed)
   uint8_t digest[32], digits[lb::LEN];
   lb::message_digest(pub_seed, leaf, root, sig_hash, counter, digest);
   if (lb::digits_of(digest, digits) != lb::TARGET_SUM) return (void)Serial.println("WOTS|ERR|bad-counter");
 
-  char l2[32], l3[32];
-  snprintf(l2, sizeof l2, "leaf %lu  tx %c%c%c%c..%c%c%c%c", (unsigned long)leaf, sig_hash_hex[2], sig_hash_hex[3], sig_hash_hex[4], sig_hash_hex[5], sig_hash_hex[62], sig_hash_hex[63], sig_hash_hex[64], sig_hash_hex[65]);
-  snprintf(l3, sizeof l3, "%.21s", label.c_str());
-  show("SIGN?", l2, l3, "BOOT=yes  wait=no");
+  Serial.print("WOTS|HASH|");
+  hexout(sig_hash, 32);
+  Serial.println();
   Serial.print("WOTS|ASK|");
   Serial.println(leaf);
-  int b = wait_button();
+  int b = ask(screen, leaf);
   if (b <= 0) {
-    show(b < 0 ? "REJECTED" : "TIMEOUT", "nothing signed");
+    show(b < 0 ? "REJECTED" : "TIMEOUT", "nothing signed", "no leaf used");
     return (void)Serial.println(b < 0 ? "WOTS|ERR|rejected" : "WOTS|ERR|timeout");
   }
   // persist-before-release: the leaf is burned even if power fails mid-signature
@@ -229,7 +274,9 @@ static void cmd_sign(const String& sig_hash_hex, uint32_t counter, const String&
     show("ERROR", "counter not saved");
     return (void)Serial.println("WOTS|ERR|persist");
   }
-  show("SIGNING", l2);
+  char l2[24];
+  snprintf(l2, sizeof l2, "leaf %lu", (unsigned long)leaf);
+  show("SIGNING", screen.title, l2);
   if (!lb::sign_chains(sk_seed, pub_seed, root, leaf, sig_hash, counter, sigs)) return (void)Serial.println("WOTS|ERR|bad-counter");
   for (int k = 0; k < lb::LEN; k++) {
     Serial.print("WOTS|SIG|");
@@ -248,7 +295,7 @@ static void cmd_sign(const String& sig_hash_hex, uint32_t counter, const String&
   Serial.println();
   char l4[24];
   snprintf(l4, sizeof l4, "next leaf %lu", (unsigned long)(leaf + 1));
-  show("SIGNED", l2, "leaf burned", l4);
+  show("SIGNED", screen.title, "leaf burned", l4);
 }
 
 /** Times one core vs both, on the real key's (public) leaves. Touches no secret state and no counter. */
@@ -277,7 +324,9 @@ static void cmd_efuse() {
 }
 
 void setup() {
+  Serial.setRxBufferSize(8192);  // a request line can be a few KB (hex)
   Serial.begin(115200);
+  Serial.setTimeout(2000);
   pinMode(PIN_APPROVE, INPUT_PULLUP);
   pinMode(PIN_REJECT, INPUT_PULLUP);
   pinMode(PIN_BOOT, INPUT_PULLUP);
@@ -322,13 +371,10 @@ void loop() {
       show_idle();
     }
     else Serial.println("WOTS|ERR|no-key");
-  } else if (cmd == "SIGN") {
-    int a = rest.indexOf('|');
-    int b = rest.indexOf('|', a + 1);
-    if (a < 0) return (void)Serial.println("WOTS|ERR|usage");
-    String sh = rest.substring(0, a);
-    uint32_t counter = (uint32_t)strtoul(rest.substring(a + 1, b < 0 ? rest.length() : b).c_str(), nullptr, 10);
-    cmd_sign(sh, counter, b < 0 ? String("") : rest.substring(b + 1));
+  } else if (cmd == "MSG" || cmd == "PQW" || cmd == "SAFE" || cmd == "FRAME") cmd_request(line);
+  else if (cmd == "SIGN") {
+    show("REFUSED", "a bare hash can't", "be shown in words:", "nothing signed");
+    Serial.println("WOTS|ERR|blind-signing-off");
   } else if (cmd == "EFUSE") cmd_efuse();
   else if (cmd == "BENCH") cmd_bench();
   else Serial.println("WOTS|ERR|unknown");

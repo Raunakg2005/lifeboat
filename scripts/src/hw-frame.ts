@@ -2,7 +2,8 @@
 //   1. read the device's public key (INFO) and its public Merkle tree (LEAVES, ~40 s), check the root
 //   2. deploy (once) and fund a LifeboatAccount for that public key (CREATE2, deterministic)
 //   3. build the transaction with the device's next leaf; the laptop grinds the counter (public work)
-//   4. the device shows SIGN? and waits for the BOOT button; it saves its counter, then streams the chains
+//   4. clear signing: the device gets the unsigned transaction, rebuilds the hash itself, shows sender, frames,
+//      amount, recipient and fee in words, waits for BOOT, saves its counter, then streams the chains
 //   5. assemble + verify the witness here, dry-run, submit through the alt mempool, publish the leaf to Arkiv
 // Usage: pnpm --filter @lifeboat/scripts hw-frame [--port COM5]
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -13,6 +14,7 @@ import { addr, u64 } from "@arkiv-network/sdk/schema";
 import { encodeTx, frame, newTx, sigHash, type FrameTx } from "@forshtat/hegota-support/tx";
 import { toWire } from "@forshtat/hegota-support/rpc";
 import { authPath, encodeWitness, fromHex, grind, nodeHash, toHex, verify, LEAVES, TREE_HEIGHT, WITNESS_BYTES } from "@lifeboat/pq";
+import { frameRequest } from "@lifeboat/core";
 import { argValue, repoPath } from "./lib/env.js";
 import { CREATE2_FACTORY, MINER_SIDECAR_URL, NODE_URL, devWallet, explorerTx, profile, publicClient, yulInitcode } from "./lib/devnet.js";
 import { rpc } from "./lib/rpc.js";
@@ -101,25 +103,32 @@ const tx: FrameTx = newTx({
   fees: { maxFeePerGas: (block.baseFeePerGas ?? parseGwei("1")) * 2n + parseGwei("1"), maxPriorityFeePerGas: parseGwei("1") },
 });
 const sh = sigHash(profile, tx);
+// what the device gets: the transaction itself, with the signature bytes elided (exactly what sigHash hashes)
+const req = frameRequest(encodeTx(profile, { ...tx, signatures: tx.signatures.map((s) => (s.msg === "0x" ? { ...s, signature: "0x" as Hex } : s)) }));
+if (req.sigHash !== sh) throw new Error("the unsigned encoding doesn't hash to the sigHash");
 const g = grind({ root, pubSeed }, next, fromHex(sh));
 console.log(`sigHash ${sh}; counter ${g.counter} found in ${g.tries} tries on this laptop`);
 
-// 4. the device signs (after the BOOT button)
+// 4. clear signing: the device rebuilds the hash from the transaction, shows it in words, and waits for BOOT
 const sigs: Uint8Array[] = new Array(64);
 let doneLeaf = -1;
+let deviceHash = "";
 p = until((l) => {
-  if (l.startsWith("WOTS|ASK|")) console.log(`\n>>> The ESP32 shows SIGN? for leaf ${l.split("|")[2]}. Press the BOOT button now. <<<\n`);
+  if (l.startsWith("WOTS|HASH|")) deviceHash = "0x" + l.split("|")[2];
+  if (l.startsWith("WOTS|ASK|")) console.log(`\n>>> The ESP32 shows the transaction in words (leaf ${l.split("|")[2]}). Read each page, press BOOT for the next one, then BOOT to sign. <<<\n`);
   if (l.startsWith("WOTS|SIG|")) {
     const [, , k, h] = l.split("|");
     sigs[Number(k!.split("/")[0]) - 1] = fromHex("0x" + h);
   }
   if (l.startsWith("WOTS|DONE|")) doneLeaf = Number(l.split("|")[2]);
   return l.startsWith("WOTS|DONE|") || l.startsWith("WOTS|ERR|");
-}, 90_000);
-await send(`WOTS|SIGN|${sh}|${g.counter}|1337 send 0.001 ETH`);
+}, 150_000);
+await send(req.line(g.counter));
 const end = await p;
 port.close();
 if (end.startsWith("WOTS|ERR|")) throw new Error(`device refused: ${end}`);
+if (deviceHash !== sh) throw new Error(`the device computed ${deviceHash}, expected ${sh}`);
+console.log("the device rebuilt the same hash from the transaction ✓");
 if (doneLeaf !== next) throw new Error(`device signed leaf ${doneLeaf}, expected ${next}`);
 
 // 5. assemble, verify, submit
@@ -143,8 +152,8 @@ const leafEntity = await arkiv.executeBatch({
 });
 mkdirSync(repoPath("evidence", "hardware"), { recursive: true });
 writeFileSync(
-  repoPath("evidence", "hardware", "esp32-frame-tx.json"),
-  JSON.stringify({ device: "ESP32 DevKit V1 (CP2102)", port: portPath, root: toHex(root), pubSeed: toHex(pubSeed), account, leaf: doneLeaf, counter: g.counter, grindTries: g.tries, sigHash: sh, txHash: hash, explorer: explorerTx(hash), receipt, simulation: { frames: sim.frames }, arkivLeafTx: leafEntity.txHash, at: new Date().toISOString() }, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2),
+  repoPath("evidence", "hardware", "esp32-frame-tx-clear-signed.json"),
+  JSON.stringify({ device: "ESP32 DevKit V1 (CP2102)", clearSigning: "the device rebuilt the hash from the unsigned transaction and showed it in words", deviceHash, port: portPath, root: toHex(root), pubSeed: toHex(pubSeed), account, leaf: doneLeaf, counter: g.counter, grindTries: g.tries, sigHash: sh, txHash: hash, explorer: explorerTx(hash), receipt, simulation: { frames: sim.frames }, arkivLeafTx: leafEntity.txHash, at: new Date().toISOString() }, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2),
 );
-console.log(`leaf ${doneLeaf} published to the Arkiv ledger (${leafEntity.txHash}); evidence/hardware/esp32-frame-tx.json saved`);
+console.log(`leaf ${doneLeaf} published to the Arkiv ledger (${leafEntity.txHash}); evidence/hardware/esp32-frame-tx-clear-signed.json saved`);
 process.exit(0);

@@ -3,6 +3,8 @@
 A one-time key is only as safe as its counter. The signer keeps the secret seed and the leaf counter on a small device, shows every request on its own screen, needs a physical button press, and **saves the counter before it computes anything**. A crash, a reset or a malicious host can burn a leaf, but it can never make the device sign twice with one.
 
 ## Live result: a frame transaction signed by the ESP32 (6 Nov 2026, ~02:10 IST)
+This ran on the devnet before its reset on 6 Nov at 11:59 IST, so the transaction below is no longer on chain; the evidence file keeps its receipt. The clear-signed re-run (`pnpm --filter @lifeboat/scripts hw-frame`, a BOOT press) replaces it.
+
 | | |
 |---|---|
 | Device key | generated **on the ESP32** (its TRNG mixed with browser entropy); root `0xf2949ed2…434f` |
@@ -40,12 +42,34 @@ Before that, a test message signed through the web app's Web Serial panel (leaf 
 [`firmware/esp32/lifeboat_signer/`](../firmware/esp32/lifeboat_signer/):
 - `keccak.h`: Keccak-256 (Ethereum padding), portable C++.
 - `wots.h`: the WOTS+C core, mirroring `packages/pq` exactly.
+- `clear.h`: **clear signing**. It turns each request into the hash to sign and the lines to show, with no Arduino code, so the same file runs in the host test.
 - `lifeboat_signer.ino`: Arduino glue (NVS counter, OLED, buttons, serial).
 
+## Clear signing: the device shows what it signs
+The device **never signs a bare hash**. A hacked laptop could otherwise ask for one thing on its own screen and get a signature for another. Instead, the host sends the request's own fields. The device rebuilds the hash from them and shows the same bytes in words:
+
+| Request | The device rebuilds | The screen shows |
+|---|---|---|
+| `MSG`: a text message | `keccak("\x19Lifeboat Signed Message:\n" ‖ len ‖ text)` (printable ASCII only) | the text |
+| `PQW`: a post-quantum wallet action (ENS records, payments, tokens) | `LifeboatPQWallet.digest(leaf, deadline, calls)`, from the ABI-encoded calls (canonical encoding only) | chain, wallet, deadline, then each call: "send 0.01 ETH" with the full recipient address, `transfer` with amount, ENS `setText` with the **name** and record (decoded from the DNS-encoded name), `setResolver`, role grants… |
+| `SAFE`: a Quantum Guard co-signature | the Safe 1.4.1 EIP-712 transaction hash, then the guard digest | Safe, nonce, what the transaction does, `! DELEGATECALL` and each call inside a `multiSend`, any gas refund |
+| `FRAME`: an EIP-8141 frame transaction | `keccak` of the unsigned transaction (RLP decoded on the device) | chain, sender, nonce, each frame (VERIFY / SENDER / DEFAULT), "send 0.001 ETH" + full recipient, max fee |
+
+Unusual things start with `!` (delegatecall, unlimited approvals, new owners, unknown functions, mainnet). Long requests are split into pages. **BOOT moves to the next page, and only on the last page does BOOT sign**, so every line has been on screen before anything is signed.
+
+The device refuses, before touching the secret or spending a leaf:
+- a bare hash (`WOTS|SIGN` → `blind-signing-off`);
+- a request that names another leaf;
+- non-canonical call encoding;
+- a frame transaction whose signature bytes aren't elided;
+- a message with control characters;
+- a counter that doesn't match its own digest;
+- anything too long to show.
+
 **Signing, step by step:**
-1. The host (browser or laptop) sends `WOTS|SIGN|<sigHash>|<counter>|<label>`. The counter is found by the host: grinding needs no secret.
-2. The device takes the leaf **from its own counter**, recomputes the digest and **refuses** if the digits don't sum to 560. No secret is touched and no leaf is spent.
-3. It shows `SIGN? leaf n, tx 0x1234..abcd` on the OLED and waits for **Approve** (the BOOT button, or D18) or Reject (D19), with a 60 s timeout.
+1. The host builds the request ([`packages/core/src/device.ts`](../packages/core/src/device.ts)), computes the same hash and finds the counter. Grinding needs no secret.
+2. The device takes the leaf **from its own counter**, rebuilds the hash from the request and recomputes the digest. It **refuses** if the digits don't sum to 560. No secret is touched and no leaf is spent.
+3. It reports the hash it built (`WOTS|HASH|…`, which the host compares with its own), shows the request page by page, and waits for **Approve** (the BOOT button, or D18) or Reject (D19). It times out after 90 s, and a timeout uses no leaf.
 4. On Approve it writes `next = n + 1` to NVS, reads it back, and halts if that fails. **Then** it walks the 64 chains and streams them.
 5. The host assembles the witness with its own copy of the public Merkle tree and **verifies it** before using it.
 
@@ -58,24 +82,34 @@ Before that, a test message signed through the web app's Web Serial panel (leaf 
 | `WOTS|INFO` | `WOTS|INFO|<next>|<pubSeed>|<root>` or `WOTS|INFO|NOKEY` |
 | `WOTS|KEYGEN|<hex32>` | `WOTS|LH|<i>|<leafHash>` × 256, then `WOTS|ROOT|<root>` |
 | `WOTS|LEAVES` | re-streams the public leaf hashes and root |
-| `WOTS|SIGN|<sigHash>|<counter>|<label>` | `WOTS|ASK|<leaf>` → (button) → `WOTS|SIG|k/64|<hex>` × 64 → `WOTS|DONE|<leaf>|<keccak(sigs)>`, or `WOTS|ERR|<reason>` |
+| `WOTS|MSG|<counter>|<text hex>` | `WOTS|HASH|<hash>`, `WOTS|ASK|<leaf>` → (pages, button) → `WOTS|SIG|k/64|<hex>` × 64 → `WOTS|DONE|<leaf>|<keccak(sigs)>`, or `WOTS|ERR|<reason>` |
+| `WOTS|PQW|<counter>|<chainId>|<wallet>|<leaf>|<deadline>|<abi.encode(calls)>` | same |
+| `WOTS|SAFE|<counter>|<chainId>|<guard>|<safe>|<to>|<value>|<data>|<op>|<safeTxGas>|<baseGas>|<gasPrice>|<gasToken>|<refundReceiver>|<nonce>` | same |
+| `WOTS|FRAME|<counter>|<unsigned tx>` | same |
+| `WOTS|SIGN|…` (a bare hash) | `WOTS|ERR|blind-signing-off` |
 | `WOTS|EFUSE` | the BLOCK3 coding scheme (read-only; never burns a fuse) |
 
-**Host:** the web app's Escape page → "Hardware signer" uses Web Serial in Chrome or Edge ([`app/src/HardwareSigner.tsx`](../app/src/HardwareSigner.tsx)). It opens the port without toggling DTR/RTS (no auto-reset) and caches the public tree per root.
+**Host:** the web app's Escape page → "Hardware signer" uses Web Serial in Chrome or Edge ([`app/src/HardwareSigner.tsx`](../app/src/HardwareSigner.tsx)). It opens the port without toggling DTR/RTS (no auto-reset). It keeps the public tree **in memory only** and re-reads it from the device on connect (1.8 s), so the browser saves nothing.
 
 ## Tests
-`node tools/firmware-check.mjs` compiles the firmware's crypto core for the host (g++ in a throwaway Alpine container) and checks it against the TypeScript vectors:
+`node tools/firmware-check.mjs` compiles the firmware's crypto core and `clear.h` for the host (g++ in a throwaway Alpine container). It checks them against the TypeScript signer's vectors, and against 11 clear-signing requests built by the host code ([`gen-device-vectors.ts`](../scripts/src/gen-device-vectors.ts)). The expected hashes come from the contract's `walletDigest`, Safe's EIP-712 hash plus the guard digest, and the frame library's `sigHash`. **22 of 22 pass:**
 ```
 ✅ keccak256('') matches Ethereum
 ✅ Merkle root matches the TypeScript key
 ✅ leaf-0 signature accepted the right counter
 ✅ 64 chain values match the TypeScript signature byte for byte
 ✅ a wrong counter is refused
+✅ clear signing: message / ENS set text / payment + token / Safe payment / Safe install (delegatecall batch) / frame tx:
+   same hash as the host, and the screen shows the details (12 checks)
+✅ clear signing refuses: another leaf, non-canonical calls, signature bytes left in, a hidden control character, a bare hash
 ```
+On the real ESP32 (`pnpm --filter @lifeboat/scripts hw-clear-test`), the refusals were checked live: a bare hash, a wrong counter and another leaf were all refused, and no leaf was used. Timeouts used no leaf either.
 
 ## Claims we can make / can't make
 - ✅ The device never signs two different messages with one leaf, as long as its NVS isn't erased: the counter is saved before signing, and the host can't pick the leaf.
 - ✅ Nothing secret leaves the device; the host only ever sees chain values for an approved request.
+- ✅ **What you approve is what gets signed:** the device builds the hash from the same bytes it shows, so a hacked laptop can't swap the request.
+- ⚠️ The seed sits in flash unencrypted, so someone with the device and a USB cable can read it. Production needs flash encryption and secure boot (permanent eFuse settings, after testing on a spare board), and the one-way counter below.
 - ⚠️ **NVS can be erased** (`erase_flash`, an older image), which rolls the counter back. The one-time eFuse counter (one burned bit per signature, 64 signatures, if the chip's BLOCK3 coding scheme is NONE) would survive that; `WOTS|EFUSE` checks the coding scheme. Burning is off by default: eFuse writes are permanent, and Arduino has no virtual-eFuse mode.
 - ⚠️ The Dabao's hardware one-way counters would make rollback impossible by design. That's the reason we want it, and it's pending the booth fix.
 - ❌ We don't claim side-channel resistance. This is a hackathon signer.
