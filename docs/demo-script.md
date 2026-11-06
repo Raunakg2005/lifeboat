@@ -27,7 +27,7 @@ Numbers are read from the evidence files when the video is made. No real person'
 | # | Screen | Say |
 |---|---|---|
 | 1 | Home | "Every time you sign anything on Ethereum, your public key goes on-chain. A future quantum computer could turn that public key into your private key. Lifeboat shows who could take over what on Q-Day, and gets them out. No quantum computer can do this today: this is about getting ready." |
-| 1b | Discover: Public key → private key, the 2-bit card on real hardware (ibm_fez) | "On a tiny test key, the attack already works: a real IBM quantum computer turned the public key into the private key." |
+| 1b | Discover: Public key → private key, the 2-bit card on real hardware (ibm_fez) | "On a tiny test key, the attack already works: a real IBM quantum computer turns the public key into a private key." |
 | 2 | Discover | "Multisig signers publish their key every time they sign, even if they never send a transaction. Counting signatures, Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested council from 0 to 11." |
 | 3 | Scan → a security council | "This works for any Safe. Paste its address, and Lifeboat recovers every signer's key from the Safe's own signatures, live, in a few seconds." |
 | 4 | Scan → ENS name, survey line, then `lifeboatpq.eth` | "Names too. Lifeboat checks all five ways to control an ENS v2 name, and proves the list is complete. Across real names on Sepolia, one per owner, *N of M* can be steered on Q-Day, *K* of them through their resolver. Here's the way out, on our own test name: the registry refused a naive transfer, accepted our handover, and now a post-quantum wallet holds every path." |

@@ -58,7 +58,7 @@ Quantum: Shor's algorithm for the elliptic-curve discrete log in Qiskit, on toy 
 |---|---|
 | GitHub | https://github.com/Raunakg2005/lifeboat (**make it public first**) |
 | Live demo | https://lifeboat-mu.vercel.app |
-| Video | **upload the file** `video/out/lifeboat-submission.mp4` to ETHGlobal.com itself (3:50, 1280×720, voice only, no music) |
+| Video | **upload the file** `video/out/lifeboat-submission.mp4` to ETHGlobal.com itself (3:55, 1280×720, voice only, no music; remade 6 Nov 21:48 IST with the IBM line) |
 
 ## Tech stack (pick the closest options in each dropdown)
 | Category | Pick |

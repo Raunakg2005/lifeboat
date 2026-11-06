@@ -25,7 +25,7 @@ const IBM_BEAT = ibm
         id: "ibm",
         label: "Discover · IBM",
         title: "A real quantum computer",
-        lines: ["On a tiny test key, the attack already works: a real IBM quantum computer turned the public key into the private key."],
+        lines: ["On a tiny test key, the attack already works: a real IBM quantum computer turns the public key into a private key."],
         act: async (p) => {
           await p.tab("Discover");
           await p.scrollToText("Public key → private key", -92); // the whole panel: real hardware · ibm_fez, k = 3 ✓, the votes
