@@ -82,7 +82,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   2. Lifeboat deploys a new resolver, points the name at it, revokes the delegate and removes the operator.
   3. The transfer is **accepted**.
   4. The PQ wallet then signs its own `pq.checked` record with a hash-based signature.
-- **Proof:** `lifeboatdemo.eth` is hijackable through 4 paths; `lifeboatpq.eth` is protected. Every tx hash is in [helm-check.md](helm-check.md).
+- **Proof:** across real ENSv2 names on Sepolia (one per owner, ours excluded), 66 of 79 can be steered on Q-Day, 49 through their resolver ([survey](../evidence/ens/survey.json), aggregates only). Our own test name `lifeboatpq.eth` shows the handover. Every tx hash is in [helm-check.md](helm-check.md).
 - **Say:** "Saving the money isn't enough if an old key can still point your name somewhere else."
 
 ### Escape 1: the post-quantum account (EIP-8141 devnet, chain 1337)

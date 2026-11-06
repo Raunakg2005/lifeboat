@@ -13,12 +13,14 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 | **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
 | **Scan** | Exposure of any address on 6 chains; a **deep scan of any Safe** (every signer recovered from its own signatures); the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Ethereum mainnet, Sepolia ENSv2 |
 | **Escape** | A post-quantum (WOTS+C) account on EIP-8141; a staked **rescue paymaster** for wallets with no ETH; the **forgery** a reused one-time key allows | EIP-8141 alt-mempool devnet (chain 1337) |
+| **Protect in place** | **Quantum Guard**: a post-quantum co-signer for an existing Safe, covering transactions and ERC-1271 signatures | A real Safe 1.4.1 on Sepolia |
 | **Harbour** | A public Q-Day registry and one-time-key ledger | Arkiv (Rabdi), evidence on Swarm |
 | **Sign safely** | An ESP32 signer that can't sign twice with one key | Firmware + Web Serial |
 
 ## Findings (block-stamped, lower bounds)
 - **Optimism Security Council (10 of 13):** 4 public keys by nonce → **13 of 13** counting signatures. **Base's nested 8-of-11 council: 0 → 11.** Two of four council Safes look safe by nonce and aren't. → [docs/discovery.md](docs/discovery.md)
-- **`lifeboatdemo.eth`:** hijackable on Q-Day through 4 of 5 control paths. **`lifeboatpq.eth`:** handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
+- **Real ENSv2 names (Sepolia, one per owner, our own excluded):** **66 of 79** can be steered on Q-Day, 49 of them through their resolver. Our own test name `lifeboatpq.eth` shows the way out: handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
+- **Quantum Guard on a real Safe:** a payment signed by the owners only was **refused on-chain**; the post-quantum co-signed one went through, and ERC-1271 (Permit2) now needs the PQ key too. → [docs/quantum-guard.md](docs/quantum-guard.md)
 - **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.1 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
 
 ## EF: Frame Transaction Alternative Mempool
@@ -63,7 +65,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 |---|---|---|
 | `packages/pq` | WOTS+C: keys, signing, verification, Merkle tree, forgery analysis | 17 (vitest) |
 | `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | 3 (vitest: Safe signature recovery) |
-| `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, mock USDC | 23 (Foundry, TypeScript vectors) |
+| `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, **Quantum Guard**, mock USDC | 32 (Foundry, TypeScript vectors) |
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
 | `firmware/esp32` | the signer | host test vs TypeScript vectors |
@@ -76,7 +78,9 @@ pnpm install
 pnpm --filter @lifeboat/pq test
 node tools/gen-yul.mjs && node tools/build-yul.mjs && (cd contracts && forge test)
 pnpm --filter @lifeboat/app dev                       # the web app
-pnpm --filter @lifeboat/scripts helm lifeboatdemo.eth # any ENSv2 name on Sepolia
+pnpm --filter @lifeboat/scripts helm lifeboatpq.eth   # any ENSv2 name on Sepolia
+pnpm --filter @lifeboat/scripts ens-survey           # real names, one per owner (aggregates only)
+pnpm --filter @lifeboat/scripts quantum-guard        # Quantum Guard on a real Safe (needs .env)
 pnpm --filter @lifeboat/scripts council-scan          # hidden exposure, mainnet
 pnpm --filter @lifeboat/scripts rescue                # three-way admission (needs .env)
 node tools/firmware-check.mjs                         # firmware crypto vs TypeScript (needs Docker)

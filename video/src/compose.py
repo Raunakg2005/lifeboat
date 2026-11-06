@@ -12,6 +12,7 @@ import numpy as np
 from av.audio.resampler import AudioResampler
 
 CACHE, OUT = sys.argv[1], sys.argv[2]
+NAME = sys.argv[3] if len(sys.argv) > 3 else "lifeboat-walkthrough"
 FPS = 30
 RATE = 48000
 
@@ -19,11 +20,12 @@ tl = json.load(open(os.path.join(CACHE, "timeline.json"), encoding="utf-8"))
 frames = json.load(open(os.path.join(CACHE, "frames.json"), encoding="utf-8"))
 W, H, dur = tl["width"], tl["height"], tl["duration"]
 os.makedirs(OUT, exist_ok=True)
-mp4 = os.path.join(OUT, "lifeboat-walkthrough.mp4")
+mp4 = os.path.join(OUT, f"{NAME}.mp4")
+SILENT = bool(tl.get("silent"))  # the real-voice cut: video only, the voice is added by final.py
 
 # ---------- audio: one buffer, every line at its start time ----------
 buf = np.zeros(int((dur + 1) * RATE), dtype=np.float32)
-for line in tl["lines"]:
+for line in [] if SILENT else tl["lines"]:
     res = AudioResampler(format="flt", layout="mono", rate=RATE)
     pcm = []
     with av.open(line["file"]) as c:
@@ -42,8 +44,9 @@ out = av.open(mp4, "w", options={"movflags": "+faststart"})
 vs = out.add_stream("libx264", rate=FPS, options={"crf": "20", "preset": "medium", "tune": "animation", "g": "150"})
 vs.width, vs.height, vs.pix_fmt = W, H, "yuv420p"
 vs.codec_context.time_base = Fraction(1, FPS)
-as_ = out.add_stream("aac", rate=RATE, layout="mono")
-as_.bit_rate = 128_000
+as_ = None if SILENT else out.add_stream("aac", rate=RATE, layout="mono")
+if as_:
+    as_.bit_rate = 128_000
 
 # ---------- video: latest captured frame at each 1/30 s tick ----------
 total = int(dur * FPS)
@@ -74,7 +77,7 @@ for p in vs.encode():
     out.mux(p)
 
 CH = 1024
-samples = buf[: int(dur * RATE)]
+samples = buf[: int(dur * RATE)] if as_ else buf[:0]
 for i in range(0, len(samples), CH):
     chunk = samples[i : i + CH]
     af = av.AudioFrame.from_ndarray(chunk.reshape(1, -1), format="fltp", layout="mono")
@@ -83,8 +86,9 @@ for i in range(0, len(samples), CH):
     af.time_base = Fraction(1, RATE)
     for p in as_.encode(af):
         out.mux(p)
-for p in as_.encode():
-    out.mux(p)
+if as_:
+    for p in as_.encode():
+        out.mux(p)
 out.close()
 
 
@@ -97,10 +101,10 @@ def ts(s, sep=","):
     return f"{h:02}:{m:02}:{sec:02}{sep}{ms:03}"
 
 
-with open(os.path.join(OUT, "lifeboat-walkthrough.srt"), "w", encoding="utf-8") as f:
+with open(os.path.join(OUT, f"{NAME}.srt"), "w", encoding="utf-8") as f:
     for i, line in enumerate(tl["lines"], 1):
         f.write(f"{i}\n{ts(line['t'])} --> {ts(line['t'] + line['seconds'])}\n{line['text']}\n\n")
-with open(os.path.join(OUT, "chapters.txt"), "w", encoding="utf-8") as f:
+with open(os.path.join(OUT, f"{NAME}-chapters.txt" if SILENT else "chapters.txt"), "w", encoding="utf-8") as f:
     for c in tl["chapters"]:
         m, s = divmod(int(max(0, c["t"])), 60)
         f.write(f"{m}:{s:02} {c['title']}\n")

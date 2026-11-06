@@ -9,7 +9,12 @@
     "shots": "node src/shots.mjs",
     "record": "node src/record.mjs",
     "compose": "node src/compose.mjs",
-    "make": "node src/tts.mjs && node src/record.mjs && node src/compose.mjs"
+    "make": "node src/tts.mjs && node src/record.mjs && node src/compose.mjs",
+    "record-submission": "node src/record.mjs --script submission",
+    "compose-submission": "node src/compose.mjs --script submission",
+    "submission": "node src/record.mjs --script submission && node src/compose.mjs --script submission",
+    "music": "node -e \"require('child_process').execFileSync(process.env.VIDEO_PYTHON||require('path').join(process.env.LOCALAPPDATA,'Temp','fdo','venv','Scripts','python.exe'),['-I','src/music.py','out/music-bed.wav','240'],{stdio:'inherit'})\"",
+    "final": "node src/final.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.52.0"

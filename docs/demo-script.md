@@ -1,25 +1,38 @@
-# Demo script (video: 3–4 min, ≥720p, screen + voice, no AI voice, no phone recording)
+# Demo video: script and how to record it
 
-Live site: https://lifeboat-mu.vercel.app. Each beat has a fallback in case something is slow on the day.
+## ETHGlobal's rules for the video
+- 2 to 4 minutes, at least 720p.
+- **A real voice:** no text-to-speech or AI voice-over, and no music with on-screen text instead of talking. Quiet background music under your voice is fine.
+- **No speeding up**, and not recorded on a phone. Keep the intro under 20 seconds and cut out any waiting.
+- Slides, if any: no more than 4 bullet points each.
 
-| Time | Screen | Say (short) | Fallback |
-|---|---|---|---|
-| 0:00 | Home: "GET OFF BEFORE Q-DAY." and the manifest ticket | "A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there. Lifeboat shows who could take over what, and gets them out. No quantum computer can do this today: this is readiness." | — |
-| 0:20 | **Discover** tab | "Checkers ask 'has this address sent a transaction?'. Multisig signers publish their key every time they sign. Counting signatures, Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested 8-of-11 council from 0 to 11." | The snapshot loads instantly; skip the live re-run |
-| 0:50 | Scan → `lifeboatdemo.eth` → **HIJACKABLE** tag, helm wheel | "Names too. ENSv2 control is spread over five paths. Here, the owner, a delegate, an operator and the resolver admin all have public keys on-chain. And we prove the role list is complete against the registry's own counts." | Recorded clip `clips/helm-demo.mp4` |
-| 1:20 | Scan → `lifeboatpq.eth` → **PROTECTED** | "We handed this one over. The registry refused the naive transfer, accepted ours, and now a post-quantum wallet holds every path. It even signed its own `pq.checked` record." | docs/helm-check.md table |
-| 1:45 | **Escape**: stat tiles + first PQ transaction | "The way out: an EIP-8141 account that checks a hash-based WOTS+C signature in Yul. 52k gas, the same for every signature." | — |
-| 2:05 | Escape: the three lanes ("sail again") | "A wallet with tokens but no ETH escapes anyway. Our staked paymaster pays and is repaid in USDC. The public mempool refuses it, the unstaked alt mempool refuses it, the staked one includes it." | Explorer link |
-| 2:35 | Escape: **forgery** tag | "One-time means one time. A naive wallet re-signs 12 fee bumps with the same key. From public data alone, the attacker forges a signature in 0.1 s and drains it, on the live devnet." | — |
-| 2:55 | Escape: **hardware signer** (ESP32 on camera *only if* screen capture allows; otherwise the panel) | "Our signer keeps the counter on a device: Approve on the device, counter saved before signing, and it refuses to sign twice." | Show the firmware test output |
-| 3:15 | **Harbour** | "Everything is re-checked on-chain and published to Arkiv. Readings expire in 24 hours. Anyone can report a key sighting, and the ledger caught the naive wallet signing twice. Full evidence lives on Swarm." | Click "evidence on Swarm" |
-| 3:40 | README / repo | "Open source, built from scratch at Mumbai. Thank you." | — |
+## How we make it (the `video/` kit)
+1. Start the app: `pnpm --filter @lifeboat/app dev`.
+2. `pnpm --filter @lifeboat/video submission` drives the app through the script below and makes `video/out/lifeboat-submission-silent.mp4` (1280×720, about 3 minutes, original speed) and `video/out/teleprompter.html`.
+3. Open the teleprompter. Start a voice-only recorder (Windows Voice Recorder or Audacity, with a headset or laptop mic in a quiet room), press play, and read the big line at a normal pace. Save the take as `video/voice/voice.wav` (or `.m4a` / `.mp3`).
+4. `pnpm --filter @lifeboat/video final` lines your first word up with the first cue, levels the voice, and adds the synthesized music bed under it, dipping while you talk (`-- --no-music` for none). It writes `video/out/lifeboat-submission.mp4` and checks the length and resolution.
+5. Watch it once, then upload.
 
-## Rehearse with the walkthrough video
-`video/` renders a narrated, captioned run through every tab (`pnpm --filter @lifeboat/video make`, see [video/README.md](../video/README.md)). Watch it once, then record this script in your own voice.
+## The script (`video/src/submission.mjs`)
+Numbers are read from the evidence files when the video is made. No real person's ENS name is shown: real names appear only as the survey's totals.
+
+| # | Screen | Say |
+|---|---|---|
+| 1 | Home | "Every time you sign anything on Ethereum, your public key goes on-chain. A future quantum computer could turn that public key into your private key. Lifeboat shows who could take over what on Q-Day, and gets them out. No quantum computer can do this today: this is about getting ready." |
+| 2 | Discover | "Multisig signers publish their key every time they sign, even if they never send a transaction. Counting signatures, Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested council from 0 to 11." |
+| 3 | Scan → a security council | "This works for any Safe. Paste its address, and Lifeboat recovers every signer's key from the Safe's own signatures, live, in a few seconds." |
+| 4 | Scan → ENS name, survey line, then `lifeboatpq.eth` | "Names too. Lifeboat checks all five ways to control an ENS v2 name, and proves the list is complete. Across real names on Sepolia, one per owner, *N of M* can be steered on Q-Day, *K* of them through their resolver. Here's the way out, on our own test name: the registry refused a naive transfer, accepted our handover, and now a post-quantum wallet holds every path." |
+| 5 | Escape: first PQ transaction | "To get out, Lifeboat gives you a post-quantum account: an EIP-8141 transaction that checks a hash-based signature in its own verify frame, for about 52,000 gas." |
+| 6 | Escape: the rescue lanes | "If your wallet holds tokens but no ETH, a staked paymaster pays the gas, and is repaid in USDC in the same transaction. The public mempool refuses it, the unstaked alternative mempool refuses it, and the staked one includes it." |
+| 7 | Escape: Quantum Guard | "Councils can't just move their funds. Quantum Guard adds a post-quantum co-signer to the Safe they already have. On a real Safe, a payment signed only by the owners was refused on-chain, with a missing post-quantum signature, and the co-signed payment went through. It covers off-chain signatures like Permit2 too." |
+| 8 | Escape: forgery | "One-time keys must stay one-time. A wallet that re-signed twelve fee bumps with one key was forged in a tenth of a second, live on the devnet." |
+| 9 | Escape: hardware signer | "So our signer keeps the key counter on a small device, saves it before every signature, and asks for a button press." |
+| 10 | Harbour → Home | "Every finding is re-checked and published to a public registry on Arkiv, with full evidence on Swarm. The tools and data are free. Protocols pay for monitoring and help migrating. Lifeboat: get off before Q-Day." |
 
 ## Checklist before recording
-- [ ] Hard-refresh the live site; confirm the Harbour counts load (Arkiv reachable)
-- [ ] Run one Helm check beforehand (warms the RPCs)
+- [ ] No other heavy job is using the public RPCs (the survey, a re-scan): the live checks in the take need them
+- [ ] Hard-refresh the app; confirm the Harbour counts load (Arkiv reachable)
 - [ ] Bee node running (Swarm links), batch TTL > 24 h
-- [ ] Record each risky beat separately as a backup clip
+- [ ] Quiet room, headset mic, a glass of water
+
+The internal rehearsal video (`pnpm --filter @lifeboat/video make`) uses a synthetic voice and is for practice only.
