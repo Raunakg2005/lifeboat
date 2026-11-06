@@ -51,8 +51,22 @@ The script finds the smallest curve with a point of order exactly 2^t.
 
 Raw counts: [`sim-2bit.json`](../evidence/quantum/sim-2bit.json), [`sim-3bit.json`](../evidence/quantum/sim-3bit.json).
 
-### Real IBM quantum hardware
-Pending: the run uses the free IBM Quantum Open Plan (10 minutes of QPU time a month; each run here takes seconds). Results land in `evidence/quantum/ibm-<bits>bit-<backend>-<job>.json` with the backend, job ID, counts and QPU time, and the app shows them automatically.
+### Real IBM quantum hardware (6 Nov 2026)
+**Shor's algorithm on a real IBM quantum computer recovered the private key from the public key**, on our 2-bit toy curve.
+
+| Key | Machine | Recovered k | Votes for the right k | Shots on the answer's pattern (noise: 1/2^t) | Two-qubit gates · depth | QPU time |
+|---|---|---|---|---|---|---|
+| 2 bits | **ibm_fez** (IBM Heron, 156 qubits) | **3 ✓** | **69%** (1,333 of 1,942 votes) | 69% (25%) | 46 · 107 | 3 s |
+
+- **The curve:** y² = x³ + x + 2 over F₅, generator G = (1, 2), order 4. The public key is Q = (1, 3), and the secret is k = 3.
+- **The run:** job `dbmtusm74qds73dsvrf0`, 4,000 shots, submitted 19:38 IST, finished 21:04 IST (it waited 85 minutes in the free plan's queue and used 3 seconds on the chip).
+- **The answer:** 69% of the shots land on the answer's pattern, against 25% if the machine were guessing. The majority vote gives k = 3, and k·G = Q checks out.
+- **The noise:** the real chip gave 69%, against 80% in the noisy simulation of IBM Torino. Real hardware is a little noisier than the model, and the right key still wins by a wide margin (1,333 votes; the next best has 249).
+- **Raw counts and metadata:** [`ibm-2bit-ibm_fez-dbmtusm74qds73dsvrf0.json`](../evidence/quantum/ibm-2bit-ibm_fez-dbmtusm74qds73dsvrf0.json).
+
+**What this does and doesn't show:**
+- **It does show:** the attack Lifeboat is about, going from the public key to the private key with Shor's algorithm, runs on real quantum hardware today, at toy scale.
+- **It doesn't show a threat to real keys:** an Ethereum key is 256 bits, not 2, and breaking one needs about 1,200 error-corrected logical qubits (Google Quantum AI, March 2026), each built from many physical ones. No quantum computer can do this to real keys today.
 
 ## Run it
 Python 3.12 with `qiskit`, `qiskit-aer` and `qiskit-ibm-runtime`.

@@ -73,9 +73,7 @@ function Card({ bits }: { bits: number }) {
             {" "}
             · job <span className="mono">{h.jobId}</span>
           </>
-        ) : (
-          " · hardware run pending"
-        )}
+        ) : null}
       </p>
     </div>
   );
@@ -83,7 +81,10 @@ function Card({ bits }: { bits: number }) {
 
 export default function QuantumPanel() {
   if (!sim(2) && !hw(2)) return null;
-  const onHardware = quantumHardwareRuns().length > 0;
+  const runs = quantumHardwareRuns();
+  const onHardware = runs.length > 0;
+  const hwBits = runs.map((h) => h.bits);
+  const scale = hwBits.length === 1 ? `${hwBits[0]} bits; the ${hwBits[0] === 2 ? 3 : 2}-bit version runs on IBM’s noise model for its Torino processor` : "2 and 3 bits";
   return (
     <section className="section">
       <div className="board">
@@ -94,7 +95,7 @@ export default function QuantumPanel() {
         <div className="board-body">
           <p style={{ marginTop: 0 }}>
             Why a public key on-chain matters: {onHardware ? "we gave an IBM quantum computer" : "we built Shor’s algorithm for a toy elliptic curve and gave it"} <b>only the public key</b>, and it returned the{" "}
-            <b>private key</b>. It’s the same attack a large quantum computer would run on an Ethereum key, scaled down from 256 bits to 2 and 3.
+            <b>private key</b>. It’s the same attack a large quantum computer would run on an Ethereum key, scaled down from 256 bits to {onHardware ? scale : "2 and 3 bits"}.
             {onHardware ? "" : " Shown here with IBM’s noise model for its Torino processor; the run on real IBM hardware is next."}
           </p>
           <div className="grid cols-2">

@@ -124,7 +124,7 @@ Timeouts use no leaf either.
 - ✅ **What you approve is what gets signed:** the device builds the hash from the same bytes it shows, so a hacked laptop can't swap the request.
 - ⚠️ With a PIN set, the seed in flash is encrypted with a key stretched from the PIN. But someone with the device and a lot of time could still read the flash and guess a short PIN offline. Production adds the ESP32's flash encryption and secure boot: permanent eFuse settings, tested on a spare board first. It also adds the one-way counter below.
 - ⚠️ **NVS can be erased** (`erase_flash`, an older image), which rolls the counter back. The one-time eFuse counter (one burned bit per signature, 64 signatures, if the chip's BLOCK3 coding scheme is NONE) would survive that; `WOTS|EFUSE` checks the coding scheme. Burning is off by default: eFuse writes are permanent, and Arduino has no virtual-eFuse mode.
-- ⚠️ The Dabao's hardware one-way counters would make rollback impossible by design. That's the reason we want it, and it's pending the booth fix.
+- ⚠️ The Dabao's hardware one-way counters would make rollback impossible by design. That's the reason we want it: the Dabao signer is our build for Crossbar (15 Dec).
 - ❌ We don't claim side-channel resistance. This is a hackathon signer.
 
 ## Bring-up log

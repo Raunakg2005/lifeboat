@@ -65,6 +65,7 @@ No quantum computer can do this today. Everything below is a readiness finding f
 
 ## Hard questions, short answers
 - **"Is this real?"** Every number links to a transaction or a file. The survey covers real names but publishes totals only, and our own test names are labelled as ours.
+- **"Is the quantum threat real?"** We ran Shor's algorithm on a real IBM quantum computer (ibm_fez): it recovered the private key of a 2-bit toy curve from its public key, with 69% of the votes on the right key (25% by chance). Real keys are 256-bit, far beyond today's machines. That gap is the time we have to move.
 - **"Why hash-based signatures?"** They rest only on hashing, which quantum computers don't shortcut, and verifying one costs 52k gas inside VERIFY.
 - **"One-time keys run out."** Each key has 256 leaves; the account enforces the order on chain, and you rotate before you run out.
 - **"Why the alt mempool?"** The paymaster reads its registry and a token balance before it pays. The public mempool forbids that, and we have the rejected transaction.

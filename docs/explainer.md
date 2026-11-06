@@ -267,7 +267,7 @@ flowchart LR
 - The demo uses devnet ETH and mock USDC. Frame transactions aren't on mainnet yet.
 - Each key holds 256 leaves; key rotation is planned, not built.
 - The discovery results are lower bounds, re-measured here for four council Safes only. The wider pre-event study isn't re-run in this repo.
-- The ESP32 counter lives in flash, which can be erased. The hardware-counter version is the Dabao, pending the booth fix.
+- The ESP32 counter lives in flash, which can be erased. The hardware-counter version is the Dabao signer, our build for Crossbar (15 Dec).
 - The ESP32 is a hackathon signer, with no side-channel resistance claimed.
 
 ## 9. Wording rules

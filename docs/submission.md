@@ -105,4 +105,5 @@ See docs/ai-usage.md in the repo: which tools we used, where, and what the team 
 - [ ] Live site checked (done 6 Nov, 19:55 IST: new build, Protect works, evidence MATCHES).
 - [ ] Morning refresh run (`pnpm --filter @lifeboat/scripts refresh`), and `arkiv/swarm.md` references updated afterwards.
 - [x] `docs/ai-usage.md` → "What the team did" reviewed by the team.
-- [ ] Optional: the IBM job `dbmtusm74qds73dsvrf0` collected and added to `docs/quantum-demo.md`.
+- [x] The IBM job `dbmtusm74qds73dsvrf0` collected and added to `docs/quantum-demo.md` (ibm_fez returned the 2-bit key, 6 Nov 21:04 IST).
+- [ ] Vercel redeployed after the IBM result (`vercel deploy deploy\lifeboat --prod`), so Discover shows the hardware run.

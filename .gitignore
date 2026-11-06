@@ -46,3 +46,4 @@ video/voice/
 
 # Monitor worker state (what it has seen and already alerted)
 scripts/.monitor-state.json
+__pycache__/
