@@ -119,6 +119,7 @@ Timeouts use no leaf either.
 - ✅ The device never signs two different messages with one leaf, as long as its NVS isn't erased: the counter is saved before signing, and the host can't pick the leaf.
 - ✅ Nothing secret leaves the device; the host only ever sees chain values for an approved request.
 - ✅ **PIN lock:** the seed is stored encrypted (key = the PIN stretched 20,000 times with keccak and a random salt). After every power-on the device is locked until the PIN is entered; wrong PINs bring growing waits that survive reboots. Set it in the app (Escape → Hardware signer) or with `pnpm --filter @lifeboat/scripts hw-pin --set` (reads `DEVICE_PIN` from `.env`).
+  Live on the ESP32 (6 Nov, [`evidence/hardware/pin-lock.json`](../evidence/hardware/pin-lock.json)): PIN set; while locked a signing request is refused (`WOTS|ERR|locked`); a wrong PIN is refused; the right PIN unlocks it, and it signs again (leaf 5, signature verified).
 - ✅ **Testnet only:** the device refuses any chain except Sepolia and the EIP-8141 devnet, whatever the laptop sends.
 - ✅ **What you approve is what gets signed:** the device builds the hash from the same bytes it shows, so a hacked laptop can't swap the request.
 - ⚠️ With a PIN set, the seed in flash is encrypted with a key stretched from the PIN. But someone with the device and a lot of time could still read the flash and guess a short PIN offline. Production adds the ESP32's flash encryption and secure boot: permanent eFuse settings, tested on a spare board first. It also adds the one-way counter below.
