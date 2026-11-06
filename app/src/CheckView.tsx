@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { getAddress, isAddress, type Address } from "viem";
+import { getAddress, isAddress, parseAbi, type Address } from "viem";
 import { normalize } from "viem/ens";
 import { eq } from "@arkiv-network/sdk/query";
 import { addr } from "@arkiv-network/sdk/schema";
-import { Aboard, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, type ChainExposure, type HelmReport } from "@lifeboat/core";
-import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
+import { Aboard, COUNCILS, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, scanSafe, type ChainExposure, type HelmReport } from "@lifeboat/core";
+import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
+import { SafeProof, SafeTag, type SafeRow } from "./SafeTag";
 import { HelmWheel, LuggageTag, Pill, Radar, Rubber, STATUS_FILL, Steps, type SpokeState } from "./ui";
 
 const EXAMPLES = [
   { tag: "name", label: "lifeboatdemo.eth (hijackable)", value: "lifeboatdemo.eth" },
   { tag: "name", label: "lifeboatpq.eth (handed over)", value: "lifeboatpq.eth" },
+  { tag: "safe", label: "Optimism Security Council", value: "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03" },
   { tag: "wallet", label: "exposed dev wallet", value: "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a" },
   { tag: "wallet", label: "post-quantum wallet", value: "0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F" },
 ];
@@ -27,17 +29,17 @@ type Query = { kind: "name" | "address"; value: string };
 type Tab = "check" | "discover" | "escape" | "harbour";
 
 export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
-  const [mode, setMode] = useState<"address" | "name">("name");
+  const [mode, setMode] = useState<"address" | "name" | "safe">("name");
   const [input, setInput] = useState("lifeboatdemo.eth");
   const [query, setQuery] = useState<Query | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const submit = (raw: string) => {
+  const submit = (raw: string, hint?: "safe") => {
     const v = raw.trim();
     setError("");
     if (isAddress(v, { strict: false })) {
-      setMode("address");
+      setMode(hint === "safe" || mode === "safe" ? "safe" : "address");
       setQuery({ kind: "address", value: getAddress(v) });
       setBusy(true);
     } else if (/^[^\s]+\.[a-z]+$/i.test(v)) {
@@ -61,8 +63,8 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
             ECDSA<span className="o">.</span>
           </h1>
           <p className="lede">
-            A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there. Check who could take over your wallet or your name, then get off before
-            Q-Day.
+            A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there. Check who could take over your wallet, your Safe or your name, then get off
+            before Q-Day.
           </p>
           <div className="toggle" role="group" aria-label="What to check">
             <button aria-pressed={mode === "name"} onClick={() => (setMode("name"), setInput("lifeboatdemo.eth"))}>
@@ -70,6 +72,9 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
             </button>
             <button aria-pressed={mode === "address"} onClick={() => (setMode("address"), setInput("0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a"))}>
               Address
+            </button>
+            <button aria-pressed={mode === "safe"} onClick={() => (setMode("safe"), setInput("0xc2819DC788505Aac350142A7A707BF9D03E3Bd03"))}>
+              Safe
             </button>
           </div>
           <form
@@ -79,16 +84,18 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
               submit(input);
             }}
           >
-            <span className="tag">{mode === "name" ? "Vessel" : "Passenger"}</span>
-            <input aria-label="Address or ENS name" value={input} onChange={(e) => setInput(e.target.value)} placeholder={mode === "name" ? "name.eth" : "0x…"} spellCheck={false} autoComplete="off" />
+            <span className="tag">{mode === "name" ? "Vessel" : mode === "safe" ? "Treasury" : "Passenger"}</span>
+            <input aria-label="Address or ENS name" value={input} onChange={(e) => setInput(e.target.value)} placeholder={mode === "name" ? "name.eth" : mode === "safe" ? "0x… a Safe on Ethereum mainnet" : "0x…"} spellCheck={false} autoComplete="off" />
             <button type="submit" disabled={busy}>
-              {busy ? "Scanning" : mode === "name" ? "Helm check" : "Check manifest"}
+              {busy ? "Scanning" : mode === "name" ? "Helm check" : mode === "safe" ? "Deep scan" : "Check manifest"}
             </button>
           </form>
           <div className="hint">
             {mode === "name"
               ? "Any ENSv2 name on Sepolia: every key that can steer it, across all five control paths."
-              : "Checks Ethereum, Base, Arbitrum, Optimism, Polygon, Sepolia. Read-only: Lifeboat never asks for a key or a signature."}
+              : mode === "safe"
+                ? "Any Safe on Ethereum mainnet: every signer's public key, recovered from the Safe's own signatures. Runs in your browser; nothing is published."
+                : "Checks Ethereum, Base, Arbitrum, Optimism, Polygon, Sepolia. Read-only: Lifeboat never asks for a key or a signature."}
           </div>
           <div className="examples">
             {EXAMPLES.map((ex) => (
@@ -97,7 +104,7 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
                 type="button"
                 onClick={() => {
                   setInput(ex.value);
-                  submit(ex.value);
+                  submit(ex.value, ex.tag === "safe" ? "safe" : undefined);
                 }}
               >
                 <b>{ex.tag}</b> {ex.label}
@@ -116,7 +123,7 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
 
       <div className="section">
         {query?.kind === "name" && <HelmPanel key={query.value} name={query.value} onDone={() => setBusy(false)} />}
-        {query?.kind === "address" && <AddressPanel key={query.value} address={query.value as Address} onDone={() => setBusy(false)} />}
+        {query?.kind === "address" && <AddressOrSafe key={query.value} address={query.value as Address} onDone={() => setBusy(false)} />}
       </div>
     </>
   );
@@ -429,5 +436,125 @@ function AddressPanel({ address, onDone }: { address: Address; onDone: () => voi
         )}
       </div>
     </LuggageTag>
+  );
+}
+
+const SAFE_PROBE = parseAbi(["function getThreshold() view returns (uint256)", "function getOwners() view returns (address[])"]);
+
+/** An address on Ethereum mainnet that answers getThreshold/getOwners is a Safe: deep scan it. Anything else: the exposure check. */
+function AddressOrSafe({ address, onDone }: { address: Address; onDone: () => void }) {
+  const [kind, setKind] = useState<"probing" | "safe" | "address">("probing");
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const code = await mainnetClient.getCode({ address });
+        if (code && code !== "0x") {
+          await Promise.all([
+            mainnetClient.readContract({ address, abi: SAFE_PROBE, functionName: "getThreshold" }),
+            mainnetClient.readContract({ address, abi: SAFE_PROBE, functionName: "getOwners" }),
+          ]);
+          if (live) setKind("safe");
+          return;
+        }
+      } catch {
+        // not a Safe (or not on mainnet): fall through to the exposure check
+      }
+      if (live) setKind("address");
+    })();
+    return () => {
+      live = false;
+    };
+  }, [address]);
+  if (kind === "probing")
+    return (
+      <div className="board loading">
+        <Radar />
+        <div>
+          <div className="stencil" style={{ fontSize: 30 }}>
+            Boarding {short(address)}
+          </div>
+          <div className="note">is it a wallet or a Safe?</div>
+        </div>
+      </div>
+    );
+  return kind === "safe" ? <SafePanel address={address} onDone={onDone} /> : <AddressPanel address={address} onDone={onDone} />;
+}
+
+/** Deep scan of one Safe, live in the browser: owners, nonces, then every signer recovered from the Safe's executions. */
+function SafePanel({ address, onDone }: { address: Address; onDone: () => void }) {
+  const [res, setRes] = useState<SafeRow | null>(null);
+  const [steps, setSteps] = useState<string[]>(["Reading owners and threshold"]);
+  const [err, setErr] = useState("");
+  const [secs, setSecs] = useState(0);
+
+  useEffect(() => {
+    let live = true;
+    const t0 = Date.now();
+    const known = COUNCILS.find((c) => c.safe.toLowerCase() === address.toLowerCase());
+    scanSafe(safeClient, safeLogs, address, { label: known?.label ?? `Safe ${short(address)}`, maxExecutions: 80, onStep: (s) => live && setSteps((x) => [...x, s]) })
+      .then((r) => live && (setRes(r as unknown as SafeRow), setSecs((Date.now() - t0) / 1000)))
+      .catch((e) => live && setErr(String(e?.shortMessage ?? e?.message ?? e).slice(0, 240)))
+      .finally(() => live && onDone());
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address]);
+
+  if (err) return <div className="error-box">Couldn't scan this Safe on Ethereum mainnet: {err}</div>;
+  if (!res)
+    return (
+      <div className="board loading">
+        <Radar />
+        <div>
+          <div className="stencil" style={{ fontSize: 30 }}>
+            Deep scan: Safe {short(address)}
+          </div>
+          <Steps steps={steps} current={steps.length - 1} />
+        </div>
+      </div>
+    );
+
+  const n = res.owners.length;
+  const hiddenFlip = res.takeableWithSignatures && !res.takeableByNonce;
+  return (
+    <div className="grid">
+      <div className={`seal ${res.takeableWithSignatures ? "bad" : "good"}`}>
+        <Rubber good={!res.takeableWithSignatures}>{res.takeableWithSignatures ? (hiddenFlip ? "Hidden" : "Exposed") : "Holds"}</Rubber>
+        <div>
+          <div className="big">
+            {res.exposedTotal} of {n} signer keys are public · threshold {res.threshold}
+          </div>
+          <div className="muted">
+            {res.takeableWithSignatures
+              ? hiddenFlip
+                ? `A nonce check sees ${res.exposedByNonce}. Counting signatures, enough keys are public to reach the threshold: on Q-Day, this Safe's upgrade path is open.`
+                : `Enough keys are public to reach the threshold: on Q-Day, this Safe's upgrade path is open.`
+              : `Fewer public keys than the threshold today. Every new signature can change that, so watch it.`}{" "}
+            No quantum computer can do this today: this is readiness data.
+          </div>
+        </div>
+      </div>
+      <SafeTag r={res} />
+      <SafeProof rows={[res]} />
+      <div className="grid cols-2">
+        <div className="paper-card">
+          <h3>What helps</h3>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li>Swapping signers buys little: each new signer's first signature reveals its key.</li>
+            <li>A post-quantum co-signer on the Safe protects it without moving funds (Lifeboat's Quantum Guard, in development).</li>
+            <li>For a protocol: a readiness assessment maps every admin key and ranks the migration steps.</li>
+          </ul>
+        </div>
+        <div className="paper-card">
+          <h3>How this was checked</h3>
+          <p className="muted" style={{ marginTop: 0 }}>
+            In your browser, at Ethereum block {String(res.block)}, in {secs.toFixed(1)} s: owner nonces on 5 chains, then the signer of every signature in the latest {res.executionsDecoded} decoded executions (of{" "}
+            {res.executionsSeen}). Executions routed through other contracts are skipped, so this is a lower bound. Nothing was published.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import { createPublicClient as arkivPublicClient } from "@arkiv-network/sdk";
 import { rabdi } from "@arkiv-network/sdk/chains";
 import { createPublicClient, http, type PublicClient } from "viem";
 import { mainnet, sepolia } from "viem/chains";
-import { PUBLIC_RPC } from "@lifeboat/core";
+import { PUBLIC_RPC, TENDERLY_MAINNET } from "@lifeboat/core";
 import sepoliaDeployments from "../../deployments/sepolia.json";
 
 export const SEPOLIA_PQ_WALLETS = [sepoliaDeployments.pqWallet] as `0x${string}`[];
@@ -10,6 +10,9 @@ export const REPO = "https://github.com/Raunakg2005/lifeboat";
 
 export const sepoliaClient = createPublicClient({ chain: sepolia, transport: http(PUBLIC_RPC.sepolia, { retryCount: 3, timeout: 30_000 }) }) as PublicClient;
 export const sepoliaLogs = createPublicClient({ chain: sepolia, transport: http(PUBLIC_RPC.sepoliaLogs, { retryCount: 3, timeout: 60_000 }) }) as PublicClient;
+// Safe deep scan: batched mainnet reads, and Tenderly's public gateway for full-range logs
+export const safeClient = createPublicClient({ chain: mainnet, transport: http(PUBLIC_RPC.mainnet, { retryCount: 3, timeout: 30_000, batch: { batchSize: 50 } }) }) as PublicClient;
+export const safeLogs = createPublicClient({ chain: mainnet, transport: http(TENDERLY_MAINNET, { retryCount: 3, timeout: 60_000 }) }) as PublicClient;
 export const mainnetClient = createPublicClient({ chain: mainnet, transport: http(PUBLIC_RPC.mainnet, { retryCount: 2, timeout: 20_000 }) }) as PublicClient;
 
 // Arkiv reads work without a key (rate-limited public endpoint). The key, if set, is a public browser key.

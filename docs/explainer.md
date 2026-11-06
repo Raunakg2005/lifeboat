@@ -66,6 +66,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   - Optimism Security Council, 10 of 13: 4 public keys by nonce → **13 of 13** counting signatures.
   - Base's nested 8-of-11 council: **0 → 11**.
   - The proof drawer shows one recovered public key with a link to the Safe transaction on Etherscan.
+- **Try any Safe:** paste a Safe address into Scan (or pick Safe mode). The same deep scan runs live in the browser, in a few seconds.
 - **Code:** [`packages/core/src/safe-scan.ts`](../packages/core/src/safe-scan.ts), 3 unit tests. Details: [discovery.md](discovery.md).
 - **Say:** "Multisig signers publish their key every time they sign. Counting that, Optimism's council goes from 4 to 13 of 13 public keys."
 

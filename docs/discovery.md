@@ -20,7 +20,7 @@
 Executions routed through other contracts (about 1–4% here) are skipped, so the result is a **lower bound**.
 
 ## Results: security councils and protocol multisigs, Ethereum mainnet, block 26,350,495 (re-scanned at blocks 26,351,153–156 before publishing: same numbers)
-Raw: [`evidence/discovery/councils.json`](../evidence/discovery/councils.json). The app's Discover tab can re-run it live in the browser.
+Raw: [`evidence/discovery/councils.json`](../evidence/discovery/councils.json). The app's Discover tab can re-run it live in the browser, and the Scan tab deep-scans **any Safe on Ethereum mainnet** the same way: paste its address (or pick Safe mode) and it reports public keys by nonce vs counting signatures, the threshold, nested Safes, and one checkable proof. It runs in the browser and publishes nothing.
 
 | Safe (public infrastructure) | Rule | Public keys by nonce | Counting signatures | Takeover-able on Q-Day |
 |---|---|---|---|---|

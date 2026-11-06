@@ -11,7 +11,7 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 | | What | Where it runs |
 |---|---|---|
 | **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
-| **Scan** | Exposure of any address on 6 chains; the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Sepolia ENSv2 |
+| **Scan** | Exposure of any address on 6 chains; a **deep scan of any Safe** (every signer recovered from its own signatures); the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Ethereum mainnet, Sepolia ENSv2 |
 | **Escape** | A post-quantum (WOTS+C) account on EIP-8141; a staked **rescue paymaster** for wallets with no ETH; the **forgery** a reused one-time key allows | EIP-8141 alt-mempool devnet (chain 1337) |
 | **Harbour** | A public Q-Day registry and one-time-key ledger | Arkiv (Rabdi), evidence on Swarm |
 | **Sign safely** | An ESP32 signer that can't sign twice with one key | Firmware + Web Serial |
