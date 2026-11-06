@@ -1,0 +1,127 @@
+{
+  "chainId": 11155111,
+  "recoveryDelaySeconds": 120,
+  "safe": "0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526",
+  "guard": "0xd7a6403A4BBc19db6dc022ee8200c43c264DD502",
+  "factory": "0x2f4f0a857438ddd5f473ae93176d0d66a03b0fb7",
+  "installed": {
+    "guard": "0xd7a6403a4bbc19db6dc022ee8200c43c264dd502",
+    "handler": "0xd7a6403a4bbc19db6dc022ee8200c43c264dd502"
+  },
+  "finishEarly": "RecoveryNotReady",
+  "steps": [
+    {
+      "what": "deploy QuantumGuardFactory",
+      "hash": "0x5c73fa646361410a2b064a48d4784f6a2003801403cf80f42aa02aaff58232e9",
+      "block": "12074824",
+      "status": "success",
+      "gasUsed": "12403255"
+    },
+    {
+      "what": "create a fresh Safe 1.4.1 (1-of-1)",
+      "hash": "0x86a7154084b5c5bbb6916c0445d2f7ee2a30f40fa9a088c15814b3fed75104d7",
+      "block": "12074825",
+      "status": "success",
+      "gasUsed": "1260461"
+    },
+    {
+      "what": "fund the Safe (0.004 ETH)",
+      "hash": "0x9a2757587e830204fd76f379522ab1c1db1d9f9a77d59e9b1fce9c7a6bd5a51d",
+      "block": "12074826",
+      "status": "success",
+      "gasUsed": "27729"
+    },
+    {
+      "what": "factory deploys the Safe's QuantumGuard",
+      "hash": "0x5b8cdf1eddf68e2d470b2f62b34b170f21834ce4a19c55046e7f6587bce82a63",
+      "block": "12074827",
+      "status": "success",
+      "gasUsed": "10579215"
+    },
+    {
+      "what": "install: setGuard + setFallbackHandler in ONE Safe transaction (owners only)",
+      "hash": "0xd471e184c40e38b784f80e1d71476dcb14a3cb25a6b33864a07e6b98a682221d",
+      "block": "12074828",
+      "status": "success",
+      "gasUsed": "283741"
+    },
+    {
+      "what": "co-signed payment (PQ leaf 0)",
+      "hash": "0xff84183617cbdf627557ac8edf34cc2a3ccfed696cea70288de8121f2a83f65a",
+      "block": "12074829",
+      "status": "success",
+      "gasUsed": "286848"
+    },
+    {
+      "what": "co-signed payment (PQ leaf 2)",
+      "hash": "0x8c9ea9f6fd7c1af35d118a0d4f148520f8ad399cfb2b54682aada4069565ae85",
+      "block": "12074841",
+      "status": "success",
+      "gasUsed": "195480"
+    },
+    {
+      "what": "co-signed payment (PQ leaf 3)",
+      "hash": "0x5303d4c6711bd3f5c02a1e8a8751f151800bb1f35f90fc92fffe0310a655c8fa",
+      "block": "12074843",
+      "status": "success",
+      "gasUsed": "195480"
+    },
+    {
+      "what": "the PQ key cancels recovery #2 (leaf 4), relayed by anyone",
+      "hash": "0x74d7e134255b01e17aab45998f6d66c95f700f8481b34d0dda50ec9e7ea474e3",
+      "block": "12074845",
+      "status": "success",
+      "gasUsed": "168856"
+    },
+    {
+      "what": "co-signed payment (PQ leaf 5)",
+      "hash": "0x00d0cc514e3b762889fe18caa009ff320030f706b862fbb1f13c5ea1b5c15b36",
+      "block": "12074849",
+      "status": "success",
+      "gasUsed": "195480"
+    },
+    {
+      "what": "owners start a recovery (no PQ signature: what a quantum attacker could do)",
+      "hash": "0xf35e5073088314d2efa2d22a61298429508a978e3ebb00921ccc2d1202adde12",
+      "block": "12074850",
+      "status": "success",
+      "gasUsed": "186558"
+    },
+    {
+      "what": "the PQ key cancels recovery #3 (leaf 6), relayed by anyone",
+      "hash": "0x1aeee025c6e911be6759976a1cdb7648a0dfc13c09091db487309b928a6ea37b",
+      "block": "12074851",
+      "status": "success",
+      "gasUsed": "168856"
+    },
+    {
+      "what": "owners start a recovery again (say the PQ key was lost)",
+      "hash": "0x5e69d7bbb640e5c4a7328c7efb9c0aaf7d1c4bdc1a538f363e84615841340123",
+      "block": "12074853",
+      "status": "success",
+      "gasUsed": "186558"
+    },
+    {
+      "what": "owners finish the recovery after the timelock",
+      "hash": "0x858f35e1d0a9e4f4c7fd97738219467e247a1e2eeea376a076bdbf16aa1141f3",
+      "block": "12074867",
+      "status": "success",
+      "gasUsed": "175029"
+    },
+    {
+      "what": "top up the Safe (0.002 ETH)",
+      "hash": "0xadc4d8f29c6635ed76cb8496d67bbddd7f9e489b935fd79798ebe9d4f514fe6b",
+      "block": "12074871",
+      "status": "success",
+      "gasUsed": "27729"
+    },
+    {
+      "what": "after recovery: an owners-only payment goes through",
+      "hash": "0x694281b79fc97a5214a6fc013fbb70755c83e5c30df250fe5161e8da45b24857",
+      "block": "12074873",
+      "status": "success",
+      "gasUsed": "70766"
+    }
+  ],
+  "note": "Recovery timelock is 2 minutes for this run (the app defaults to 7 days). Some steps were re-run after a load-balanced RPC answered from a stale node; each step lists its included transaction."
+}

@@ -23,7 +23,8 @@
     "refresh": "pnpm arkiv-publish --skip-names && pnpm swarm-publish && pnpm discovery-publish",
     "ens-survey": "tsx --env-file=../.env src/ens-survey.ts",
     "quantum-guard": "tsx --env-file=../.env src/quantum-guard.ts",
-    "gen-guard-vectors": "tsx src/gen-guard-vectors.ts"
+    "gen-guard-vectors": "tsx src/gen-guard-vectors.ts",
+    "guard-lifecycle": "tsx --env-file=../.env src/guard-lifecycle.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",

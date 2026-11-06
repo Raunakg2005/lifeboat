@@ -41,5 +41,32 @@
     },
     "safe": "0x94E8Da267c6356B8f5D292e6668252b79c3951B8",
     "guard": "0xcba2dc40f216ed382994917add851a1a7f7e55af"
+  },
+  "quantumGuardV2": {
+    "txs": {
+      "deploy QuantumGuardFactory": "0x5c73fa646361410a2b064a48d4784f6a2003801403cf80f42aa02aaff58232e9",
+      "create a fresh Safe 1.4.1 (1-of-1)": "0x86a7154084b5c5bbb6916c0445d2f7ee2a30f40fa9a088c15814b3fed75104d7",
+      "fund the Safe (0.004 ETH)": "0x9a2757587e830204fd76f379522ab1c1db1d9f9a77d59e9b1fce9c7a6bd5a51d",
+      "factory deploys the Safe's QuantumGuard": "0x5b8cdf1eddf68e2d470b2f62b34b170f21834ce4a19c55046e7f6587bce82a63",
+      "install: setGuard + setFallbackHandler in ONE Safe transaction (owners only)": "0xd471e184c40e38b784f80e1d71476dcb14a3cb25a6b33864a07e6b98a682221d",
+      "co-signed payment (PQ leaf 0)": "0xff84183617cbdf627557ac8edf34cc2a3ccfed696cea70288de8121f2a83f65a",
+      "owners start a recovery (no PQ signature: what a quantum attacker could do)": "0xf35e5073088314d2efa2d22a61298429508a978e3ebb00921ccc2d1202adde12",
+      "co-signed payment (PQ leaf 2)": "0x8c9ea9f6fd7c1af35d118a0d4f148520f8ad399cfb2b54682aada4069565ae85",
+      "co-signed payment (PQ leaf 3)": "0x5303d4c6711bd3f5c02a1e8a8751f151800bb1f35f90fc92fffe0310a655c8fa",
+      "the PQ key cancels recovery #2 (leaf 4), relayed by anyone": "0x74d7e134255b01e17aab45998f6d66c95f700f8481b34d0dda50ec9e7ea474e3",
+      "co-signed payment (PQ leaf 5)": "0x00d0cc514e3b762889fe18caa009ff320030f706b862fbb1f13c5ea1b5c15b36",
+      "the PQ key cancels recovery #3 (leaf 6), relayed by anyone": "0x1aeee025c6e911be6759976a1cdb7648a0dfc13c09091db487309b928a6ea37b",
+      "owners start a recovery again (say the PQ key was lost)": "0x5e69d7bbb640e5c4a7328c7efb9c0aaf7d1c4bdc1a538f363e84615841340123",
+      "owners finish the recovery after the timelock": "0x858f35e1d0a9e4f4c7fd97738219467e247a1e2eeea376a076bdbf16aa1141f3",
+      "top up the Safe (0.002 ETH)": "0xadc4d8f29c6635ed76cb8496d67bbddd7f9e489b935fd79798ebe9d4f514fe6b",
+      "after recovery: an owners-only payment goes through": "0x694281b79fc97a5214a6fc013fbb70755c83e5c30df250fe5161e8da45b24857"
+    },
+    "factory": "0x2f4f0a857438ddd5f473ae93176d0d66a03b0fb7",
+    "safe": "0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526",
+    "guard": "0xd7a6403A4BBc19db6dc022ee8200c43c264DD502",
+    "paid": true,
+    "vetoed": true,
+    "restartReadyAt": "1793947284",
+    "recovered": true
   }
 }

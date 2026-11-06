@@ -4,6 +4,7 @@ import EscapeView from "./EscapeView";
 import HarbourView from "./HarbourView";
 import DiscoverView from "./DiscoverView";
 import HomeView from "./HomeView";
+import ProtectView from "./ProtectView";
 import { REPO } from "./lib";
 import { WaveBand } from "./ui";
 
@@ -12,6 +13,7 @@ const TABS = [
   { id: "check", label: "Scan" },
   { id: "discover", label: "Discover" },
   { id: "escape", label: "Escape" },
+  { id: "protect", label: "Protect" },
   { id: "harbour", label: "Harbour" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -56,6 +58,7 @@ export default function App() {
         {tab === "check" && <CheckView onGo={go} />}
         {tab === "discover" && <DiscoverView />}
         {tab === "escape" && <EscapeView />}
+        {tab === "protect" && <ProtectView />}
         {tab === "harbour" && <HarbourView />}
       </main>
       <footer>
