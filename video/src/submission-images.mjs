@@ -1,6 +1,7 @@
 // The images for the ETHGlobal form, from the real app (needs it on localhost:5173):
 //   logo.png 512×512 · cover.png 1280×720 · screenshots 1600×900 of Home, Scan (ENS), Discover, Escape, Protect, Harbour
-// Writes docs/images/submission/. Usage: node video/src/submission-images.mjs [--url http://localhost:5173]
+//   08: the IBM quantum card (Discover). --cover-only: only 08 and the cover (reuses the screenshots already on disk)
+// Writes docs/images/submission/. Usage: node video/src/submission-images.mjs [--url http://localhost:5173] [--cover-only]
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,7 @@ mkdirSync(OUT, { recursive: true });
 const argUrl = process.argv.indexOf("--url");
 const URL0 = (argUrl > 0 ? process.argv[argUrl + 1] : "http://localhost:5173").replace(/\/+$/, "");
 const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000));
+const COVER_ONLY = process.argv.includes("--cover-only");
 
 const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--hide-scrollbars", "--force-color-profile=srgb"] });
 const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1, colorScheme: "light" });
@@ -34,6 +36,7 @@ const shot = async (name) => {
   console.log("wrote", name);
 };
 
+if (!COVER_ONLY) {
 // 1. Home
 await go("home");
 await shot("01-home.png");
@@ -84,6 +87,12 @@ await page.evaluate(() => {
 await page.getByText("MATCHES").first().waitFor({ state: "visible", timeout: 60_000 });
 await sleep(1.5);
 await shot("06-harbour-evidence-matches.png");
+}
+
+// 8. Discover: Shor's algorithm on real IBM hardware, public key -> private key
+await go("discover");
+await scrollTo("Public key → private key", -92);
+await shot("08-discover-ibm-quantum.png");
 
 // ---------- logo and cover, in the app's own fonts and colours ----------
 const FONTS = `<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Big+Shoulders+Stencil+Display:wght@900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">`;
@@ -137,7 +146,7 @@ await render(
   <div class="bar"></div><div class="stripe"></div><div class="mark">LIFEBOAT</div><div class="sub">Q-DAY READINESS · PORT OF MUMBAI</div>
   <h1>WHO COULD<br>TAKE OVER WHAT<br><em>ON Q-DAY?</em></h1>
   <p>Lifeboat finds the wallets, Safes and ENS names a future quantum computer could take over, and moves them to post-quantum keys.</p>
-  <div class="chips"><span class="chip">EIP-8141 ALT MEMPOOL</span><span class="chip">ENSv2</span><span class="chip">ARKIV + SWARM</span><span class="chip">ESP32 CLEAR SIGNING</span></div>
+  <div class="chips"><span class="chip">EIP-8141 ALT MEMPOOL</span><span class="chip">ENSv2</span><span class="chip">ARKIV + SWARM</span><span class="chip">ESP32 CLEAR SIGNING</span><span class="chip">SHOR ON IBM HARDWARE</span></div>
   <img class="shot s1" src="${b64("02-scan-ens-helm-check.png")}">
   <img class="shot s2" src="${b64("06-harbour-evidence-matches.png")}">
   ${WAVES(1280, 130)}<div class="boat">${BOAT}</div>
@@ -148,5 +157,5 @@ await render(
 );
 
 await browser.close();
-writeFileSync(join(OUT, "README.md"), "# Images for the ETHGlobal submission\n\nMade by `video/src/submission-images.mjs` from the real app: `logo.png` (512×512), `cover.png` (1280×720) and screenshots `01`–`07` (1600×900; `07` is a frame from the submission video).\n");
+writeFileSync(join(OUT, "README.md"), "# Images for the ETHGlobal submission\n\nMade by `video/src/submission-images.mjs` from the real app: `logo.png` (512×512), `cover.png` (1280×720) and screenshots `01`–`08` (1600×900; `07` is a frame from the submission video, `08` is the IBM quantum card).\n");
 console.log("done:", OUT);

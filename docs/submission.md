@@ -16,7 +16,7 @@ Finds wallets, Safes and ENS names exposed to Q-Day, and moves them to post-quan
 
 ## Description
 ```
-Every time you sign anything on Ethereum, your public key goes on-chain, and a future quantum computer could turn that public key into your private key. No quantum computer can do this today; Lifeboat is about getting ready.
+Every time you sign anything on Ethereum, your public key goes on-chain, and a future quantum computer could turn that public key into your private key. On a tiny test key, that attack already works: Shor's algorithm on a real IBM quantum computer (ibm_fez) turned a 2-bit public key into its private key. Real Ethereum keys have 256 bits, and no quantum computer can break one today. Lifeboat is about getting ready.
 
 Lifeboat shows who could take over what, then gets them out:
 
@@ -49,6 +49,8 @@ Hardware: ESP32 firmware in portable C++ (Keccak, WOTS+C, an RLP/ABI decoder for
 Arkiv (@arkiv-network/sdk 1.0.1): six schemas, readonly + permissionless-extension audit records, an open one-time-key ledger that flags "signed twice", records updated in place (patch + extend in one executeBatch), count queries, keyset paging and keyless reads. Swarm: our own Bee 2.8.3 light node in Docker uploads the evidence; records carry swarmRef + evidenceHash, and the app re-hashes the file in the browser.
 
 App: Vite + React + viem on Vercel with a strict CSP, EIP-6963 wallet discovery and per-tab error boundaries. An end-to-end Playwright test drives the Protect tab with a scripted wallet on Sepolia.
+
+Quantum: Shor's algorithm for the elliptic-curve discrete log in Qiskit, on toy curves with 2- and 3-bit keys. The point-addition gates are compiled from the toy curve's addition table, run on Qiskit Aer (ideal, and IBM's Torino noise model), then on real IBM hardware through Qiskit Runtime. On ibm_fez (Heron, 156 qubits) the 2-bit key came back right: k = 3 with 1,333 of 1,942 votes (69%; 25% by chance), 46 two-qubit gates, 3 s of QPU time, job dbmtusm74qds73dsvrf0. The raw counts are in the repo, and the Discover tab draws them.
 ```
 
 ## Links
@@ -67,7 +69,7 @@ App: Vite + React + viem on Vercel with a strict CSP, EIP-6963 wallet discovery 
 | Web frameworks | React, Vite |
 | Databases | Arkiv (type it if it isn't listed); storage: Swarm |
 | Design tools | none |
-| Other | ENSv2, Safe, ESP32 (Arduino), Web Serial, Docker, Playwright, Qiskit, WOTS+C |
+| Other | ENSv2, Safe, ESP32 (Arduino), Web Serial, Docker, Playwright, Qiskit, IBM Quantum (ibm_fez), WOTS+C |
 
 ## Prizes
 - **Finalist + partner prizes**, with these three partner picks:

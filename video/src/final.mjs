@@ -21,7 +21,7 @@ if (!existsSync(silent)) {
 }
 const tl = JSON.parse(readFileSync(join(ROOT, "cache", "submission", "timeline.json"), "utf8"));
 const firstLine = tl.lines[0]?.t ?? 2.5;
-const py = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean).find((c) => c === "python" || existsSync(c));
+const py = [process.env.VIDEO_PYTHON, join(ROOT, ".venv", "Scripts", "python.exe"), join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean).find((c) => c === "python" || existsSync(c));
 const extra = [];
 if (!arg("--music")) extra.push("--no-music"); // the submission rule: audio without music
 if (arg("--music")) extra.push("--music", arg("--music"));

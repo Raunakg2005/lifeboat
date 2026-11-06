@@ -11,6 +11,7 @@ const { SEGMENTS } = await import("./submission.mjs");
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const SCREEN = {
   home: "Home: the problem, the six stops",
+  ibm: "Discover: Public key → private key, the 2-bit card on real hardware (IBM ibm_fez), k = 3 ✓",
   discover: "Discover: Optimism Security Council, keys found by signatures",
   safe: "Scan → Safe: every signer's key recovered, live",
   names: "Scan → ENS name: the five control paths, the survey line, our test name lifeboatpq.eth",

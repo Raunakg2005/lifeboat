@@ -1,7 +1,7 @@
 // Runs compose.py with a Python that has PyAV (H.264 + AAC) and numpy, then deletes the captured frames
 // (about 1.5 GB per take) unless --keep-frames is given.
 //   --script submission: the silent real-voice cut, plus out/teleprompter.html to read along while it plays.
-// Set VIDEO_PYTHON to choose the Python; the default is the local faster-whisper venv.
+// Set VIDEO_PYTHON to choose the Python; the default is video/.venv (py -3.12 -m venv .venv; pip install faster-whisper av numpy pillow).
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -15,7 +15,7 @@ const cache = SCRIPT === "rehearsal" ? join(ROOT, "cache") : join(ROOT, "cache",
 const recorded = JSON.parse(readFileSync(join(cache, "timeline.json"), "utf8"));
 const VOICED = SUBMISSION && !recorded.silent; // paced to your recorded voice (record --voice)
 const name = VOICED ? "lifeboat-submission" : ({ rehearsal: "lifeboat-walkthrough", submission: "lifeboat-submission-silent", ens: "lifeboat-ens-explained" }[SCRIPT] ?? `lifeboat-${SCRIPT}`);
-const candidates = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean);
+const candidates = [process.env.VIDEO_PYTHON, join(ROOT, ".venv", "Scripts", "python.exe"), join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean);
 const py = candidates.find((c) => c === "python" || existsSync(c));
 execFileSync(py, ["-I", join(ROOT, "src", "compose.py"), cache, join(ROOT, "out"), name], { stdio: "inherit" });
 

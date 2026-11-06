@@ -24,7 +24,9 @@ ROOT = sys.argv[1]
 CACHE = os.path.join(ROOT, "cache", "submission")
 RATE = 48000
 words_by_part = json.load(open(os.path.join(ROOT, "cache", "voice-words.json"), encoding="utf-8"))
-tl = json.load(open(os.path.join(CACHE, "timeline.json"), encoding="utf-8"))
+# the script's lines and beat titles: script.json (written by voice.mjs from submission.mjs), else the last recording
+SCRIPT_JSON = os.path.join(CACHE, "script.json")
+tl = json.load(open(SCRIPT_JSON if os.path.exists(SCRIPT_JSON) else os.path.join(CACHE, "timeline.json"), encoding="utf-8"))
 lines = tl["lines"]
 
 

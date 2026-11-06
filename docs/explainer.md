@@ -6,7 +6,7 @@ A plain-words walkthrough of every part of Lifeboat: what it does, how it works,
 
 - Your Ethereum **address** is a hash of your **public key**. While nobody has seen the public key, a quantum computer has nothing to attack.
 - **Every signature reveals the public key.** Anyone can recover it from the signature with `ecrecover`. Sending a transaction is one kind of signature. Signing for a multisig, a vote or an order is another.
-- A large enough quantum computer could turn a public key into its private key (Shor's algorithm). People call that day **Q-Day**. Nobody can do this today. Google's March 2026 estimate is about 1,200 logical qubits for an Ethereum key, far beyond current machines.
+- A large enough quantum computer could turn a public key into its private key (Shor's algorithm). People call that day **Q-Day**. At toy scale it already works: we ran Shor's algorithm on IBM's ibm_fez, and it turned a 2-bit public key into its private key ([quantum-demo.md](quantum-demo.md)). For a real key, nobody can do this today. Google's March 2026 estimate is about 1,200 logical qubits for an Ethereum key, far beyond current machines.
 - **So the exposure is already on-chain.** Lifeboat measures it, shows who could take over what on Q-Day, and gives each one a way out.
 
 The way out has three parts:
@@ -207,7 +207,7 @@ flowchart LR
 
 | Question | Answer |
 |---|---|
-| Can a quantum computer do this today? | No. These are readiness findings from public data. The deadlines are what make it urgent: NIST deprecates ECDSA after 2030 and disallows it after 2035 |
+| Can a quantum computer do this today? | At toy scale, yes: IBM's ibm_fez returned our 2-bit test key from its public key. A real 256-bit key, no: that needs about 1,200 error-corrected logical qubits. These are readiness findings from public data. The deadlines are what make it urgent: NIST deprecates ECDSA after 2030 and disallows it after 2035 |
 | Isn't a public exposure list a hit list? | We publish public infrastructure only (councils, bridges, DAOs), truncate signer addresses, count individuals without naming them, and brief owners privately first. Everything shown is already public on-chain |
 | Why not just move to a fresh address? | A fresh address is safe only until it signs once. A real fix needs a quantum-safe signature scheme, and names and Safes need their *control* moved, not just their funds |
 | How accurate is the detection? | It's a lower bound across the channels we list. Executions routed through other contracts (1–4%) are skipped. Anyone can check the proof drawer's key against Etherscan |

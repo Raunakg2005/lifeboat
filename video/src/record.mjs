@@ -24,9 +24,9 @@ const argUrl = process.argv.indexOf("--url");
 const URL0 = (argUrl > 0 ? process.argv[argUrl + 1] : "http://localhost:5173").replace(/\/+$/, "");
 const W = 1280;
 const H = 720;
-const LEAD = VOICE ? 0.3 : 0.5; // seconds of picture before the first line of a beat
-const GAP_LINE = VOICE ? 0.15 : 0.3;
-const GAP_SEG = VOICE ? 0.4 : 0.8;
+const LEAD = VOICE ? 0.2 : 0.5; // seconds of picture before the first line of a beat
+const GAP_LINE = VOICE ? 0.12 : 0.3;
+const GAP_SEG = VOICE ? 0.3 : 0.8; // voiced: tight enough that the IBM beat still fits in 4:00
 const FIRST = VOICE ? 1.0 : 2.5; // the first cue: time to settle (or to start talking, when you read along)
 
 // how long a person takes to say a line, unhurried

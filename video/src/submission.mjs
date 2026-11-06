@@ -2,7 +2,7 @@
 // screen to it. About 3 minutes at a calm pace. Every number is read from the evidence files, nothing typed in.
 // No real person's name is shown: real ENS names appear only as the survey's totals, and the handover is shown on
 // our own test name, said to be ours.
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,6 +13,26 @@ const councils = json("evidence/discovery/councils.json").results;
 const op = councils.find((c) => c.label.startsWith("Optimism"));
 const nested = councils.flatMap((c) => c.owners.map((o) => o.nested)).find((n) => n && n.threshold === 8);
 const guard = json("evidence/guard/quantum-guard.json");
+// a verified Shor run on real IBM hardware (quantum/toy_ecdlp.py ibm): the beat after the problem shows it, if there is one
+const ibm = readdirSync(join(REPO, "evidence", "quantum"))
+  .filter((f) => /^ibm-.*\.json$/.test(f))
+  .map((f) => json(`evidence/quantum/${f}`))
+  .find((e) => e.kind === "ibm-quantum" && e.verified === true);
+
+const IBM_BEAT = ibm
+  ? [
+      {
+        id: "ibm",
+        label: "Discover · IBM",
+        title: "A real quantum computer",
+        lines: ["On a tiny test key, the attack already works: a real IBM quantum computer turned the public key into the private key."],
+        act: async (p) => {
+          await p.tab("Discover");
+          await p.scrollToText("Public key → private key", -92); // the whole panel: real hardware · ibm_fez, k = 3 ✓, the votes
+        },
+      },
+    ]
+  : [];
 
 export const SEGMENTS = [
   {
@@ -29,6 +49,7 @@ export const SEGMENTS = [
       await at(0.75, () => p.scrollToText("Six stops", -60));
     },
   },
+  ...IBM_BEAT,
   {
     id: "discover",
     label: "Discover",
@@ -38,7 +59,8 @@ export const SEGMENTS = [
       `Counting signatures, Optimism's Security Council goes from ${op.exposedByNonce} to ${op.exposedTotal} of ${op.owners.length} public keys, and Base's nested council from ${nested.exposedByNonce} to ${nested.exposedTotal}.`,
     ],
     act: async (p, at) => {
-      await p.tab("Discover");
+      if (ibm) await p.scrollTo(0); // already on Discover, at the quantum card: back up to the signatures proof
+      else await p.tab("Discover");
       await at(0.45, () => p.scrollToText("Optimism Security Council", -70));
     },
   },

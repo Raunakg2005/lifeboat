@@ -7,12 +7,13 @@ No quantum computer can do this today. Everything below is a readiness finding f
 
 ## 30 seconds (booth, elevator)
 > Every signature you make on Ethereum puts your public key on-chain. A future quantum computer could turn that public key into your private key.
+> On a tiny test key, that already works: we ran it on a real IBM quantum computer, and it returned the private key.
 > Lifeboat finds what's exposed. That includes keys that never sent a transaction but signed for a multisig: 13 of 13 on Optimism's Security Council.
 > Then it gets you out: a post-quantum account on EIP-8141, a guard for Safes you already have, and a safe handover for ENS names.
 > Your new key lives on a small device. It shows every request in plain words and only signs after you press its button.
 
 ## 2 minutes (judges)
-1. **The problem, in one fact.** Your public key goes on-chain the moment you sign anything. Multisig signers publish theirs every time they sign. Optimism's Security Council has **13 of 13** signer keys public once you count signatures, not 4. Base's nested council goes from 0 to 11.
+1. **The problem, in one fact.** Your public key goes on-chain the moment you sign anything. Multisig signers publish theirs every time they sign. Optimism's Security Council has **13 of 13** signer keys public once you count signatures, not 4. Base's nested council goes from 0 to 11. And the attack is real at toy scale: on IBM's **ibm_fez**, Shor's algorithm returned our 2-bit test key from its public key (69% of the votes, 25% by chance).
 2. **Names too.** Across 1,011 real ENSv2 names on Sepolia (one per owner), **902 can be steered on Q-Day, 863 of them through their resolver.** That second path is the trap: you can move the name and still leave the resolver in the old key's hands.
 3. **Get out, three ways:**
    - **Escape:** a WOTS+C post-quantum account checked inside an EIP-8141 frame transaction, **52,367 gas**. A wallet with tokens but no ETH escapes too: a staked paymaster pays the gas and is repaid in USDC in the same transaction. Only the alternative mempool admits that, and we show all three answers live.

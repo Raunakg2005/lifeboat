@@ -2,7 +2,7 @@
 
 **A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there, not just sending a transaction. Lifeboat shows who could take over what on Q-Day, and gives each one a way out.**
 
-Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can do this today: these are readiness findings from public on-chain data.
+Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). On a tiny test key, the attack already works: Shor's algorithm on a real IBM quantum computer turned a 2-bit public key into its private key ([how](docs/quantum-demo.md)). Real keys have 256 bits, and no quantum computer can break one today: these are readiness findings from public on-chain data.
 
 **Live demo: https://lifeboat-mu.vercel.app** · the landing page explains it in a minute; then scan any address, or any ENSv2 name on Sepolia.
 
@@ -10,7 +10,7 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 
 | | What | Where it runs |
 |---|---|---|
-| **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
+| **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees; and the attack itself, Shor's algorithm on real IBM hardware turning a toy public key into its private key | Ethereum mainnet (live, in the browser) |
 | **Scan** | Exposure of any address on 6 chains; a **deep scan of any Safe** (every signer recovered from its own signatures); the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Ethereum mainnet, Sepolia ENSv2 |
 | **Escape** | A post-quantum (WOTS+C) account on EIP-8141; a staked **rescue paymaster** for wallets with no ETH; the **forgery** a reused one-time key allows | EIP-8141 alt-mempool devnet (chain 1337) |
 | **Protect in place** | **Quantum Guard**: a post-quantum co-signer for an existing Safe (transactions + ERC-1271), lost-key recovery the PQ key can veto, a factory, a one-transaction install. The app's **Protect** tab installs and co-signs on any Sepolia Safe | Safe 1.4.1 on Sepolia |
