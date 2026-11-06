@@ -29,6 +29,10 @@ export default function App() {
   }, []);
   useEffect(() => {
     window.scrollTo({ top: 0 }); // newer Chromium returns a Promise here, so don't return it as the effect's cleanup
+    // on a narrow phone the tab row can scroll sideways: keep the open tab in view
+    const nav = document.querySelector<HTMLElement>(".nav");
+    const on = nav?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (nav && on && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2;
   }, [tab]);
 
   const go = (t: Tab) => {

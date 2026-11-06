@@ -110,7 +110,7 @@ export default function AlertsBoard() {
         <div className="board-note">{sev === "all" ? "No alerts yet." : `No ${sev} alerts.`}</div>
       ) : (
         <div className="table-wrap">
-          <table className="manifest">
+          <table className="manifest stack">
             <thead>
               <tr>
                 <th>Severity</th>
@@ -123,18 +123,18 @@ export default function AlertsBoard() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.key}>
-                  <td>
+                  <td data-label="Severity">
                     <span className={`pill ${r.severity === "high" ? "exposed" : r.severity === "medium" ? "not-seen" : "contract"}`}>{r.severity}</span>
                   </td>
-                  <td>
+                  <td data-label="Changed">
                     <b>{r.event.replace(/-/g, " ")}</b>
                     <div className="note">{r.detail}</div>
                   </td>
-                  <td className="m">{r.kind === "name" ? r.target : short(r.target)}</td>
-                  <td className="m">
+                  <td className="m" data-label="Target">{r.kind === "name" ? r.target : short(r.target)}</td>
+                  <td className="m" data-label="Network">
                     {net(r.chainId)} · block {Number(r.block).toLocaleString("en-US")}
                   </td>
-                  <td>
+                  <td data-label="Record">
                     <div className="rec-meta">
                       <span>{expiresIn(r.expiresAt, block)}</span>
                       <ArkivLink entityKey={r.key} />

@@ -188,7 +188,7 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
             <span className="label">every claim links its transaction</span>
           </div>
           <div className="table-wrap">
-            <table className="manifest">
+            <table className="manifest stack">
               <thead>
                 <tr>
                   <th>What happened</th>
@@ -199,9 +199,9 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
               <tbody>
                 {PROOF.map((p) => (
                   <tr key={p.href}>
-                    <td className="b">{p.what}</td>
-                    <td className="m">{p.net}</td>
-                    <td className="m">
+                    <td className="b" data-label="">{p.what}</td>
+                    <td className="m" data-label="Network">{p.net}</td>
+                    <td className="m" data-label="Where">
                       <a href={p.href} target="_blank" rel="noreferrer">
                         {p.at} ↗
                       </a>

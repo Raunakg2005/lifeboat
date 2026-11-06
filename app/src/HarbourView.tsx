@@ -47,6 +47,20 @@ type Data = {
 
 const DAY = 86400;
 const LEAF_PAGE = 100;
+const PHONE_LEAVES = 8;
+
+/** True on phone-width screens (the same 560 px breakpoint as the stylesheet). */
+function useNarrow() {
+  const q = "(max-width: 560px)";
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
+  useEffect(() => {
+    const m = window.matchMedia(q);
+    const on = () => setNarrow(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}
 const ring = (expiresAt: bigint, block: bigint) => ({ fraction: secondsLeft(expiresAt, block) / DAY, label: expiresIn(expiresAt, block) });
 const txUrl = (chainId: string, h: string) => (!/^0x[0-9a-f]{64}$/i.test(h) ? null : chainId === "11155111" ? sepoliaTx(h) : chainId === "1337" ? explorerTx(h) : null);
 
@@ -76,6 +90,9 @@ const leafRows = (page: Awaited<ReturnType<typeof leafPage>>): Lf[] =>
 export default function HarbourView() {
   const [data, setData] = useState<Data | null>(null);
   const [leaves, setLeaves] = useState<{ rows: Lf[]; total: bigint; block: bigint; more: boolean; loading: boolean } | null>(null);
+  // on a phone each sighting is a card: show the first few, the rest on request
+  const narrow = useNarrow();
+  const [allLeaves, setAllLeaves] = useState(false);
   const [err, setErr] = useState("");
   const [sort, setSort] = useState<"risk" | "newest">("risk");
   const [ev, setEv] = useState<{ ref: string; records: EvidenceRecord[]; title: string } | null>(null);
@@ -272,7 +289,7 @@ export default function HarbourView() {
                 <span style={{ marginLeft: "auto" }}>{String(data.exposedRecords)} readings on Arkiv</span>
               </div>
               <div className="table-wrap">
-                <table className="manifest">
+                <table className="manifest stack">
                   <thead>
                     <tr>
                       <th>Key</th>
@@ -287,18 +304,18 @@ export default function HarbourView() {
                       const l = ring(e.expiresAt, data.block);
                       return (
                         <tr key={e.key}>
-                          <td className="m">
+                          <td className="m" data-label="Key">
                             {short(e.address)} <TestTag account={e.address} />
                             {e.via === "safe-signature" && <div className="note">{e.note.split(":")[0]}</div>}
                           </td>
-                          <td>{chainName(e.chainId)}</td>
-                          <td className="m" style={{ whiteSpace: "nowrap" }}>
+                          <td data-label="Where">{chainName(e.chainId)}</td>
+                          <td className="m" data-label="Cargo" style={{ whiteSpace: "nowrap" }}>
                             {Number(e.eth).toFixed(4)} ETH
                           </td>
-                          <td>
+                          <td data-label="Valid">
                             <Ring fraction={l.fraction} label={l.label} />
                           </td>
-                          <td>
+                          <td data-label="Record">
                             <div className="rec-meta">
                               <ArkivLink entityKey={e.key} />
                               {e.ev.swarmRef && (
@@ -407,7 +424,7 @@ export default function HarbourView() {
               <span style={{ marginLeft: "auto" }}>{leaves.rows.filter((l) => !isPublisher(l.owner)).length} from other writers</span>
             </div>
             <div className="table-wrap">
-              <table className="manifest">
+              <table className="manifest stack">
                 <thead>
                   <tr>
                     <th>Key</th>
@@ -419,20 +436,20 @@ export default function HarbourView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaves.rows.map((l) => (
+                  {(narrow && !allLeaves ? leaves.rows.slice(0, PHONE_LEAVES) : leaves.rows).map((l) => (
                     <tr key={l.key}>
-                      <td className="m">{short(l.root)}</td>
-                      <td className="m">#{l.leaf}</td>
-                      <td className="m">
+                      <td className="m" data-label="Key">{short(l.root)}</td>
+                      <td className="m" data-label="Leaf">#{l.leaf}</td>
+                      <td className="m" data-label="Account">
                         {short(l.account)} <TestTag account={l.account} />
                       </td>
-                      <td className="m">{l.tx.startsWith("0x") ? short(l.tx, 8) : l.tx}</td>
-                      <td>
+                      <td className="m" data-label="Used in">{l.tx.startsWith("0x") ? short(l.tx, 8) : l.tx}</td>
+                      <td data-label="Reported by">
                         <span className={`writer ${isPublisher(l.owner) ? "ours" : "other"}`} title={l.owner}>
                           {writerLabel(l.owner)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Entry">
                         <div className="rec-meta">
                           <FlagStamp flags={l.flags} />
                           <span>{expiresIn(l.expiresAt, leaves.block)}</span>
@@ -444,7 +461,17 @@ export default function HarbourView() {
                 </tbody>
               </table>
             </div>
-            {leaves.more && (
+            {narrow && !allLeaves && leaves.rows.length > PHONE_LEAVES && (
+              <div className="board-note">
+                <button type="button" className="more-btn" onClick={() => setAllLeaves(true)}>
+                  Show all {leaves.rows.length}
+                </button>{" "}
+                <span className="note">
+                  showing {PHONE_LEAVES} of {leaves.rows.length}
+                </span>
+              </div>
+            )}
+            {(!narrow || allLeaves || leaves.rows.length <= PHONE_LEAVES) && leaves.more && (
               <div className="board-note">
                 <button type="button" className="more-btn" disabled={leaves.loading} onClick={loadMore}>
                   {leaves.loading ? "Loading…" : "Load more"}

@@ -17,7 +17,7 @@ export function SafeTag({ r }: { r: SafeRow }) {
       id={r.label}
       meta={`${r.threshold}-of-${r.owners.length} · Safe ${short(r.safe)} · ${r.executionsDecoded}/${r.executionsSeen} executions decoded`}
     >
-      <div className="grid cols-4" style={{ margin: "8px 0 12px" }}>
+      <div className="grid cols-4 kpis" style={{ margin: "8px 0 12px" }}>
         <div>
           <div className="label">Needed to take over</div>
           <div className="stencil" style={{ fontSize: 44 }}>

@@ -194,7 +194,8 @@ export default function EscapeView() {
               <div className="note">VERIFY accepted the forged signature</div>
             </div>
           </div>
-          <table className="manifest">
+          <div className="table-wrap">
+          <table className="manifest stack">
             <thead>
               <tr>
                 <th>Reuses of one key</th>
@@ -207,15 +208,16 @@ export default function EscapeView() {
             </thead>
             <tbody>
               <tr>
-                <td className="b">Tries to forge</td>
-                <td className="m">~2^64</td>
-                <td className="m">~2^32</td>
-                <td className="m">~2^23</td>
-                <td className="m">~2^18</td>
-                <td className="m">~2^14</td>
+                <td className="b" data-label="">Tries to forge</td>
+                <td className="m" data-label="2 reuses">~2^64</td>
+                <td className="m" data-label="5 reuses">~2^32</td>
+                <td className="m" data-label="10 reuses">~2^23</td>
+                <td className="m" data-label="12 reuses">~2^18</td>
+                <td className="m" data-label="16 reuses">~2^14</td>
               </tr>
             </tbody>
           </table>
+          </div>
           <p className="desc" style={{ marginTop: 12 }}>
             Lifeboat's wallet can't make this mistake: every signing attempt reserves a fresh leaf and writes it to disk before the signature leaves the device, and each landed transaction raises an on-chain
             leaf floor. The reuse also shows up in the public leaf ledger: see Harbour.

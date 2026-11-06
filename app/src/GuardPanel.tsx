@@ -86,10 +86,12 @@ export default function GuardPanel() {
           <div className="qg-row">
             <div>
               <div className="qg-who">Uniswap's Permit2, for real</div>
-              <div className="note">a 1 USDC permit from the Safe, checked by Permit2 itself</div>
+              <div className="note">
+                a 1 USDC permit from the Safe, checked by Permit2 itself{p2.permitRevertOwnersOnly ? ` · refusal: ${p2.permitRevertOwnersOnly}` : ""}
+              </div>
             </div>
             <div className="qg-chips">
-              <span className="pill pq">owners only: refused{p2.permitRevertOwnersOnly ? ` (${p2.permitRevertOwnersOnly})` : ""}</span>
+              <span className="pill pq">owners only: refused</span>
               <span className="pill pq">+ PQ approval: accepted</span>
             </div>
             <div className="qg-proof">
