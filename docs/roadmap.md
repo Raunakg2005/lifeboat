@@ -21,7 +21,7 @@
 | **External audit** | Quantum Guard + factory, then the PQ account | Contracts that hold control of treasuries need an independent review (2–4 weeks at the auditor, about $40–100k) |
 | **Key custody** | The guard's PQ key on a hardware signer (ESP32 today, the Dabao with Crossbar next) or an HSM, with an encrypted backup | A browser key is fine on testnet, not for a council |
 | **Data platform** | Paid RPC providers, an indexer for Safe executions and ENS events, Postgres for private team data (watch lists, webhooks, emails, API keys), an API with keys and rate limits | Private data never goes on a public chain; free endpoints rate-limit |
-| **Coverage** | Mainnet ENS (v1 registry, NameWrapper, resolver approvals), Safes on L2s, Snapshot and CoW signatures | Read-only work, next after the platform |
+| **Coverage** | The Helm check on mainnet ENSv2 (now live on mainnet: the same code with mainnet addresses), names still on ENS v1 (registry, NameWrapper, resolver approvals), Safes on L2s, Snapshot and CoW signatures | Read-only work, next after the platform |
 | **Safe 1.5** | A module guard, so modules can't bypass the PQ co-signature | Safe 1.4.1 modules skip transaction guards |
 | **Protocol-gated** | The EIP-8141 PQ account and the staked rescue paymaster on mainnet | They need EIP-8141 frame transactions on mainnet |
 
