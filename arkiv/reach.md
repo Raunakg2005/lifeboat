@@ -28,4 +28,4 @@ See the [roadmap](../docs/roadmap.md) and the [business model](../docs/business-
 - Publish the discovery engine's public-infrastructure findings (bridges, security councils, DAO Safes) daily, as records updated in place.
 - A watcher that reads the alt mempool and publishes leaf sightings for every WOTS-style account it sees: the first writer that isn't us.
 - A wallet warning ("this name's controller key is public") through a Snap or browser extension that queries the registry.
-- Mainnet ENSv2 Helm checks (ENSv2 is live on mainnet).
+- The Helm check on mainnet names: everything here runs on ENSv2's Sepolia deployment today, and the same check needs only the mainnet addresses (read-only first; handovers after an audit).
