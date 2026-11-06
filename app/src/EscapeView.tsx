@@ -6,6 +6,7 @@ import forgery from "../../evidence/ef/forgery.json";
 import { REPO, explorerTx, short } from "./lib";
 import { Boat, LuggageTag, Pill } from "./ui";
 import HardwareSigner from "./HardwareSigner";
+import GuardPanel from "./GuardPanel";
 
 const verifyGas = parseInt(first.simulation.frames[0]!.gasUsed, 16);
 const rescueFrames = rescue.simulation.frames.map((f: { gasUsed: string }) => parseInt(f.gasUsed, 16));
@@ -150,6 +151,8 @@ export default function EscapeView() {
           </div>
         </div>
       </section>
+
+      <GuardPanel />
 
       <section className="section">
         <div className="label">Why one-time means one time</div>

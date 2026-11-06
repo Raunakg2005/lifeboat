@@ -1,0 +1,71 @@
+{
+  "chainId": 11155111,
+  "startedAt": "2026-11-06T05:19:00.065Z",
+  "steps": [
+    {
+      "what": "create Safe 1.4.1 (1-of-1, owner = exposed dev wallet)",
+      "hash": "0x21db7cd30d40a2bdbcc17a66ff7ad7e4db942bd4ff8907a9acc6cd2d92612ffe",
+      "block": "12074455",
+      "status": "success",
+      "gasUsed": "1260461"
+    },
+    {
+      "what": "fund the Safe (0.003 ETH)",
+      "hash": "0x112c8c12354b99fc409c3d5b109e81da2b75d5af9c2fabd548caa5f9e36bf183",
+      "block": "12074456",
+      "status": "success",
+      "gasUsed": "27729"
+    },
+    {
+      "what": "deploy QuantumGuard (WOTS+C co-signer)",
+      "hash": "0x729c087f880d0cd4417d16efd03e8d6b719bfe2caefb03111b29fcbbd6ba9a1d",
+      "block": "12074457",
+      "status": "success",
+      "gasUsed": "8501003"
+    },
+    {
+      "what": "Safe tx: setGuard(QuantumGuard), owners only",
+      "hash": "0xb40960a485ae484c41c37dcf9594b2bb892db52d8f1dfe5520bdae0be7646f48",
+      "block": "12074459",
+      "status": "success",
+      "gasUsed": "263302"
+    },
+    {
+      "what": "Safe tx: setFallbackHandler(QuantumGuard), co-signed with PQ leaf 0",
+      "hash": "0x0908727714855bf5b0833073e7442c7439774eccffcb19bc26111a95803c1b5a",
+      "block": "12074460",
+      "status": "success",
+      "gasUsed": "289929"
+    },
+    {
+      "what": "attack: pay 0.001 ETH to an attacker with the owner's ECDSA signature only",
+      "hash": "0x41b45516e0cb13c9c8c72f65542b48fb486b728d50aee0d0b332554eb7698b68",
+      "block": "12074461",
+      "status": "reverted",
+      "gasUsed": "55781"
+    },
+    {
+      "what": "pay 0.001 ETH to the treasury, co-signed with PQ leaf 1",
+      "hash": "0x15628aced1bbd2c90c59d3feca242a23a41d182386b9eecf0493a731c1f21118",
+      "block": "12074462",
+      "status": "success",
+      "gasUsed": "195480"
+    },
+    {
+      "what": "PQ key approves the message (leaf 2), relayed by anyone",
+      "hash": "0xf1caeb757568e1caaecce8012ae00eda292b43c2031b4570238276b81b829a51",
+      "block": "12074465",
+      "status": "success",
+      "gasUsed": "242432"
+    }
+  ],
+  "erc1271Before": "0x1626ba7e",
+  "attackRevert": "MissingPQSignature",
+  "erc1271AfterWithoutPQ": "0xffffffff",
+  "erc1271AfterWithPQ": "0x1626ba7e",
+  "safe": "0x94E8Da267c6356B8f5D292e6668252b79c3951B8",
+  "guard": "0xcba2dc40f216ed382994917add851a1a7f7e55af",
+  "pqRoot": "0xa184b8370396b1af1b6d3c9151d055f36bffd57691c0a3ff5d11d641c1218007",
+  "leavesUsed": 3,
+  "finishedAt": "2026-11-06T05:21:17.662Z"
+}

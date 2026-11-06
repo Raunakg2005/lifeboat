@@ -27,5 +27,19 @@
   },
   "demoNames": [
     "lifeboatdemo.eth"
-  ]
+  ],
+  "quantumGuard": {
+    "txs": {
+      "create Safe 1.4.1 (1-of-1, owner = exposed dev wallet)": "0x21db7cd30d40a2bdbcc17a66ff7ad7e4db942bd4ff8907a9acc6cd2d92612ffe",
+      "fund the Safe (0.003 ETH)": "0x112c8c12354b99fc409c3d5b109e81da2b75d5af9c2fabd548caa5f9e36bf183",
+      "deploy QuantumGuard (WOTS+C co-signer)": "0x729c087f880d0cd4417d16efd03e8d6b719bfe2caefb03111b29fcbbd6ba9a1d",
+      "Safe tx: setGuard(QuantumGuard), owners only": "0xb40960a485ae484c41c37dcf9594b2bb892db52d8f1dfe5520bdae0be7646f48",
+      "Safe tx: setFallbackHandler(QuantumGuard), co-signed with PQ leaf 0": "0x0908727714855bf5b0833073e7442c7439774eccffcb19bc26111a95803c1b5a",
+      "attack: pay 0.001 ETH to an attacker with the owner's ECDSA signature only": "0x41b45516e0cb13c9c8c72f65542b48fb486b728d50aee0d0b332554eb7698b68",
+      "pay 0.001 ETH to the treasury, co-signed with PQ leaf 1": "0x15628aced1bbd2c90c59d3feca242a23a41d182386b9eecf0493a731c1f21118",
+      "PQ key approves the message (leaf 2), relayed by anyone": "0xf1caeb757568e1caaecce8012ae00eda292b43c2031b4570238276b81b829a51"
+    },
+    "safe": "0x94E8Da267c6356B8f5D292e6668252b79c3951B8",
+    "guard": "0xcba2dc40f216ed382994917add851a1a7f7e55af"
+  }
 }

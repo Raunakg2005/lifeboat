@@ -318,10 +318,20 @@ footer a { color: #fff; }
 .bar span { font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); }
 .bar.win span { color: var(--ink); font-weight: 700; }
 
+/* ---------- quantum guard ---------- */
+.qg-row { display: grid; grid-template-columns: 1.3fr auto 1fr; gap: 18px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--paper-2); }
+.qg-who { font-family: var(--stencil); font-weight: 900; font-size: 24px; text-transform: uppercase; line-height: 1; }
+.qg-proof { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 13px; }
+.qg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.survey-line { margin-top: 10px; font-size: 13.5px; color: var(--ink-2); border-left: 4px solid var(--ink); padding-left: 10px; max-width: 680px; }
+.survey-line b { color: var(--orange-deep); }
+
 /* ---------- responsive ---------- */
 @media (max-width: 920px) {
   .hero { grid-template-columns: 1fr; }
   .landing-hero { grid-template-columns: 1fr; }
+  .qg-row { grid-template-columns: 1fr; }
+  .qg-proof { align-items: flex-start; }
   .who-grid { grid-template-columns: 1fr; }
   .ticket { transform: none; }
   .route { grid-template-columns: 1fr 1fr; }

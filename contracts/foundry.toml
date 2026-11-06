@@ -11,3 +11,8 @@ optimizer_runs = 1000
 # The Yul account uses `verbatim` for the EIP-8141 opcodes, so it is only valid as a pure Yul object.
 fs_permissions = [{ access = "read", path = "./yul/out" }, { access = "read", path = "./test/vectors" }]
 gas_reports = ["*"]
+
+# QuantumGuard implements the 11-argument Safe Guard interface: compile just that file with the IR pipeline
+# (stack depth), so the contracts already deployed keep their exact bytecode.
+additional_compiler_profiles = [{ name = "via-ir", via_ir = true }]
+compilation_restrictions = [{ paths = "src/QuantumGuard.sol", via_ir = true }, { paths = "test/QuantumGuard.t.sol", via_ir = true }]
