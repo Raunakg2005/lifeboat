@@ -26,7 +26,7 @@ const GAP_LINE = 0.3;
 const GAP_SEG = 0.8;
 
 // how long a person takes to say a line, unhurried
-const speakSeconds = (t) => Math.max(1.6, t.split(/s+/).filter(Boolean).length / 2.4 + 0.35);
+const speakSeconds = (t) => Math.max(1.6, t.split(" ").filter(Boolean).length / 2.4 + 0.35);
 const audio = SUBMISSION
   ? { voice: "your own", segments: SEGMENTS.map((sg) => ({ id: sg.id, lines: sg.lines.map((text) => ({ text, file: null, seconds: Number(speakSeconds(text).toFixed(2)) })) })) }
   : JSON.parse(readFileSync(join(CACHE, "timeline-audio.json"), "utf8"));

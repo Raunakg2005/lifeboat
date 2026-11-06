@@ -19,7 +19,7 @@ New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in pla
 
 ## Findings (block-stamped, lower bounds)
 - **Optimism Security Council (10 of 13):** 4 public keys by nonce → **13 of 13** counting signatures. **Base's nested 8-of-11 council: 0 → 11.** Two of four council Safes look safe by nonce and aren't. → [docs/discovery.md](docs/discovery.md)
-- **Real ENSv2 names (Sepolia, one per owner, our own excluded):** **66 of 79** can be steered on Q-Day, 49 of them through their resolver. Our own test name `lifeboatpq.eth` shows the way out: handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
+- **Real ENSv2 names (Sepolia, one per owner, our own excluded):** **902 of 1,011** (89%) can be steered on Q-Day, 863 of them through their resolver. Our own test name `lifeboatpq.eth` shows the way out: handed over and protected. → [docs/helm-check.md](docs/helm-check.md)
 - **Quantum Guard on a real Safe:** a payment signed by the owners only was **refused on-chain**; the post-quantum co-signed one went through, and ERC-1271 (Permit2) now needs the PQ key too. → [docs/quantum-guard.md](docs/quantum-guard.md)
 - **One-time keys:** a wallet that re-signs 12 fee bumps with one leaf can be forged in **0.1 s**. We did it, and drained it, on the live devnet. → [docs/pq-account.md](docs/pq-account.md)
 

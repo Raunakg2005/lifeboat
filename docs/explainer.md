@@ -82,7 +82,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   2. Lifeboat deploys a new resolver, points the name at it, revokes the delegate and removes the operator.
   3. The transfer is **accepted**.
   4. The PQ wallet then signs its own `pq.checked` record with a hash-based signature.
-- **Proof:** across real ENSv2 names on Sepolia (one per owner, ours excluded), 66 of 79 can be steered on Q-Day, 49 through their resolver ([survey](../evidence/ens/survey.json), aggregates only). Our own test name `lifeboatpq.eth` shows the handover. Every tx hash is in [helm-check.md](helm-check.md).
+- **Proof:** across real ENSv2 names on Sepolia (one per owner, ours excluded), 902 of 1,011 can be steered on Q-Day, 863 through their resolver ([survey](../evidence/ens/survey.json), aggregates only). Our own test name `lifeboatpq.eth` shows the handover. Every tx hash is in [helm-check.md](helm-check.md).
 - **Say:** "Saving the money isn't enough if an old key can still point your name somewhere else."
 
 ### Escape 1: the post-quantum account (EIP-8141 devnet, chain 1337)
@@ -212,6 +212,10 @@ flowchart LR
 | Why not just move to a fresh address? | A fresh address is safe only until it signs once. A real fix needs a quantum-safe signature scheme, and names and Safes need their *control* moved, not just their funds |
 | How accurate is the detection? | It's a lower bound across the channels we list. Executions routed through other contracts (1–4%) are skipped. Anyone can check the proof drawer's key against Etherscan |
 | What's new here? | Hidden exposure at council level, including nested Safes; the ENSv2 Helm check with a completeness proof; the three-way rescue admission; cheap WOTS+C combined with a hardware counter and a public leaf ledger. The fee-bump reuse problem is known; we credit it and show it live |
+| Is the ENS finding staged? | No. It's a survey of real ENSv2 names on Sepolia, one per owner, with our own test wallets excluded; only totals are published. Our own name `lifeboatpq.eth` is used only to show the handover, and we say it's ours |
+| Why not just tell a council to move its funds? | It can't: its Safe holds upgrade rights and roles. Quantum Guard adds a post-quantum co-signer to the Safe it already has. On a real Safe, an owners-only payment was refused on-chain and the co-signed one went through |
+| Doesn't a guard miss off-chain signatures like Permit2? | A transaction guard alone does. Quantum Guard is also the Safe's ERC-1271 handler, so those need the PQ key too. Shown live: valid before, refused with the guard, valid after the PQ approval |
+| What if the PQ key is lost? | Then the Safe is locked: the guard also checks its own removal. Keep it on the hardware signer and rotate before the 256 leaves run out |
 
 **EF: frame transactions and the alt mempool**
 

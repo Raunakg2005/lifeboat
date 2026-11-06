@@ -5,7 +5,8 @@
 // test wallets. Each gets the full Helm check (5 control paths, role lists proven complete).
 //
 // Names belong to people, so only aggregates and label hashes are written: never a name or an address.
-// Usage: pnpm --filter @lifeboat/scripts ens-survey [--limit 60]
+// Usage: pnpm --filter @lifeboat/scripts ens-survey [--limit 60] [--retry-errors]
+//   --retry-errors: re-check only the names that errored last time (rate limits) and merge them in.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import type { Address } from "viem";
 import { PUBLISHER, helmCheck, registeredNames, type HelmReport } from "@lifeboat/core";
@@ -24,7 +25,12 @@ const t0 = Date.now();
 const all = await registeredNames(pub, logs, { exclude: ours });
 const byRegistrant = new Map<string, (typeof all)[number]>(); // keyed by owner: LabelRegistered's sender is the registrar contract
 for (const n of all) if (!byRegistrant.has(n.owner)) byRegistrant.set(n.owner, n); // newest first
-const sample = [...byRegistrant.values()].slice(0, LIMIT);
+const RETRY = process.argv.includes("--retry-errors");
+const prevPath = repoPath("evidence", "ens", "survey.json");
+const prev = RETRY && existsSync(prevPath) ? JSON.parse(readFileSync(prevPath, "utf8")) : null;
+const retryHashes = new Set<string>((prev?.results ?? []).filter((r: { verdict: string }) => r.verdict === "error").map((r: { labelHash: string }) => r.labelHash));
+const fullSample = [...byRegistrant.values()].slice(0, prev ? prev.sampled : LIMIT);
+const sample = prev ? fullSample.filter((n) => retryHashes.has(n.labelHash)) : fullSample;
 console.log(`${all.length} active names by ${byRegistrant.size} owners (ours excluded); checking ${sample.length}, one per owner`);
 
 type Row = { labelHash: string; verdict: HelmReport["verdict"] | "error"; paths: number[]; ownerExposure?: string; resolverExposed?: boolean; holders?: number };
@@ -55,8 +61,10 @@ await Promise.all(
 );
 process.stdout.write("\n");
 
-const count = (f: (r: Row) => boolean) => rows.filter(f).length;
-const checked = rows.filter((r) => r.verdict !== "error");
+const allRows: Row[] = prev ? [...prev.results.filter((r: Row) => !(r.verdict === "error" && rows.some((n) => n.labelHash === r.labelHash))), ...rows] : rows;
+if (prev && BigInt(prev.block) > block) block = BigInt(prev.block);
+const count = (f: (r: Row) => boolean) => allRows.filter(f).length;
+const checked = allRows.filter((r) => r.verdict !== "error");
 const summary = {
   chain: "sepolia",
   registry: "ENSv2 ETHRegistry (.eth)",
@@ -65,14 +73,14 @@ const summary = {
   method: "One active name per owner (their newest), all ENSv2 .eth registrations, our own test wallets excluded. Full Helm check on each: 5 control paths, role lists proven complete. Hijackable = an owner-controllable path (1-4) held by a key whose public key is on-chain.",
   activeNames: all.length,
   owners: byRegistrant.size,
-  sampled: sample.length,
+  sampled: fullSample.length,
   checked: checked.length,
   verdicts: { hijackable: count((r) => r.verdict === "hijackable"), protected: count((r) => r.verdict === "protected"), unknown: count((r) => r.verdict === "unknown"), error: count((r) => r.verdict === "error") },
   paths: Object.fromEntries([1, 2, 3, 4].map((p) => [p, count((r) => r.paths.includes(p))])),
   ownerKinds: { exposed: count((r) => r.ownerExposure === "exposed"), notSeen: count((r) => r.ownerExposure === "not-seen"), contract: count((r) => r.ownerExposure === "contract"), pq: count((r) => r.ownerExposure === "pq-wallet") },
   note: "A name owned by a contract (a Safe, a wrapper) isn't counted as safe: who controls it depends on that contract.",
   resolverExposed: count((r) => !!r.resolverExposed),
-  results: rows,
+  results: allRows,
 };
 mkdirSync(repoPath("evidence", "ens"), { recursive: true });
 writeFileSync(repoPath("evidence", "ens", "survey.json"), JSON.stringify(summary, null, 2));

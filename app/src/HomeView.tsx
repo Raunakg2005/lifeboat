@@ -16,7 +16,7 @@ const COUNCIL_SWARM = "cf5693936d6583e069e069a9a1095dcac6333685994bc965423589fcd
 
 const ROUTE: { n: number; title: string; line: string; proof: string; tab: Tab; cta: string }[] = [
   { n: 1, title: "Detect", line: "Recover public keys from multisig signatures, not just from sent transactions.", proof: "Optimism council: 4 → 13 of 13", tab: "discover", cta: "Discover" },
-  { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: `${survey.verdicts.hijackable} of ${survey.checked} real names exposed`, tab: "check", cta: "Helm check" },
+  { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: `${survey.verdicts.hijackable.toLocaleString("en-US")} of ${survey.checked.toLocaleString("en-US")} real names exposed`, tab: "check", cta: "Helm check" },
   { n: 3, title: "Escape", line: "A post-quantum account that checks a hash-based signature in the transaction itself.", proof: "52,369 gas · block 403,931", tab: "escape", cta: "Escape" },
   { n: 4, title: "Rescue", line: "A staked sponsor pays gas for wallets with tokens but no ETH, and is repaid in USDC.", proof: "❌ ❌ ✅ · block 404,050", tab: "escape", cta: "The rescue" },
   { n: 5, title: "Sign safely", line: "A device that saves its counter before signing, so a one-time key is used once.", proof: "ESP32-signed · block 406,887", tab: "escape", cta: "Hardware" },
@@ -108,8 +108,8 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
           <div className="ticket-row">
             <div className="k">Real ENSv2 names, one per owner (Sepolia)</div>
             <div className="v">
-              <b>{survey.verdicts.hijackable}</b>
-              <small> of {survey.checked} can be steered on Q-Day</small>
+              <b>{survey.verdicts.hijackable.toLocaleString("en-US")}</b>
+              <small> of {survey.checked.toLocaleString("en-US")} can be steered on Q-Day</small>
             </div>
           </div>
           <div className="ticket-row">

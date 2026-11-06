@@ -49,6 +49,12 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
     } else setError("Enter an Ethereum address (0x…) or an ENSv2 name (name.eth).");
   };
 
+  // Switching mode clears an input of the wrong kind (an address in name mode, a name in address/Safe mode).
+  const switchMode = (m: "address" | "name" | "safe") => {
+    setMode(m);
+    const v = input.trim();
+    if (v && (m === "name" ? isAddress(v, { strict: false }) : !isAddress(v, { strict: false }))) setInput("");
+  };
   // A real name someone registered in ENSv2 recently (never one of ours), picked at random.
   const pickName = async () => {
     setPicking("name");
@@ -106,13 +112,13 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
             before Q-Day.
           </p>
           <div className="toggle" role="group" aria-label="What to check">
-            <button aria-pressed={mode === "name"} onClick={() => setMode("name")}>
+            <button aria-pressed={mode === "name"} onClick={() => switchMode("name")}>
               ENS name
             </button>
-            <button aria-pressed={mode === "address"} onClick={() => setMode("address")}>
+            <button aria-pressed={mode === "address"} onClick={() => switchMode("address")}>
               Address
             </button>
-            <button aria-pressed={mode === "safe"} onClick={() => setMode("safe")}>
+            <button aria-pressed={mode === "safe"} onClick={() => switchMode("safe")}>
               Safe
             </button>
           </div>
@@ -159,8 +165,8 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
           )}
           {mode === "name" && (
             <div className="survey-line">
-              Across real ENSv2 names (one per owner, Sepolia block {Number(survey.block).toLocaleString("en-US")}): <b>{survey.verdicts.hijackable}</b> of {survey.checked} can be steered on Q-Day,{" "}
-              <b>{survey.resolverExposed}</b> of them through their resolver. Names are counted, never listed.
+              Across real ENSv2 names (one per owner, Sepolia block {Number(survey.block).toLocaleString("en-US")}): <b>{survey.verdicts.hijackable.toLocaleString("en-US")}</b> of {survey.checked.toLocaleString("en-US")} can be steered on Q-Day,{" "}
+              <b>{survey.resolverExposed.toLocaleString("en-US")}</b> of them through their resolver. Names are counted, never listed.
             </div>
           )}
           <div className="warning">No quantum computer can do this today. These are readiness findings from public on-chain data.</div>
@@ -287,7 +293,14 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
       </div>
     );
 
-  const tone = report.verdict === "hijackable" ? "bad" : report.verdict === "protected" ? "good" : "unknown";
+  // "protected" from the check means no exposed key on paths 1-4. Say exactly why, so a contract owner or a key
+  // that simply hasn't signed yet is never presented as post-quantum.
+  const pathHolders = report.entries.filter((e) => e.path <= 4);
+  const ownerKind = report.entries.find((e) => e.path === 1)?.holder.exposure;
+  const allPq = pathHolders.length > 0 && pathHolders.every((e) => e.holder.exposure === "pq-wallet");
+  const state: "bad" | "pq" | "contract" | "not-seen" | "unknown" =
+    report.verdict === "hijackable" ? "bad" : report.verdict === "unknown" ? "unknown" : allPq ? "pq" : ownerKind === "contract" || pathHolders.some((e) => e.holder.exposure === "contract") ? "contract" : "not-seen";
+  const tone = state === "bad" ? "bad" : state === "pq" ? "good" : "unknown";
   const spokes: SpokeState[] = [1, 2, 3, 4, 5].map((p) => ({ path: p, label: PATHS[p]!.title, fill: spokeFill(report, p) }));
   const keys = new Set(report.entries.map((e) => e.holder.address)).size;
 
@@ -295,7 +308,7 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
     <div className="grid">
       <LuggageTag
         tone={tone}
-        verdict={tone === "bad" ? "Hijackable" : tone === "good" ? "Protected" : "Unknown"}
+        verdict={state === "bad" ? "Hijackable" : state === "pq" ? "Protected" : state === "contract" ? "Contract" : state === "not-seen" ? "Not seen" : "Unknown"}
         id={report.name}
         meta={`${keys} keys at the helm · Sepolia block ${report.block.toString()} · ${secs.toFixed(1)} s`}
       >
@@ -304,8 +317,12 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
             <>
               On Q-Day this name can be steered through path{report.hijackablePaths.length > 1 ? "s" : ""} <b>{report.hijackablePaths.join(", ")}</b> by keys whose public keys are already on-chain.
             </>
-          ) : tone === "good" ? (
+          ) : state === "pq" ? (
             <>No exposed key steers this name. Its owner and every resolver role sit with a post-quantum wallet{report.systemicExposed ? "; the port authority (path 5) is systemic and shown for the record" : ""}.</>
+          ) : state === "contract" ? (
+            <>No key on paths 1-4 has its public key on-chain, but a contract holds the name: who controls it depends on that contract's own signers (deep-scan it if it's a Safe).</>
+          ) : state === "not-seen" ? (
+            <>No key on paths 1-4 has revealed its public key yet. The first transaction or signature from one of them will: move the name to a post-quantum wallet before that.</>
           ) : (
             <>The role list couldn't be proven complete, so we won't call it safe.</>
           )}

@@ -51,7 +51,10 @@ It also includes an ESP32 signer that keeps the counter on the device and can't 
 - [ ] **Refresh Arkiv:** exposure and name entries expire after 24 h (the first batch was written Thu ~22:16). Run `pnpm --filter @lifeboat/scripts swarm-publish` on Sat morning: it re-checks both names and writes fresh entities with `swarmRef`. The Harbour counts come back with it.
 - [ ] Check the Bee batch TTL is above 24 h (`curl http://127.0.0.1:1633/stamps`)
 - [x] Hardware: ESP32 flashed, key generated on the device, test signature valid, frame tx 0x69c1eaec… included (block 406,887). Add a photo to `docs/hardware.md`
-- [ ] Record the video (docs/demo-script.md) and add the link here and in the README
+- [ ] Record the video with **your own voice** (docs/demo-script.md: silent cut + teleprompter + `final`), 2-4 min, 720p+, not sped up, no TTS, no music-instead-of-talking, not on a phone. Add the link here and in the README
 - [ ] Rebuild and redeploy the app (`pnpm --filter @lifeboat/app build`, copy into `deploy/lifeboat`, `vercel deploy deploy\lifeboat --prod`)
-- [ ] Make the GitHub repo **public**
+- [ ] Make the GitHub repo **public** (rule: it must stay public)
+- [ ] Check docs/ai-usage.md, especially "What the team did", and keep it accurate
+- [ ] From-scratch rule: "prior project-specific code, designs, or assets are not allowed". All code is new, but the visual style follows our pre-event prototype's look. It's disclosed in ai-usage.md; confirm with the organisers (Discord) if in doubt
+- [ ] Finalist judging is 4 min demo + 3 min Q&A: rehearse with docs/explainer.md (judge questions)
 - [ ] Fill the form: Finalist + Partner; EF / ENS / Arkiv (+ Swarm bonus box)
