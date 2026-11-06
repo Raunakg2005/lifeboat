@@ -3,6 +3,7 @@ import { desc, eq } from "@arkiv-network/sdk/query";
 import { ARKIV_BLOCK_SECONDS, Aboard, Exposure, Leaf, NameCheck, PUBLISHER } from "@lifeboat/core";
 import { REPO, arkiv, short, swarmUrl } from "./lib";
 import { Pill, Ring, Rubber } from "./ui";
+import AlertsBoard from "./AlertsBoard";
 
 type Data = {
   block: bigint;
@@ -169,6 +170,8 @@ export default function HarbourView() {
               })}
             </div>
           </div>
+
+          <AlertsBoard />
 
           <div className="board">
             <div className="board-head">

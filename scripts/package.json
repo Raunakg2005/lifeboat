@@ -24,7 +24,8 @@
     "ens-survey": "tsx --env-file=../.env src/ens-survey.ts",
     "quantum-guard": "tsx --env-file=../.env src/quantum-guard.ts",
     "gen-guard-vectors": "tsx src/gen-guard-vectors.ts",
-    "guard-lifecycle": "tsx --env-file=../.env src/guard-lifecycle.ts"
+    "guard-lifecycle": "tsx --env-file=../.env src/guard-lifecycle.ts",
+    "monitor": "tsx --env-file=../.env src/monitor.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",

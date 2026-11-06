@@ -49,11 +49,32 @@ export const NameCheck = defineSchema("lifeboat.name.v1", {
   swarmRef: str().optional(),
 });
 
+/** Monitor: something being watched (public infrastructure, or a target its owner asked to watch). */
+export const Watch = defineSchema("lifeboat.watch.v1", {
+  target: str().indexed(), // an address (lowercase) or an ENS name
+  kind: str().indexed(), // safe | guard | name
+  chainId: u64().indexed(),
+  label: str(),
+});
+
+/** Monitor: a risky state or a change on a watched target, at one block. */
+export const Alert = defineSchema("lifeboat.alert.v1", {
+  target: str().indexed(),
+  kind: str().indexed(), // safe | guard | name
+  chainId: u64().indexed(),
+  event: str().indexed(), // threshold-reachable | keys-exposed | recovery-started | recovered | guard-removed | verdict-changed | leaves-low
+  severity: str().indexed(), // high | medium | info
+  detail: str(), // <= 128 bytes, for humans
+  checkedBlock: u64(),
+});
+
 export const EXPIRY = {
   exposure: () => ExpirationTime.fromHours(24),
   name: () => ExpirationTime.fromHours(24),
   aboard: () => ExpirationTime.fromDays(180),
   leaf: () => ExpirationTime.fromDays(180),
+  watch: () => ExpirationTime.fromDays(30),
+  alert: () => ExpirationTime.fromDays(30),
 };
 
 export const CHECKER = "lifeboat-publisher/0.1";

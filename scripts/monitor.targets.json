@@ -1,0 +1,11 @@
+{
+  "note": "What the Monitor watches. Public infrastructure on mainnet is read-only (nothing is ever sent there); Quantum Guard Safes and ENS names are on Sepolia. Private delivery settings (MONITOR_WEBHOOK_URL) stay in .env.",
+  "targets": [
+    { "kind": "safe", "chainId": 1, "target": "0xF06E95eF589D9c38af242a8AAee8375f14023F85", "label": "Arbitrum Security Council (L1)" },
+    { "kind": "safe", "chainId": 1, "target": "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03", "label": "Optimism Security Council" },
+    { "kind": "safe", "chainId": 1, "target": "0x7bB41C3008B3f03FE483B28b8DB90e19Cf07595c", "label": "Base multisig" },
+    { "kind": "guard", "chainId": 11155111, "target": "0x94E8Da267c6356B8f5D292e6668252b79c3951B8", "label": "Lifeboat test Safe (Quantum Guard v1)" },
+    { "kind": "guard", "chainId": 11155111, "target": "0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526", "label": "Lifeboat test Safe (Quantum Guard v2)" },
+    { "kind": "name", "chainId": 11155111, "target": "lifeboatpq.eth", "label": "Lifeboat test name (handed over)" }
+  ]
+}

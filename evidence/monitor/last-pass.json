@@ -1,0 +1,42 @@
+{
+  "at": "2026-11-06T06:48:23.488Z",
+  "arkivTx": "0xe78f540be4cc72565092b5353054e80f77bbfa1feccc62ebad4033d57a1b574e",
+  "alerts": [
+    {
+      "target": "0xF06E95eF589D9c38af242a8AAee8375f14023F85",
+      "kind": "safe",
+      "chainId": 1,
+      "event": "threshold-reachable",
+      "severity": "high",
+      "detail": "Arbitrum Security Council (L1): 12/12 signer keys public, threshold 9",
+      "block": "26354111"
+    },
+    {
+      "target": "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03",
+      "kind": "safe",
+      "chainId": 1,
+      "event": "threshold-reachable",
+      "severity": "high",
+      "detail": "Optimism Security Council: 13/13 signer keys public, threshold 10",
+      "block": "26354112"
+    },
+    {
+      "target": "0x7bB41C3008B3f03FE483B28b8DB90e19Cf07595c",
+      "kind": "safe",
+      "chainId": 1,
+      "event": "threshold-reachable",
+      "severity": "high",
+      "detail": "Base multisig: 2/2 signer keys public, threshold 2",
+      "block": "26354113"
+    },
+    {
+      "target": "0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526",
+      "kind": "guard",
+      "chainId": 11155111,
+      "event": "recovered",
+      "severity": "high",
+      "detail": "Lifeboat test Safe (Quantum Guard v2): recovery completed, the guard no longer requires the PQ key",
+      "block": "12074894"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { env } from "./env.js";
 
-export { Aboard, CHECKER, EXPIRY, Exposure, Leaf, NameCheck, PUBLISHER } from "@lifeboat/core";
+export { Aboard, Alert, CHECKER, EXPIRY, Exposure, Leaf, NameCheck, PUBLISHER, Watch } from "@lifeboat/core";
 
 export const arkivChain = () => rabdi({ accessKey: env("ARKIV_ACCESS_KEY") });
 export const arkivPublic = () => createPublicClient({ chain: arkivChain(), transport: http(undefined, { retryCount: 4, timeout: 30_000 }) });

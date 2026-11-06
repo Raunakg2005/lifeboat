@@ -40,3 +40,6 @@ tmp-build/
 # walkthrough video: cached TTS, frames and renders
 video/cache/
 video/out/
+
+# Monitor worker state (what it has seen and already alerted)
+scripts/.monitor-state.json
