@@ -3,18 +3,12 @@ import { getAddress, isAddress, parseAbi, type Address } from "viem";
 import { normalize } from "viem/ens";
 import { eq } from "@arkiv-network/sdk/query";
 import { addr } from "@arkiv-network/sdk/schema";
-import { Aboard, COUNCILS, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, scanSafe, type ChainExposure, type HelmReport } from "@lifeboat/core";
-import { SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
+import { Aboard, COUNCILS, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, registeredNames, scanSafe, type ChainExposure, type HelmReport } from "@lifeboat/core";
+import { OUR_TEST_ACCOUNTS, SEPOLIA_PQ_WALLETS, arkiv, mainnetClient, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl } from "./lib";
 import { SafeProof, SafeTag, type SafeRow } from "./SafeTag";
+import survey from "../../evidence/ens/survey.json";
 import { HelmWheel, LuggageTag, Pill, Radar, Rubber, STATUS_FILL, Steps, type SpokeState } from "./ui";
 
-const EXAMPLES = [
-  { tag: "name", label: "lifeboatdemo.eth (hijackable)", value: "lifeboatdemo.eth" },
-  { tag: "name", label: "lifeboatpq.eth (handed over)", value: "lifeboatpq.eth" },
-  { tag: "safe", label: "Optimism Security Council", value: "0xc2819DC788505Aac350142A7A707BF9D03E3Bd03" },
-  { tag: "wallet", label: "exposed dev wallet", value: "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a" },
-  { tag: "wallet", label: "post-quantum wallet", value: "0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F" },
-];
 
 const PATHS: Record<number, { title: string; why: string }> = {
   1: { title: "Owner", why: "holds the name's token in its parent registry" },
@@ -30,7 +24,9 @@ type Tab = "check" | "discover" | "escape" | "harbour";
 
 export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
   const [mode, setMode] = useState<"address" | "name" | "safe">("name");
-  const [input, setInput] = useState("lifeboatdemo.eth");
+  const [input, setInput] = useState("");
+  const [picking, setPicking] = useState<"" | "name" | "wallet">("");
+  const hasWallet = typeof window !== "undefined" && !!(window as unknown as { ethereum?: unknown }).ethereum;
   const [query, setQuery] = useState<Query | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -53,6 +49,49 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
     } else setError("Enter an Ethereum address (0x…) or an ENSv2 name (name.eth).");
   };
 
+  // A real name someone registered in ENSv2 recently (never one of ours), picked at random.
+  const pickName = async () => {
+    setPicking("name");
+    setError("");
+    try {
+      const names = await registeredNames(sepoliaClient, sepoliaLogs, { exclude: [PUBLISHER, ...OUR_TEST_ACCOUNTS], lastBlocks: 100_000n });
+      if (!names.length) throw new Error("no names registered in the last ~2 weeks");
+      // one name per owner (their newest), so a bulk registrant doesn't dominate the pick
+      const byOwner = new Map<string, string>();
+      for (const n of names) if (!byOwner.has(n.owner)) byOwner.set(n.owner, n.name);
+      const pool = [...byOwner.values()];
+      const pick = pool[Math.floor(Math.random() * pool.length)]!;
+      setInput(pick);
+      submit(pick);
+    } catch (e) {
+      setError(`Couldn't list recent ENSv2 names: ${String((e as Error).message).slice(0, 160)}`);
+    } finally {
+      setPicking("");
+    }
+  };
+  const pickCouncil = () => {
+    const c = COUNCILS[Math.floor(Math.random() * COUNCILS.length)]!;
+    setInput(c.safe);
+    submit(c.safe, "safe");
+  };
+  // Read-only: asks the wallet for its address, never for a signature.
+  const useMyWallet = async () => {
+    setPicking("wallet");
+    setError("");
+    try {
+      const eth = (window as unknown as { ethereum: { request: (a: { method: string }) => Promise<string[]> } }).ethereum;
+      const [a] = await eth.request({ method: "eth_requestAccounts" });
+      if (a) {
+        setInput(a);
+        submit(a);
+      }
+    } catch (e) {
+      setError(`Your wallet didn't share an address: ${String((e as Error).message).slice(0, 120)}`);
+    } finally {
+      setPicking("");
+    }
+  };
+
   return (
     <>
       <section className="hero">
@@ -67,13 +106,13 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
             before Q-Day.
           </p>
           <div className="toggle" role="group" aria-label="What to check">
-            <button aria-pressed={mode === "name"} onClick={() => (setMode("name"), setInput("lifeboatdemo.eth"))}>
+            <button aria-pressed={mode === "name"} onClick={() => setMode("name")}>
               ENS name
             </button>
-            <button aria-pressed={mode === "address"} onClick={() => (setMode("address"), setInput("0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a"))}>
+            <button aria-pressed={mode === "address"} onClick={() => setMode("address")}>
               Address
             </button>
-            <button aria-pressed={mode === "safe"} onClick={() => (setMode("safe"), setInput("0xc2819DC788505Aac350142A7A707BF9D03E3Bd03"))}>
+            <button aria-pressed={mode === "safe"} onClick={() => setMode("safe")}>
               Safe
             </button>
           </div>
@@ -98,23 +137,31 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
                 : "Checks Ethereum, Base, Arbitrum, Optimism, Polygon, Sepolia. Read-only: Lifeboat never asks for a key or a signature."}
           </div>
           <div className="examples">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex.value}
-                type="button"
-                onClick={() => {
-                  setInput(ex.value);
-                  submit(ex.value, ex.tag === "safe" ? "safe" : undefined);
-                }}
-              >
-                <b>{ex.tag}</b> {ex.label}
+            <span className="label" style={{ alignSelf: "center" }}>
+              Try
+            </span>
+            <button type="button" disabled={!!picking || busy} onClick={pickName}>
+              <b>name</b> {picking === "name" ? "picking a name…" : "a random real ENSv2 name"}
+            </button>
+            <button type="button" disabled={!!picking || busy} onClick={pickCouncil}>
+              <b>safe</b> a security council
+            </button>
+            {hasWallet && (
+              <button type="button" disabled={!!picking || busy} onClick={useMyWallet}>
+                <b>wallet</b> {picking === "wallet" ? "asking your wallet…" : "my connected wallet"}
               </button>
-            ))}
+            )}
           </div>
           {error && (
             <p className="error-box" role="alert" style={{ maxWidth: 680 }}>
               {error}
             </p>
+          )}
+          {mode === "name" && (
+            <div className="survey-line">
+              Across real ENSv2 names (one per owner, Sepolia block {Number(survey.block).toLocaleString("en-US")}): <b>{survey.verdicts.hijackable}</b> of {survey.checked} can be steered on Q-Day,{" "}
+              <b>{survey.resolverExposed}</b> of them through their resolver. Names are counted, never listed.
+            </div>
           )}
           <div className="warning">No quantum computer can do this today. These are readiness findings from public on-chain data.</div>
         </div>
@@ -223,7 +270,8 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
   if (err)
     return (
       <div className="error-box">
-        Couldn't check <b>{name}</b> on Sepolia ENSv2: {err}. Is it registered in ENSv2 on Sepolia? v1-only names aren't covered yet.
+        Couldn't finish the Helm check for <b>{name}</b>: {err}.{" "}
+        {/limit|rate|429|timeout|timed out/i.test(err) ? "The public RPC is busy: try again in a moment." : "Is it registered in ENSv2 on Sepolia? Names that exist only in ENS v1 (mainnet) aren't covered yet."}
       </div>
     );
   if (!report)
@@ -305,8 +353,11 @@ function HelmPanel({ name, onDone }: { name: string; onDone: () => void }) {
           </p>
           {report.completeness.map((c, i) => (
             <div key={i} style={{ marginTop: 10, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <Rubber good={c.complete}>{c.complete ? "Proven complete" : "Mismatch"}</Rubber>
-              <span className="mono muted">{c.where.replace(/0x[0-9a-fA-F]{40}/, (m) => short(m))}</span>
+              <Rubber good={c.complete}>{c.complete ? "Proven complete" : "Not proven"}</Rubber>
+              <span className="mono muted">
+                {c.where.replace(/0x[0-9a-fA-F]{40}/, (m) => short(m))}
+                {c.note ? ` · ${c.note}` : ""}
+              </span>
             </div>
           ))}
         </div>

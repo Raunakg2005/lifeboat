@@ -38,7 +38,7 @@ export interface HelmReport {
   owner: Address;
   resolver: Address;
   entries: PathEntry[];
-  completeness: { where: string; resource: bigint; rebuilt: bigint; onChain: bigint; complete: boolean }[];
+  completeness: { where: string; resource: bigint; rebuilt: bigint; onChain: bigint; complete: boolean; note?: string }[];
   hijackablePaths: number[]; // owner-controllable paths (1-4) with an exposed holder
   systemicExposed: number; // exposed holders in path 5
   verdict: "hijackable" | "protected" | "unknown";
@@ -56,10 +56,17 @@ async function logsAll(client: PublicClient, params: any, from: bigint, to: bigi
 }
 
 /** Current role holders of `resource` on an EAC contract, rebuilt from logs and checked against roleCount. */
+const SHARED_RESOLVER_PAIRS = 200;
+
 async function holders(client: PublicClient, logs: PublicClient, contract: Address, abi: any, resource: bigint | undefined, toBlock: bigint) {
   const evs = await logsAll(logs, { address: contract, event: EAC_ROLES_CHANGED, args: resource === undefined ? {} : { resource } }, ENS_V2_FROM_BLOCK, toBlock);
   const pairs = new Map<string, { resource: bigint; account: Address }>();
   for (const e of evs) pairs.set(`${e.args.resource}:${e.args.account}`, { resource: e.args.resource, account: getAddress(e.args.account) });
+  // A resolver shared by many names has role history for all of them. Its root admins control every record, so
+  // they are always read; the per-name setters of other names can't be told apart here, so they are reported as
+  // not proven (the verdict becomes "unknown" unless an exposed key is found anyway), never as protected.
+  const shared = resource === undefined && pairs.size > SHARED_RESOLVER_PAIRS;
+  if (shared) for (const [k, p] of pairs) if (p.resource !== 0n) pairs.delete(k);
   const read = await Promise.all(
     [...pairs.values()].map(async (p) => ({ ...p, bitmap: (await client.readContract({ address: contract, abi, functionName: "roles", args: [p.resource, p.account], blockNumber: toBlock })) as bigint })),
   );
@@ -73,6 +80,7 @@ async function holders(client: PublicClient, logs: PublicClient, contract: Addre
       return { resource: r, rebuilt, onChain, complete: rebuilt === onChain };
     }),
   );
+  if (shared) completeness.push({ resource: -1n, rebuilt: 0n, onChain: 0n, complete: false, note: "shared resolver: per-name record setters not proven" } as any);
   return { holders: out, completeness };
 }
 
@@ -193,7 +201,7 @@ export async function helmCheck(
     completeness,
     hijackablePaths,
     systemicExposed,
-    verdict: !allComplete ? "unknown" : hijackablePaths.length ? "hijackable" : "protected",
+    verdict: hijackablePaths.length ? "hijackable" : !allComplete ? "unknown" : "protected", // an exposed key on paths 1-4 is enough; "protected" needs every list proven,
   };
 }
 
@@ -216,4 +224,40 @@ export function printReport(r: HelmReport) {
         : "\nVERDICT: unknown (role list could not be proven complete)",
   );
   if (r.systemicExposed) console.log(`(systemic: ${r.systemicExposed} exposed parent-registry admin key(s), outside the owner's control)`);
+}
+
+// ---------------------------------------------------------------- real names, for a fair sample
+const LABEL_REGISTERED = parseAbiItem("event LabelRegistered(uint256 indexed tokenId, bytes32 indexed labelHash, string label, address owner, uint64 expiry, address indexed sender)");
+
+export interface RegisteredName {
+  name: string;
+  labelHash: `0x${string}`;
+  owner: Address;
+  sender: Address;
+  expiry: bigint;
+  block: bigint;
+}
+
+/**
+ * Every .eth name registered in ENSv2 on Sepolia, newest first, from the ETHRegistry's own LabelRegistered events.
+ * Names still active at `now` only, one entry per name, and none registered by or for the accounts in `exclude`
+ * (our own test wallets), so a sample is never staged.
+ */
+export async function registeredNames(client: PublicClient, logs: PublicClient, opts: { exclude?: string[]; now?: bigint; lastBlocks?: bigint } = {}): Promise<RegisteredName[]> {
+  const toBlock = await client.getBlockNumber();
+  const from = opts.lastBlocks && toBlock - opts.lastBlocks > ENS_V2_FROM_BLOCK ? toBlock - opts.lastBlocks : ENS_V2_FROM_BLOCK;
+  const evs = await logsAll(logs, { address: ENS.ETHRegistry, event: LABEL_REGISTERED }, from, toBlock);
+  const now = opts.now ?? BigInt(Math.floor(Date.now() / 1000));
+  const ex = new Set((opts.exclude ?? []).map((a) => a.toLowerCase()));
+  const seen = new Set<string>();
+  const out: RegisteredName[] = [];
+  for (const e of evs.sort((a, b) => Number(b.blockNumber - a.blockNumber))) {
+    const label = String(e.args.label ?? "");
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    if (BigInt(e.args.expiry) <= now) continue;
+    if (ex.has(String(e.args.owner).toLowerCase()) || ex.has(String(e.args.sender).toLowerCase())) continue;
+    out.push({ name: `${label}.eth`, labelHash: e.args.labelHash, owner: getAddress(e.args.owner), sender: getAddress(e.args.sender), expiry: BigInt(e.args.expiry), block: e.blockNumber });
+  }
+  return out;
 }

@@ -9,7 +9,7 @@ export * from "@lifeboat/core";
 
 export const SEPOLIA_RPC = () => envOr("SEPOLIA_RPC_URL", PUBLIC_RPC.sepolia);
 
-export const sepoliaClient = () => createPublicClient({ chain: sepolia, transport: http(SEPOLIA_RPC(), { retryCount: 4, timeout: 30_000 }) });
+export const sepoliaClient = () => createPublicClient({ chain: sepolia, batch: { multicall: true }, transport: http(SEPOLIA_RPC(), { retryCount: 4, timeout: 30_000 }) });
 export const sepoliaLogsClient = () => createPublicClient({ chain: sepolia, transport: http(PUBLIC_RPC.sepoliaLogs, { retryCount: 4, timeout: 60_000 }) });
 export const mainnetClient = () => createPublicClient({ transport: http(envOr("MAINNET_RPC_URL", PUBLIC_RPC.mainnet), { retryCount: 3, timeout: 30_000 }) });
 

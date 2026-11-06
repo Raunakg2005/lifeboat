@@ -1,4 +1,6 @@
 import snapshot from "../../evidence/discovery/councils.json";
+import survey from "../../evidence/ens/survey.json";
+import guardEv from "../../evidence/guard/quantum-guard.json";
 import { REPO, explorerTx, sepoliaTx, short, swarmUrl } from "./lib";
 import { Boat, LuggageTag } from "./ui";
 import { quantumHardwareRuns } from "./QuantumPanel";
@@ -14,7 +16,7 @@ const COUNCIL_SWARM = "cf5693936d6583e069e069a9a1095dcac6333685994bc965423589fcd
 
 const ROUTE: { n: number; title: string; line: string; proof: string; tab: Tab; cta: string }[] = [
   { n: 1, title: "Detect", line: "Recover public keys from multisig signatures, not just from sent transactions.", proof: "Optimism council: 4 → 13 of 13", tab: "discover", cta: "Discover" },
-  { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: "lifeboatdemo.eth: 4 paths open", tab: "check", cta: "Helm check" },
+  { n: 2, title: "Map", line: "Every key that can steer an ENSv2 name, across five control paths, proven complete.", proof: `${survey.verdicts.hijackable} of ${survey.checked} real names exposed`, tab: "check", cta: "Helm check" },
   { n: 3, title: "Escape", line: "A post-quantum account that checks a hash-based signature in the transaction itself.", proof: "52,369 gas · block 403,931", tab: "escape", cta: "Escape" },
   { n: 4, title: "Rescue", line: "A staked sponsor pays gas for wallets with tokens but no ETH, and is repaid in USDC.", proof: "❌ ❌ ✅ · block 404,050", tab: "escape", cta: "The rescue" },
   { n: 5, title: "Sign safely", line: "A device that saves its counter before signing, so a one-time key is used once.", proof: "ESP32-signed · block 406,887", tab: "escape", cta: "Hardware" },
@@ -28,6 +30,14 @@ const PROOF: { what: string; net: string; at: string; href: string }[] = [
   { what: "Transaction signed on the ESP32 after a button press", net: "EIP-8141 devnet", at: "block 406,887", href: explorerTx("0x69c1eaec36a29185a599ebead5a0662a7198683c352ba98e88dda3daeaf39213") },
   { what: "ENS name handed over to a post-quantum wallet", net: "Sepolia ENSv2", at: short("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a", 6), href: sepoliaTx("0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a") },
   { what: "Council deep scan, every signer, stored on Swarm", net: "Swarm testnet", at: short(COUNCIL_SWARM, 6), href: swarmUrl(COUNCIL_SWARM) },
+  ...guardEv.steps
+    .filter((s) => s.what.startsWith("attack") || s.what.startsWith("pay 0.001 ETH to the treasury"))
+    .map((s) => ({
+      what: s.what.startsWith("attack") ? "Quantum Guard refused a Safe payment signed by the owners only" : "Quantum Guard let the co-signed payment through",
+      net: "Sepolia · Safe 1.4.1",
+      at: `block ${Number(s.block).toLocaleString("en-US")}`,
+      href: sepoliaTx(s.hash),
+    })),
   ...quantumHardwareRuns().map((q) => ({
     what: `Shor's algorithm recovered a ${q.bits}-bit toy private key from its public key`,
     net: `IBM ${q.backend}`,
@@ -96,10 +106,10 @@ export default function HomeView({ onGo }: { onGo: (t: Tab) => void }) {
             </div>
           </div>
           <div className="ticket-row">
-            <div className="k">lifeboatdemo.eth (Sepolia ENSv2)</div>
+            <div className="k">Real ENSv2 names, one per owner (Sepolia)</div>
             <div className="v">
-              <b>4</b>
-              <small> of 5 control paths held by public keys</small>
+              <b>{survey.verdicts.hijackable}</b>
+              <small> of {survey.checked} can be steered on Q-Day</small>
             </div>
           </div>
           <div className="ticket-row">

@@ -1,0 +1,850 @@
+{
+  "chain": "sepolia",
+  "registry": "ENSv2 ETHRegistry (.eth)",
+  "block": "12074432",
+  "checkedAt": "2026-11-06T05:14:42.832Z",
+  "method": "One active name per owner (their newest), all ENSv2 .eth registrations, our own test wallets excluded. Full Helm check on each: 5 control paths, role lists proven complete. Hijackable = an owner-controllable path (1-4) held by a key whose public key is on-chain.",
+  "activeNames": 5078,
+  "owners": 1014,
+  "sampled": 80,
+  "checked": 79,
+  "verdicts": {
+    "hijackable": 66,
+    "protected": 13,
+    "unknown": 0,
+    "error": 1
+  },
+  "paths": {
+    "1": 65,
+    "2": 0,
+    "3": 0,
+    "4": 49
+  },
+  "ownerKinds": {
+    "exposed": 65,
+    "notSeen": 1,
+    "contract": 13,
+    "pq": 0
+  },
+  "note": "A name owned by a contract (a Safe, a wrapper) isn't counted as safe: who controls it depends on that contract.",
+  "resolverExposed": 49,
+  "results": [
+    {
+      "labelHash": "0x7d913024631c9ef896b74a1c521256332d7cfeb815caec5cd5f7c24c226bc1a1",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x0fee0ee5cad2e5cbb628c396e33e4fd2ff7034e423d0e4720931aab400e229fc",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x417082fe4406d07d923bb6168ef26bfcaa7284da6b458416e55426cb7d9afc76",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x53a8cf7ab120c2546663bf28412ab46894bebd09fcf2edf112dcd5359c395820",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x1bed3079ed1718fbcbef4c3a98d62b2221bcf08a40fd112605d9bc1e9e8536b7",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x9d1925edad241da033aba5d613d2783e5449bc743b7f2360520403de7d9f4e47",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x303100f06892f4f0dc7cdd488a8a15b20de2ca9dae59933f2b9f7e992d6e5625",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x9a3205d756ba2c4613c6d37263e909e2995fd3162aa11bf85c3a04abe9a3ff6e",
+      "verdict": "hijackable",
+      "paths": [
+        4
+      ],
+      "ownerExposure": "contract",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x81b1390863eb64dfb15ec65e9226419e345e50cd3b82a93fa6fa22d1f40a1a08",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x83880fc77b695bd2864d11e691ef68fccc324c57b3e94f52de05ac0d2ef7b63a",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xcfacba1d794229ffd479a429844dd1e7bcad2123310dd758af86345aad90a22a",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xeddf0b55067c9fed0b9b683dcb1e7af07f3ef1d3afb4df784ad926b7c2716335",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x0cca89a19ebcf821559b9ce2a8270342e0b3e63c64c210f8aec0d1baf4654d8a",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x9648f35c3f0d09aead62fceb28c74ef4e2fee7adaf33698b5516cc83b5b9a1da",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xffb2f8b0ee90870a99dcf36367d36dc73b9ebbbdf7af381b87ae4100efbe7388",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x52ac9cbb8208adc678a3a6dac211c9d2fb319de166f8f219ab61b69f288b9e78",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x1e68e0a31a5de5c312cb8f67c9f11e9960bc9d00c19f001ea8673b8e2f148095",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xde81754ec0fb4aae45851b122190cda7429ee1ca676851f4655fae79a67c5732",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xdaae214c3c0cd9871ac9e4c33dd2d5d781cfd8738a95c64113cbd0283d36bdcb",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x0e598e7f6e537fe4460d3f900644b774012f07da7295d8c3379a0a2f8c831b97",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xe7abe02f1919868430991294c26287cd9fb746638c67c4f9d25be8755ccce146",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 3
+    },
+    {
+      "labelHash": "0x907e3862d1fd1141e2c7212c40d0c494e4f92a6c090104274907184a4b2fe50e",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x49c6a3a11901a2e248a629438c28aa559f9455768f0ec627026e9d6d9876f853",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 4
+    },
+    {
+      "labelHash": "0xf2279b2aa97ab40ea0676b81be7e4976f4469934f1f7c524f8a35e00a4d3b84b",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xdcf48d4757119a1f617986857cf19f445da0b8e96874dbed3d41dc063f92b508",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xfcbbad1284e6afb21c8c11fbb8a1c72e26cfcb6db710061c826155d67422a1a3",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x8285841eb27a9836db28d7133828a4dfa4b59eee75550c7aa802167932e1b80b",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x942df11d8c9d2224a57bfdbb07fddd12fd390fbd7b985cc2d2e5c2465cb83793",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x2447c43a6160806768d4c947ce727fb12b7f2700badae716947943ea245c25d6",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x9ecbac61a1330a0d40bf1ca84ab71869226740f1f6dfeccba14ea6d67d135c2a",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x58c8955ffb2b95fa2c6ba902e6de163a7c2c41e08baa3cf60b2a61711cc37f62",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x7d4d026d5a2ea035f63309150185431a44a4bc89fba9cc163eedcf04c2489ec9",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xc266722a39c58ab3cf170b07b80de62d1b3fe6ffa7c56df54025b3ea472f59a7",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x31243fc26b88af9c5b3d2ee15ff63b308519bc003148a80507e990601058ea0d",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xe4296c6eebf50fcef677c7ce78d5735bb66b37716e8bd25ed9c57eb94d8b28b6",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x4b9b16af30a69eef871ba0e3f0a41a2a19665f25285344000ecfb8493a16bd9b",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x436499b4d8f2dd3fdb65593cd5a107b15663fdfe32816835f8f777dcc3f9ca6c",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x1d14dda39d48381d111116d09bab253d82441f4bf6b5feaa29789d674953535e",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x2bd6b6292fe220476cb15316e7198a2165c8980c787f127c05b3981f5d37cc64",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xe82e721e23cbd84289f3daeb116c25c37f7085d6aef0eac421bfdf2e54fda5c2",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xb55ee00b015c94d9703447ba156c62b0dfb2d301cdfe8a7dd062f9c0dbbd51ee",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x4be7daf92ec7c3127276366389f3ce2fd9f35ea3c84dfdce02eb27bf78dcf996",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xeaac08c25674751db6ae0aa0cef09ddbcba2c88f7877f2af7d54e0e6437d1565",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xd1a5cc9d1c0eea3c8ca79581ee03d5ad694f2f8684795fb3c1aa74077ccc0781",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xc02a1b308afabfe4efbb2425bebbe5c23922613c7fa5ea0cf45ffa89548b1748",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 3
+    },
+    {
+      "labelHash": "0x039d38caaa749ea0a6df9a9e406d7b41cfd63e042b04906f7a5e162836eb60f8",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 6
+    },
+    {
+      "labelHash": "0x7d2fc4102b95a577c5800d4c008666c174395591ab52adda61be80ff5e90dfd4",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x8f43673ed2458670970792f93e8322ac7729f83488478c55024c92b033fd9e1e",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xbcf273fea7763f3efed4a20d7e3a2039d40be96dcf46b479de0e9b7e5d88fa4a",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x4fd967966e6b0ea40f78dff297fed3b472763137dac6cf564d7263e918f425ef",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x60c837d660df46d2c7447c25f2c7b3c6f9747cab1c7147e4163dc97d5ecbabde",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xe2fa25956ff55d6213aeaa4434c3eff0cbc108d6bf63e3ffdb78594abeb460df",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x27a0e0781f72a06d50b78eb9d56998b852243f318c300d923009de3a499d0f90",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x3f58a4152a852b52e4310f161acacdbf4c94ce855f0986a0e8c9633ce47758d7",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x9c1ca61498816bdf185874947f6ea16c04298c4cce9aba6aa556fb1dc90dd631",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x9bb47c6c738ea8e40bd299076a22a945072d5f3c33d8e3924026bd15a6152067",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xd8d48288cab6ec5a35dc0907df43c48dfd480921026701d75cab8a0c994809b0",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x16612d72cf3e0b38a1ca189f7dfd9bac3d73f759362f6c924ae08a69fb29a139",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xbaa944dfbdc6db8bf42ebe194b0062a053a417ebeb57e44b4b70c770a3ba088f",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xdc6867f08ac7ae7e0191c56f4cba2809da6ddffdea3e1a9c931ba32e9911a15d",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x93bd7636ba59c5b27228179b042d7925136c422e17dd40590cbf0c0557b71e5b",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x7d75e411c9bcf7ecf41ac08b1a5ce7881e9bc694b76e707f7b0365878aecf5df",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x320146c7c755e3f9df8c71e0d57ad72b85b487866fe361de07160bbcb9c72ea0",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xd6b6b218f977b06f44c266441dd75d07c13ea59bf1d7d1a265babc0aa1d7bbd1",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 3
+    },
+    {
+      "labelHash": "0xdd9ac0458bb44f7a48b5849bdaf3c37b6269be2f4b36ba5c24191769584a9805",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x6ed302f987e3e5acea38c97cd4120a12cc153731d5bf66bd95fc4ca792e63800",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x3b4dd230b40f2507d6f3b056eaf3cb4f395a4da57c7f178a76b4585047325e88",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xcee27490d57723bba30ee3a40cb95a0f5371574bbac3a126aea84ef8909e922d",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xee96901619049638181c81dd849b068b42dadaac4d1a8160d6684b69369f8395",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xa3082ff894d8b40a332d6cf9e89cf40c1c62bc886eb06915f7421d34aed33643",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x7d8e326195ba3e7ab8e8e76680a21680de72108d9e5bb043cc8f7a8be0442e91",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xdb76ec1fd9974653551810c45263fca9ebe7a617db953b441cf24a8ee982f8a6",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xdd17b313add00129d9ae42c4e061d93197c3d550df06eaed4a5f0fb0d34cf18f",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "not-seen",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xe2a46f4363352b9ada47d81483b5715bc3be1698e6eab8c0d41c884c66848ec2",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 2
+    },
+    {
+      "labelHash": "0xc2e5b9cf1e19e3ea063aeee411b0b20d617fdf905dd7bdebca5f94883fa82d46",
+      "verdict": "protected",
+      "paths": [],
+      "ownerExposure": "contract",
+      "resolverExposed": false,
+      "holders": 2
+    },
+    {
+      "labelHash": "0x5759e9c4dd0085f1e29c0272c56a26ee546bb747efef92a657dad30ecc43eb6c",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x20910283245a4d072f9fa42660f43a5f093d560f4078420e2bd58d205a07c4a1",
+      "verdict": "error",
+      "paths": []
+    },
+    {
+      "labelHash": "0x56ffc53aaaabaae59260c0dcaf5126e73b3ed65169b8731cd8f1c994e2fd45f9",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0x474d352a189c395f6fe9590ae4197451b8d959de630b68fcbbdf636ecaeee8c6",
+      "verdict": "hijackable",
+      "paths": [
+        1,
+        4
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": true,
+      "holders": 1
+    },
+    {
+      "labelHash": "0xcc141c046380622f5bb7c9a4b4bf1a15ec601edb44f6e76b9ee26dccf11411ac",
+      "verdict": "hijackable",
+      "paths": [
+        1
+      ],
+      "ownerExposure": "exposed",
+      "resolverExposed": false,
+      "holders": 1
+    }
+  ]
+}
