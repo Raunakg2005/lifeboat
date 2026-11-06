@@ -109,7 +109,7 @@ export const SEGMENTS = [
     id: "forgery",
     label: "Escape · forgery",
     title: "One-time means one time",
-    lines: ["One-time keys must stay one-time. A wallet that re-signed twelve fee bumps with one key was forged in a tenth of a second, live on the devnet."],
+    lines: ["One-time keys must stay one-time. A wallet that re-signed twelve fee bumps with one key was forged in under a second, live on the devnet."],
     act: async (p) => {
       await p.scrollToText("Why one-time means one time");
     },
@@ -118,7 +118,10 @@ export const SEGMENTS = [
     id: "hardware",
     label: "Escape · hardware",
     title: "Sign safely",
-    lines: ["So our signer keeps the key counter on a small device, saves it before every signature, and asks for a button press."],
+    lines: [
+      "So our signer keeps the key on a small device. It never signs a bare hash: it rebuilds what it signs from the request and shows it in words, amount, recipient, ENS name.",
+      "It saves its counter before every signature and waits for a button press. Its last transaction was signed exactly that way.",
+    ],
     act: async (p) => {
       await p.scrollToText("Sign safely");
     },
@@ -128,13 +131,28 @@ export const SEGMENTS = [
     label: "Harbour",
     title: "Publish, and the close",
     lines: [
-      "Every finding is re-checked and published to a public registry on Arkiv, with full evidence on Swarm.",
+      "Every finding is re-checked and published to a public registry on Arkiv, signed by our publisher, with an expiry and a link to each record.",
+      "The full evidence sits on Swarm, and the app downloads it, hashes it in your browser, and shows that it matches the Arkiv record.",
       "The tools and data are free. Protocols pay for monitoring and help migrating.",
       "Lifeboat: get off before Q-Day.",
     ],
     act: async (p, at) => {
       await p.tab("Harbour");
-      await at(0.6, () => p.tab("Home"));
+      await at(0.12, () => p.scrollToText("ENS HELM CHECK VERDICTS", -90).catch(() => p.scrollToText("Names", -90)));
+      // open the evidence for our test name lifeboatpq.eth: the smallest block that names it and holds one "open evidence" button
+      await at(0.3, () =>
+        p.run(`(() => {
+          const btns = [...document.querySelectorAll("button")].filter((b) => b.textContent.trim().toLowerCase() === "open evidence");
+          const own = btns.find((b) => {
+            let el = b.parentElement;
+            while (el && !el.textContent.includes("lifeboatpq.eth")) el = el.parentElement;
+            return el && [...el.querySelectorAll("button")].filter((x) => x.textContent.trim().toLowerCase() === "open evidence").length === 1;
+          });
+          (own || btns[0])?.click();
+        })()`),
+      );
+      await at(0.66, () => p.run(`window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))`));
+      await at(0.72, () => p.tab("Home"));
     },
   },
 ];

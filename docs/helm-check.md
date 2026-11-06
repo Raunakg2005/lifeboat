@@ -2,7 +2,7 @@
 
 Moving your money to a post-quantum wallet isn't enough. If a quantum-breakable key can still steer your **name**, an attacker can point `you.eth` at their own address, and every payment sent to it is theirs. In ENSv2, control of a name is spread over five places, and a plain transfer of the name moves only one of them.
 
-Code: [`scripts/src/lib/helm.ts`](../scripts/src/lib/helm.ts) · CLI: `pnpm --filter @lifeboat/scripts helm <name.eth>` · works for **any** ENSv2 name on Sepolia (nothing hard-coded).
+Code: [`packages/core/src/helm.ts`](../packages/core/src/helm.ts) (shared by the app and the scripts) · CLI: `pnpm --filter @lifeboat/scripts helm <name.eth>` · works for **any** ENSv2 name on Sepolia (nothing hard-coded).
 
 ## The five paths
 
@@ -74,7 +74,7 @@ pq.account  0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f
 pq.checked  2026-11-05T16:24:03.097Z signed by the PQ key
 ```
 
-## Contracts (Sepolia, ABIs from Sourcify in [`scripts/abi/ens`](../scripts/abi/ens))
+## Contracts (Sepolia, ABIs from Sourcify in [`packages/core/abi/ens`](../packages/core/abi/ens))
 Universal Resolver `0xeEeE…EeEe` · ETHRegistry `0xd4eb…a8b4` · ETHRegistrar `0xf633…a3d3` · PermissionedResolver impl `0x115e…2b2c` · VerifiableFactory `0xda70…2991` · UniversalHelper `0xd453…fe`. Role bits come from the verified `RegistryRolesLib` / `PermissionedResolverLib` sources.
 
 ## Run it

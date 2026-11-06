@@ -30,4 +30,4 @@ A future quantum computer can derive a private key from any public key already o
 - Least privilege for automated checkers: a watcher can be given a setter role for the single record `pq.checked` only, so a compromised watcher can change one timestamp and nothing else.
 
 ## Reference implementation
-[`scripts/src/ens-handover.ts`](../scripts/src/ens-handover.ts) (writes the records), [`scripts/src/lib/helm.ts`](../scripts/src/lib/helm.ts) (checks control). Live on Sepolia: `lifeboatpq.eth`.
+[`scripts/src/ens-handover.ts`](../scripts/src/ens-handover.ts) (writes the records), [`packages/core/src/helm.ts`](../packages/core/src/helm.ts) (checks control). Live on Sepolia: `lifeboatpq.eth`.

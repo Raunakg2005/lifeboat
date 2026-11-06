@@ -25,9 +25,9 @@ Numbers are read from the evidence files when the video is made. No real person'
 | 5 | Escape: first PQ transaction | "To get out, Lifeboat gives you a post-quantum account: an EIP-8141 transaction that checks a hash-based signature in its own verify frame, for about 52,000 gas." |
 | 6 | Escape: the rescue lanes | "If your wallet holds tokens but no ETH, a staked paymaster pays the gas, and is repaid in USDC in the same transaction. The public mempool refuses it, the unstaked alternative mempool refuses it, and the staked one includes it." |
 | 7 | Escape: Quantum Guard | "Councils can't just move their funds. Quantum Guard adds a post-quantum co-signer to the Safe they already have. On a real Safe, a payment signed only by the owners was refused on-chain, with a missing post-quantum signature, and the co-signed payment went through. It covers off-chain signatures like Permit2 too." |
-| 8 | Escape: forgery | "One-time keys must stay one-time. A wallet that re-signed twelve fee bumps with one key was forged in a tenth of a second, live on the devnet." |
-| 9 | Escape: hardware signer | "So our signer keeps the key counter on a small device, saves it before every signature, and asks for a button press." |
-| 10 | Harbour → Home | "Every finding is re-checked and published to a public registry on Arkiv, with full evidence on Swarm. The tools and data are free. Protocols pay for monitoring and help migrating. Lifeboat: get off before Q-Day." |
+| 8 | Escape: forgery | "One-time keys must stay one-time. A wallet that re-signed twelve fee bumps with one key was forged in under a second, live on the devnet." |
+| 9 | Escape: hardware signer | "So our signer keeps the key on a small device. It never signs a bare hash: it rebuilds what it signs from the request and shows it in words, amount, recipient, ENS name. It saves its counter before every signature and waits for a button press. Its last transaction was signed exactly that way." |
+| 10 | Harbour → **open evidence** on lifeboatpq.eth → Home | "Every finding is re-checked and published to a public registry on Arkiv, signed by our publisher, with an expiry and a link to each record. The full evidence sits on Swarm, and the app downloads it, hashes it in your browser, and shows that it matches the Arkiv record. The tools and data are free. Protocols pay for monitoring and help migrating. Lifeboat: get off before Q-Day." |
 
 ## Checklist before recording
 - [ ] No other heavy job is using the public RPCs (the survey, a re-scan): the live checks in the take need them
