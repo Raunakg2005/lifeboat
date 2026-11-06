@@ -1,0 +1,93 @@
+{
+  "startedAt": "2026-11-06T07:25:08.296Z",
+  "chainId": 11155111,
+  "txs": [
+    {
+      "by": "setup (dev wallet)",
+      "what": "create a fresh Safe 1.4.1 owned by the test wallet",
+      "hash": "0x30807dc0c5f7c9e54509eafa2d86573a4f8db6e071d3fe5a5446ee043370cf3f",
+      "block": "12075077"
+    },
+    {
+      "by": "setup (dev wallet)",
+      "what": "fund the Safe (0.001 ETH)",
+      "hash": "0x79d50fb4ddfaa5918dd543a7333e7f619868337f488f890018f93fd9593ecffa",
+      "block": "12075078"
+    },
+    {
+      "by": "app (test wallet)",
+      "what": "install Quantum Guard (factory + one Safe transaction)",
+      "hash": "0xe37124d8db41f45e906354561c53cb6be9d7632a8b3346c53845cf7653371394",
+      "block": "12075079"
+    },
+    {
+      "by": "app (test wallet)",
+      "what": "install Quantum Guard (factory + one Safe transaction)",
+      "hash": "0xd243c9e0df3b3d90b21503e22ac703f6101ac87a4655d23890b552318e0900db",
+      "block": "12075080"
+    },
+    {
+      "by": "app (test wallet)",
+      "what": "co-sign and send a payment",
+      "hash": "0x5ac8267c8bd7e794990da4af1c9feb097ce53d97d7accbd0940ddd00f1be5c4e",
+      "block": "12075081"
+    },
+    {
+      "by": "app (test wallet)",
+      "what": "owners start a recovery",
+      "hash": "0x0833188074736832b8f0119ffe0c7fa28aad6f3d8b723a8db52e33f2f969e643",
+      "block": "12075082"
+    },
+    {
+      "by": "app (test wallet)",
+      "what": "veto it with the post-quantum key",
+      "hash": "0x0cf2e7085c883782f64c559d70e2454122f2cf12bbdeb0a12c42027fb9fc7505",
+      "block": "12075083"
+    }
+  ],
+  "steps": [
+    {
+      "name": "connect the wallet",
+      "secs": 0.558
+    },
+    {
+      "name": "create a post-quantum key in the browser",
+      "secs": 1.602
+    },
+    {
+      "name": "load the Safe",
+      "secs": 1.377
+    },
+    {
+      "name": "install Quantum Guard (factory + one Safe transaction)",
+      "secs": 19.82
+    },
+    {
+      "name": "co-sign and send a payment",
+      "secs": 14.186
+    },
+    {
+      "name": "owners start a recovery",
+      "secs": 10.576
+    },
+    {
+      "name": "veto it with the post-quantum key",
+      "secs": 11.404
+    }
+  ],
+  "checks": {
+    "guardInstalled": true,
+    "handlerIsGuard": true,
+    "guardUsesTheBrowserKey": true,
+    "leavesUsed": 2,
+    "recoveryAttempts": 1,
+    "recoveryPending": false,
+    "safeNonce": 3,
+    "pageErrors": []
+  },
+  "testOwner": "0x9943D5A64CDb3Df22140FBF392e4f023e7cb4d64",
+  "safe": "0x8eD9F14385dE79C855d4D283028F98C0b4B771a9",
+  "guard": "0x481a71e52557ff6c8b0c6dd819812e0dedd94f4b",
+  "passed": true,
+  "finishedAt": "2026-11-06T07:26:45.494Z"
+}

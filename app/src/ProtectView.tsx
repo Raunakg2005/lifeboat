@@ -53,23 +53,29 @@ const pairOf = (k: StoredKey) => {
   return pairCache.get(k.root)!;
 };
 
-async function readSafe(address: Address): Promise<SafeInfo> {
+/**
+ * Everything is read at ONE block (at least `atLeast`). Public RPCs are load-balanced: a node that doesn't have that
+ * block yet errors, and the fallback moves on, so the Safe and its guard never come from different moments.
+ */
+async function readSafe(address: Address, atLeast = 0n): Promise<SafeInfo> {
   const c = sepoliaClient;
-  const block = await c.getBlockNumber();
+  const latest = await c.getBlockNumber();
+  const block = latest > atLeast ? latest : atLeast;
+  const at = { blockNumber: block };
   const [version, owners, threshold, nonce, balance, gw, hw] = await Promise.all([
-    c.readContract({ address, abi: safeAbi, functionName: "VERSION" }).catch(() => "?"),
-    c.readContract({ address, abi: safeAbi, functionName: "getOwners" }),
-    c.readContract({ address, abi: safeAbi, functionName: "getThreshold" }),
-    c.readContract({ address, abi: safeAbi, functionName: "nonce" }),
-    c.getBalance({ address }),
-    c.getStorageAt({ address, slot: GUARD_SLOT }),
-    c.getStorageAt({ address, slot: HANDLER_SLOT }),
+    c.readContract({ address, abi: safeAbi, functionName: "VERSION", ...at }).catch(() => "?"),
+    c.readContract({ address, abi: safeAbi, functionName: "getOwners", ...at }),
+    c.readContract({ address, abi: safeAbi, functionName: "getThreshold", ...at }),
+    c.readContract({ address, abi: safeAbi, functionName: "nonce", ...at }),
+    c.getBalance({ address, ...at }),
+    c.getStorageAt({ address, slot: GUARD_SLOT, ...at }),
+    c.getStorageAt({ address, slot: HANDLER_SLOT, ...at }),
   ]);
   const guard = slotAddress(gw);
   let qg: Guard | null = null;
   if (BigInt(guard) !== 0n) {
     try {
-      const r = (fn: string) => c.readContract({ address: guard, abi: quantumGuardAbi, functionName: fn as any });
+      const r = (fn: string) => c.readContract({ address: guard, abi: quantumGuardAbi, functionName: fn as any, ...at });
       const [root, pubSeed, usedLeaves] = await Promise.all(["root", "pubSeed", "usedLeaves"].map(r));
       // v1 guards (no lost-key recovery) answer the first three only
       const [recoveryDelay, recoveryNonce, recoveryReadyAt, recovered] = await Promise.all(["recoveryDelay", "recoveryNonce", "recoveryReadyAt", "recovered"].map(r)).catch(() => [0n, 0n, 0n, false]);
@@ -139,6 +145,22 @@ export default function ProtectView() {
       setConfirmations([]);
     });
   const refresh = async () => info && setInfo(await readSafe(info.address));
+  /**
+   * Public RPCs are load-balanced and can answer from a node a block behind. After a transaction, keep reading until
+   * the Safe shows it (its block, and the nonce moved on), so the next signature never uses a stale nonce or bitmap.
+   */
+  const settle = async (minBlock: bigint, minNonce?: bigint) => {
+    for (let i = 0; i < 15; i++) {
+      try {
+        const s = await readSafe(info!.address, minBlock);
+        if (minNonce === undefined || s.nonce >= minNonce) return setInfo(s);
+      } catch {
+        // a node without that block yet: try again
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    await refresh();
+  };
 
   const newKey = () =>
     guarded("Generating a WOTS+C key (256 one-time leaves)", async () => {
@@ -185,11 +207,13 @@ export default function ProtectView() {
       signatures = concat([ownerSigs, witness]);
       note(`post-quantum co-signature with leaf ${leaf}`);
     }
-    const hash = await wallet!.sendTransaction({ account: account!, chain: sepolia, to: info!.address, data: execTransactionData(tx, signatures) });
+    // explicit gas: an estimate from a lagging node can come out too low for the Safe's inner call
+    const hash = await wallet!.sendTransaction({ account: account!, chain: sepolia, to: info!.address, data: execTransactionData(tx, signatures), gas: pq ? 700_000n : 500_000n });
     note(`${label}: sent`, hash);
     const r = await sepoliaClient.waitForTransactionReceipt({ hash });
     note(`${label}: ${r.status === "success" ? "included" : "reverted"} in block ${r.blockNumber}`, hash);
-    await refresh();
+    if (r.status !== "success") throw new Error(`${label} reverted on-chain`);
+    await settle(r.blockNumber, tx.nonce + 1n);
   }
 
   /** One owner: sign and execute here. Several: propose to Safe's transaction service and wait for the others. */
@@ -266,10 +290,11 @@ export default function ProtectView() {
   const cancelRecovery = () =>
     guarded("Cancelling the recovery", async () => {
       const { leaf, witness } = pqSign(GUARD_KIND.cancelRecovery, cancelRecoveryHash(info!.qg!.recoveryNonce));
-      const hash = await wallet!.sendTransaction({ account: account!, chain: sepolia, to: info!.guard, data: encodeFunctionData({ abi: quantumGuardAbi, functionName: "cancelRecovery", args: [witness] }) });
+      const hash = await wallet!.sendTransaction({ account: account!, chain: sepolia, to: info!.guard, data: encodeFunctionData({ abi: quantumGuardAbi, functionName: "cancelRecovery", args: [witness] }), gas: 400_000n });
+      const r = await sepoliaClient.waitForTransactionReceipt({ hash });
+      if (r.status !== "success") throw new Error("the veto reverted on-chain");
       note(`recovery #${info!.qg!.recoveryNonce} cancelled with PQ leaf ${leaf}`, hash);
-      await sepoliaClient.waitForTransactionReceipt({ hash });
-      await refresh();
+      await settle(r.blockNumber);
     });
 
   // ---------------------------------------------------------------- view

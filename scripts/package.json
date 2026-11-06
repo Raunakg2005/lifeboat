@@ -25,7 +25,8 @@
     "quantum-guard": "tsx --env-file=../.env src/quantum-guard.ts",
     "gen-guard-vectors": "tsx src/gen-guard-vectors.ts",
     "guard-lifecycle": "tsx --env-file=../.env src/guard-lifecycle.ts",
-    "monitor": "tsx --env-file=../.env src/monitor.ts"
+    "monitor": "tsx --env-file=../.env src/monitor.ts",
+    "e2e-protect": "tsx --env-file=../.env src/e2e-protect.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
@@ -35,5 +36,8 @@
     "@serialport/parser-readline": "12",
     "serialport": "12",
     "viem": "^2.57.16"
+  },
+  "devDependencies": {
+    "playwright-core": "1.52.0"
   }
 }

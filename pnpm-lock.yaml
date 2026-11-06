@@ -114,6 +114,10 @@ importers:
       viem:
         specifier: ^2.57.16
         version: 2.57.16(typescript@5.8.3)
+    devDependencies:
+      playwright-core:
+        specifier: 1.52.0
+        version: 1.52.0
 
   video:
     devDependencies:

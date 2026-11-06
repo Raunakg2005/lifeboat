@@ -53,6 +53,7 @@ The tests use a minimal Safe with Safe 1.4.1's order of checks in `execTransacti
 - **Factory** (`QuantumGuardFactory`): deploys a guard for any Safe at a CREATE2 address the app can predict.
 - **One-transaction install:** the Safe delegatecalls Safe's `MultiSendCallOnly` to call `setGuard` and `setFallbackHandler` together.
 - **The app** (Protect tab): install on any Sepolia Safe, co-sign payments with a browser WOTS+C key (testnet only), and start, finish or veto a recovery. Safes with several owners collect confirmations through Safe's transaction service.
+- **End-to-end test** (`pnpm --filter @lifeboat/scripts e2e-protect`): a throwaway test wallet is injected into the real page; it connects, creates the browser key, installs the guard on a fresh Safe, co-signs a payment, starts a recovery and vetoes it, then checks the chain (guard and handler set, root matches the browser key, 2 leaves used, no recovery pending). Last run passed on Safe [`0x8eD9…71a9`](https://sepolia.etherscan.io/address/0x8eD9F14385dE79C855d4D283028F98C0b4B771a9); transactions and screenshots in [`evidence/e2e/`](../evidence/e2e/).
 
 ### Live on a fresh Safe 1.4.1 (Sepolia, timelock 2 minutes for the run)
 Safe [`0x14B3…9526`](https://sepolia.etherscan.io/address/0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526) · guard [`0xd7a6…D502`](https://sepolia.etherscan.io/address/0xd7a6403A4BBc19db6dc022ee8200c43c264DD502) · factory [`0x2f4f…0fb7`](https://sepolia.etherscan.io/address/0x2f4f0a857438ddd5f473ae93176d0d66a03b0fb7)

@@ -68,7 +68,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 | `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | 3 (vitest: Safe signature recovery) |
 | `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, **Quantum Guard + factory**, mock USDC | 36 (Foundry, TypeScript vectors) |
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
-| `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
+| `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked; Protect tab end to end on Sepolia (`e2e-protect`, evidence in `evidence/e2e/`) |
 | `firmware/esp32` | the signer | host test vs TypeScript vectors |
 | `quantum` | Shor's algorithm for the elliptic-curve discrete log on toy curves: simulators and IBM quantum hardware | ideal + noisy simulation; hardware run → [docs/quantum-demo.md](docs/quantum-demo.md) |
 | `video` | the narrated walkthrough: offline TTS, scripted recording, MP4 + subtitles | renders in about 10 minutes |
@@ -84,6 +84,7 @@ pnpm --filter @lifeboat/scripts ens-survey           # real names, one per owner
 pnpm --filter @lifeboat/scripts quantum-guard        # Quantum Guard on a real Safe (needs .env)
 pnpm --filter @lifeboat/scripts guard-lifecycle      # v2: install, co-sign, veto, timelocked recovery (Sepolia)
 pnpm --filter @lifeboat/scripts monitor              # one Monitor pass (alerts to Arkiv + optional webhook)
+pnpm --filter @lifeboat/scripts e2e-protect          # Protect tab in a real browser with a test wallet (app on :5173)
 pnpm --filter @lifeboat/scripts council-scan          # hidden exposure, mainnet
 pnpm --filter @lifeboat/scripts rescue                # three-way admission (needs .env)
 node tools/firmware-check.mjs                         # firmware crypto vs TypeScript (needs Docker)
