@@ -10,7 +10,7 @@
   "postageBatch": {
     "id": "d65b35d84fb16b2811f5cbb0a1b5d00045c074bd43ac2a04014e7266bd3a7bae",
     "depth": 18,
-    "ttlHours": 55.93666666666667,
+    "ttlHours": 54.63722222222222,
     "txHash": "0xc8669c51715ff7c747251b7e8b456e3ef290e34c60f1e21b858087adb7faba23",
     "boughtBy": "0xf7e0dbaa225ffdba49abbdf9d52ca3b3842b2466"
   },
@@ -57,44 +57,33 @@
       "gatewayOk": true
     },
     "evidence/arkiv/publish.json": {
-      "reference": "85006d567f61a5e85e87bbd2dc99ba396f93f9416f71233874bb54b3dedeac2a",
-      "evidenceHash": "0x96f17d218c032b61ae2a57c84f3a20cede175548f048fa4f244d88f69981e405",
-      "bytes": 4380,
-      "local": "http://127.0.0.1:1633/bzz/85006d567f61a5e85e87bbd2dc99ba396f93f9416f71233874bb54b3dedeac2a/",
-      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/85006d567f61a5e85e87bbd2dc99ba396f93f9416f71233874bb54b3dedeac2a/",
+      "reference": "152c3f189e2a44e63df9b983aa8bc2dc4877aaf80f2dd0007a91ce513b8e5e7e",
+      "evidenceHash": "0x546909e136cb3c7c0a74c13d515c3a8d6a0c6b80eea4a3e260c0ab270195eec8",
+      "bytes": 4378,
+      "local": "http://127.0.0.1:1633/bzz/152c3f189e2a44e63df9b983aa8bc2dc4877aaf80f2dd0007a91ce513b8e5e7e/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/152c3f189e2a44e63df9b983aa8bc2dc4877aaf80f2dd0007a91ce513b8e5e7e/",
       "gatewayOk": true
     },
-    "evidence/ens/helm-lifeboatpq.eth-12075905.json": {
-      "reference": "9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef",
-      "evidenceHash": "0x40ae5ec7cd704d71b1a26503160e4749a4f6359a78d9d7a48e4ed73073f374fe",
+    "evidence/ens/helm-lifeboatpq.eth-12076287.json": {
+      "reference": "381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9",
+      "evidenceHash": "0x98de3eb8b8ac983a73de150a905e6c115d0604850469d83347a9bd6702186c17",
       "bytes": 4499,
-      "local": "http://127.0.0.1:1633/bzz/9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef/",
-      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef/",
+      "local": "http://127.0.0.1:1633/bzz/381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9/",
       "gatewayOk": true
     },
-    "evidence/ens/helm-lifeboatdemo.eth-12075905.json": {
-      "reference": "efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a",
-      "evidenceHash": "0x6e9e68c171f4875643eaf115c8dc695b655ce907d368f18ab30fa33c7691cc78",
-      "bytes": 5435,
-      "local": "http://127.0.0.1:1633/bzz/efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a/",
-      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a/",
+    "evidence/ens/helm-lifeboatdemo.eth-12076287.json": {
+      "reference": "54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399",
+      "evidenceHash": "0xb280f56bf7b6853bf8befe423b3d56516cf001b65f6a8f7de712420020bcf9db",
+      "bytes": 5021,
+      "local": "http://127.0.0.1:1633/bzz/54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399/",
+      "gateway": "https://api.gateway.testnet.ethswarm.org/bzz/54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399/",
       "gatewayOk": true
     }
   },
   "arkiv": {
-    "txHash": "0x14f1569a98f0bda6647105986640c02660f466d0c67f6f67ba744f43165c930c",
-    "created": [
-      {
-        "schema": "lifeboat.aboard.v1",
-        "id": "0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3:0x8ac605b0310da319e81314f7ec8d22ca038441295bc544bf71a71e5c2655a59b",
-        "key": "0x92f03757e848e8a7688716012ba39588e055c7c3261a27403cdb296bc8d554d7"
-      },
-      {
-        "schema": "lifeboat.aboard.v1",
-        "id": "0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a:0x62dff1ecc8c5ffa2433deba158a0dcd5dd6c53f93de2b1f9d86f91f20e2093e2",
-        "key": "0x5f9b490132fb56924f424adce8cf81d6c3a042490153cd13ba55ebd287177854"
-      }
-    ],
+    "txHash": "0x919d16d93694321b31dcc55862495806113e6549f44668b59d7ec358954e11e4",
+    "created": [],
     "updated": [
       {
         "schema": "lifeboat.name.v1",
@@ -117,17 +106,28 @@
       "0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc",
       "0x6e1cd17777eeadabfc22507cd625ce91ad7e48cec0e851c527f1a7adf50b6853"
     ],
-    "unchanged": [],
+    "unchanged": [
+      {
+        "schema": "lifeboat.aboard.v1",
+        "id": "0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3:0x8ac605b0310da319e81314f7ec8d22ca038441295bc544bf71a71e5c2655a59b",
+        "key": "0x92f03757e848e8a7688716012ba39588e055c7c3261a27403cdb296bc8d554d7"
+      },
+      {
+        "schema": "lifeboat.aboard.v1",
+        "id": "0x2509d99b9997dc90a35a1c5ffef23f697797797ea22ace5bba04175479be206a:0x62dff1ecc8c5ffa2433deba158a0dcd5dd6c53f93de2b1f9d86f91f20e2093e2",
+        "key": "0x5f9b490132fb56924f424adce8cf81d6c3a042490153cd13ba55ebd287177854"
+      }
+    ],
     "links": [
       {
         "schema": "lifeboat.name.v1",
-        "swarmRef": "9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef",
-        "evidenceHash": "0x40ae5ec7cd704d71b1a26503160e4749a4f6359a78d9d7a48e4ed73073f374fe"
+        "swarmRef": "381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9",
+        "evidenceHash": "0x98de3eb8b8ac983a73de150a905e6c115d0604850469d83347a9bd6702186c17"
       },
       {
         "schema": "lifeboat.name.v1",
-        "swarmRef": "efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a",
-        "evidenceHash": "0x6e9e68c171f4875643eaf115c8dc695b655ce907d368f18ab30fa33c7691cc78"
+        "swarmRef": "54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399",
+        "evidenceHash": "0xb280f56bf7b6853bf8befe423b3d56516cf001b65f6a8f7de712420020bcf9db"
       },
       {
         "schema": "lifeboat.exposure.v1",
@@ -146,5 +146,5 @@
       }
     ]
   },
-  "at": "2026-11-06T10:14:20.876Z"
+  "at": "2026-11-06T11:32:07.599Z"
 }

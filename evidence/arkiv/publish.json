@@ -1,13 +1,7 @@
 {
   "writer": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
-  "txHash": "0x5f3af277ae026b93a5a6807e71ea2ed1485ea63e1baaab1863686f9f734e4b74",
-  "created": [
-    {
-      "schema": "lifeboat.leaf.v1",
-      "id": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e:2:0x5664f3af8b515c37f88ba59ac5e52b0366e1f3c39e47f230541072b7adaea6a5",
-      "key": "0x9c72a214c49875392cc1b6322ac3081147e8768af4050f3570ff93cb4a951ab5"
-    }
-  ],
+  "txHash": "0x38dd5f56b395fccf39fcdd652dc4563b7b85fd0cf29b6c75628a780725884e60",
+  "created": [],
   "updated": [
     {
       "schema": "lifeboat.exposure.v1",
@@ -49,6 +43,11 @@
     "0x6f5a59938af15c0edf670be974fcc4abb45da1605ab7322b8e0a7f9e154f203f"
   ],
   "unchanged": [
+    {
+      "schema": "lifeboat.leaf.v1",
+      "id": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e:2:0x5664f3af8b515c37f88ba59ac5e52b0366e1f3c39e47f230541072b7adaea6a5",
+      "key": "0x9c72a214c49875392cc1b6322ac3081147e8768af4050f3570ff93cb4a951ab5"
+    },
     {
       "schema": "lifeboat.leaf.v1",
       "id": "0xe731b4ee8e86af2ff3fb1ea81885358c1c723fb174f4d98a8b9975263dc5cc7e:0:0x7177b2a8080aff0bb221ed4d586837aed9c2ec73ce5e10863ce9fcb68ff8205e",
@@ -104,8 +103,8 @@
     {
       "claim": "fresh Helm check of lifeboatpq.eth",
       "ok": true,
-      "detail": "verdict protected, owner 0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F, block 12075903"
+      "detail": "verdict protected, owner 0x2e58B0f2336dFe76b8bbAb1BfD927E354CBC997F, block 12076286"
     }
   ],
-  "publishedAt": "2026-11-06T10:13:58.113Z"
+  "publishedAt": "2026-11-06T11:31:41.536Z"
 }

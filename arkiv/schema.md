@@ -91,7 +91,8 @@ Read by Harbour → Monitor (the "targets watched" count, via the SDK's count AP
 - A query returns at most 100 entities. Totals come from the count API, and the ledger pages by key.
 - Expiry is counted in 2-second blocks; `ExpirationTime.fromHours/fromDays` handles it, and the app shows "expires in 18 h" from `$expiresAt`.
 
-## Live batches (6 Nov 2026)
-- [`0x5f3af277…6b74`](https://rabdi.explorer.arkiv.network/tx/0x5f3af277ae026b93a5a6807e71ea2ed1485ea63e1baaab1863686f9f734e4b74): 1 leaf created, 6 exposure records updated in place and extended ([`evidence/arkiv/publish.json`](../evidence/arkiv/publish.json)).
-- [`0x14f1569a…930c`](https://rabdi.explorer.arkiv.network/tx/0x14f1569a98f0bda6647105986640c02660f466d0c67f6f67ba744f43165c930c): 2 aboard records with evidence, 2 names and the forgery exposure updated, with `swarmRef` + `evidenceHash` ([`evidence/swarm/swarm.json`](../evidence/swarm/swarm.json)).
-- [`0xf8ab11a1…8322`](https://rabdi.explorer.arkiv.network/tx/0xf8ab11a1277e1b0b2d7a27509aa6840501b666dd0846817979ec1d8e04f38322): 4 council Safe exposures updated ([`evidence/discovery/arkiv-publish.json`](../evidence/discovery/arkiv-publish.json)).
+## Live batches (6 Nov 2026, the latest refresh at 17:02 IST)
+A daily refresh writes **no new entities**: it updates the same records in place and extends them. That run: 6 updated and extended in the first batch (5 unchanged), 3 in the second, 4 in the third. The first run that day created the ledger entry for leaf 2 and the two aboard records with evidence.
+- [`0x38dd5f56…4e60`](https://rabdi.explorer.arkiv.network/tx/0x38dd5f56b395fccf39fcdd652dc4563b7b85fd0cf29b6c75628a780725884e60): 6 exposure records updated in place and extended ([`evidence/arkiv/publish.json`](../evidence/arkiv/publish.json)).
+- [`0x919d16d9…11e4`](https://rabdi.explorer.arkiv.network/tx/0x919d16d93694321b31dcc55862495806113e6549f44668b59d7ec358954e11e4): 2 names and the forgery exposure updated in place, with the fresh `swarmRef` + `evidenceHash` ([`evidence/swarm/swarm.json`](../evidence/swarm/swarm.json)).
+- [`0x40e4baf4…1f63`](https://rabdi.explorer.arkiv.network/tx/0x40e4baf4d71e05fb765bf6807e7e56d378b191ebc0188134d34597d246cd1f63): 4 council Safe exposures updated ([`evidence/discovery/arkiv-publish.json`](../evidence/discovery/arkiv-publish.json)).

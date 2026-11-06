@@ -14,24 +14,24 @@
 - **The check:** the app's **open evidence** button (Harbour, Check, Home) downloads the file from Swarm and hashes it **in the browser**. It compares the hash with the record's `evidenceHash` and shows "Swarm file matches the Arkiv record". It also checks that the block, verdict or status and the name or address in the file agree with the record. So nobody has to trust the gateway, or us, for the file to be the one the record was written from.
 
 ## Open one yourself
-Arkiv entity [`0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc`](https://rabdi.explorer.arkiv.network/entity/0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc). It's a `lifeboat.name.v1` record for **our own test name** `lifeboatdemo.eth`, verdict `hijackable`, checked at Sepolia block 12,075,905. It holds:
-- `swarmRef = efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a`
-- `evidenceHash = 0x6e9e68c171f4875643eaf115c8dc695b655ce907d368f18ab30fa33c7691cc78`
+Arkiv entity [`0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc`](https://rabdi.explorer.arkiv.network/entity/0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc). It's a `lifeboat.name.v1` record for **our own test name** `lifeboatdemo.eth`, verdict `hijackable`, checked at Sepolia block 12,076,287. It holds:
+- `swarmRef = 54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399`
+- `evidenceHash = 0xb280f56bf7b6853bf8befe423b3d56516cf001b65f6a8f7de712420020bcf9db`
 
-→ https://api.gateway.testnet.ethswarm.org/bzz/efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a/ (the full Helm check report)
+→ https://api.gateway.testnet.ethswarm.org/bzz/54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399/ (the full Helm check report)
 
 Re-checks update this record in place, so **the key stays the same** and its expiry is extended. The `swarmRef` changes only when there's a newer report.
 
-The current Swarm-linked records (Arkiv batch [`0x14f1569a…930c`](https://rabdi.explorer.arkiv.network/tx/0x14f1569a98f0bda6647105986640c02660f466d0c67f6f67ba744f43165c930c), 6 Nov):
+The current Swarm-linked records (Arkiv batch [`0x919d16d9…11e4`](https://rabdi.explorer.arkiv.network/tx/0x919d16d93694321b31dcc55862495806113e6549f44668b59d7ec358954e11e4), 6 Nov):
 
 | Arkiv entity | Schema | What | Swarm file |
 |---|---|---|---|
-| [`0x3f95966c…5773`](https://rabdi.explorer.arkiv.network/entity/0x3f95966ca70d7533cf0cb097d3d30d2823b3c7c79d20c88d43d24ebdc95f5773) | name | `lifeboatpq.eth` (our test name): protected | [9b6a9ef0…f5ef](https://api.gateway.testnet.ethswarm.org/bzz/9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef/) |
-| [`0x49daf4a3…94cc`](https://rabdi.explorer.arkiv.network/entity/0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc) | name | `lifeboatdemo.eth` (our test name): hijackable | [efd9640c…b37a](https://api.gateway.testnet.ethswarm.org/bzz/efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a/) |
+| [`0x3f95966c…5773`](https://rabdi.explorer.arkiv.network/entity/0x3f95966ca70d7533cf0cb097d3d30d2823b3c7c79d20c88d43d24ebdc95f5773) | name | `lifeboatpq.eth` (our test name): protected | [381d7e95…abf9](https://api.gateway.testnet.ethswarm.org/bzz/381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9/) |
+| [`0x49daf4a3…94cc`](https://rabdi.explorer.arkiv.network/entity/0x49daf4a3bb109c7cd56c79f316527dec5150c2ce44ec0cb677f9a0aac8e894cc) | name | `lifeboatdemo.eth` (our test name): hijackable | [54d6ab91…5399](https://api.gateway.testnet.ethswarm.org/bzz/54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399/) |
 | [`0x6e1cd177…6853`](https://rabdi.explorer.arkiv.network/entity/0x6e1cd17777eeadabfc22507cd625ce91ad7e48cec0e851c527f1a7adf50b6853) | exposure | our naive test wallet, whose reused key was forged | [8184ff03…b449](https://api.gateway.testnet.ethswarm.org/bzz/8184ff0357fba794dc5eb17775a8fe3133b46ce68b77371da8c50620429cb449/) |
 | [`0x92f03757…54d7`](https://rabdi.explorer.arkiv.network/entity/0x92f03757e848e8a7688716012ba39588e055c7c3261a27403cdb296bc8d554d7) | aboard | the sponsored rescue (readonly) | [06796fb1…6c9a](https://api.gateway.testnet.ethswarm.org/bzz/06796fb1e0d945f40e3a1a9a55a88636d93dc43c1d9da16bb923f8a8b3416c9a/) |
 | [`0x5f9b4901…7854`](https://rabdi.explorer.arkiv.network/entity/0x5f9b490132fb56924f424adce8cf81d6c3a042490153cd13ba55ebd287177854) | aboard | the ENS handover (readonly) | [e3d23a6a…5057](https://api.gateway.testnet.ethswarm.org/bzz/e3d23a6aae034169f1cf5edeb22426530d7ca076f44ba5dfeb54d63294875057/) |
-| 4 × exposure | exposure | the council Safes (Arkiv batch [`0xf8ab11a1…8322`](https://rabdi.explorer.arkiv.network/tx/0xf8ab11a1277e1b0b2d7a27509aa6840501b666dd0846817979ec1d8e04f38322)) | [bba0be87…bd00](https://api.gateway.testnet.ethswarm.org/bzz/bba0be8744dc4110c24c385a36475e552c73416e8e40b08707d59e75897abd00/) |
+| 4 × exposure | exposure | the council Safes (Arkiv batch [`0x40e4baf4…1f63`](https://rabdi.explorer.arkiv.network/tx/0x40e4baf4d71e05fb765bf6807e7e56d378b191ebc0188134d34597d246cd1f63)) | [d4019f0c…e8ae](https://api.gateway.testnet.ethswarm.org/bzz/d4019f0c24caaff31d17a593d905aa7e846a4395061ed8a8cbf8f9c7b34ee8ae/) |
 
 All 9 files from this run, uploaded pinned, read back through our node and the public gateway, and keccak-checked ([`evidence/swarm/swarm.json`](../evidence/swarm/swarm.json), [`evidence/discovery/arkiv-publish.json`](../evidence/discovery/arkiv-publish.json)):
 
@@ -42,10 +42,10 @@ All 9 files from this run, uploaded pinned, read back through our node and the p
 | paymaster guards | `5a675a05e55ad8b581c9651856d2007cb3ada5b42e4ec7be08b6fc2df3ffadf9` |
 | forgery demo | `8184ff0357fba794dc5eb17775a8fe3133b46ce68b77371da8c50620429cb449` |
 | ENS handover | `e3d23a6aae034169f1cf5edeb22426530d7ca076f44ba5dfeb54d63294875057` |
-| Arkiv publish record | `85006d567f61a5e85e87bbd2dc99ba396f93f9416f71233874bb54b3dedeac2a` |
-| Helm report `lifeboatpq.eth` | `9b6a9ef08c3263f3c072fcf3d2f389a895d3372b21c5ca9a62ef6ce391a8f5ef` |
-| Helm report `lifeboatdemo.eth` | `efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a` |
-| council scan | `bba0be8744dc4110c24c385a36475e552c73416e8e40b08707d59e75897abd00` |
+| Arkiv publish record | `152c3f189e2a44e63df9b983aa8bc2dc4877aaf80f2dd0007a91ce513b8e5e7e` |
+| Helm report `lifeboatpq.eth` | `381d7e95a54750f02c7384e305724f4c118e6a0337c7badd95362ee05d95abf9` |
+| Helm report `lifeboatdemo.eth` | `54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399` |
+| council scan | `d4019f0c24caaff31d17a593d905aa7e846a4395061ed8a8cbf8f9c7b34ee8ae` |
 
 ## Postage batch and node
 - **Batch ID:** `d65b35d84fb16b2811f5cbb0a1b5d00045c074bd43ac2a04014e7266bd3a7bae`, depth 18. Bought 6 Nov 2026 ~00:10 IST with purchase tx `0xc8669c51715ff7c747251b7e8b456e3ef290e34c60f1e21b858087adb7faba23` on Sepolia. At 15:44 IST on 6 Nov it had 55.9 h left, so it lasts until about **Sun 8 Nov 23:40 IST**. The Monitor checks the batch TTL and raises an `evidence-at-risk` alert under 24 h.
@@ -73,9 +73,9 @@ You should see `{"reference":"<64 hex>"}`.
 
 **Read one** (no node needed):
 ```bash
-curl -s https://api.gateway.testnet.ethswarm.org/bzz/efd9640c5ad8feb6460c8c0dad7f60ef7c72a0cc9d9fa04a6b50da6fccd6b37a/
+curl -s https://api.gateway.testnet.ethswarm.org/bzz/54d6ab918f90f9b90d5311a2c0707838c95be674287a910ba7d99d37a8825399/
 ```
-You should see the JSON Helm report for `lifeboatdemo.eth`, with `"verdict": "hijackable"` and block 12,075,905. In the app, Harbour → Names → **open evidence** shows the same file with the "matches the Arkiv record" seal.
+You should see the JSON Helm report for `lifeboatdemo.eth`, with `"verdict": "hijackable"` and block 12,076,287. In the app, Harbour → Names → **open evidence** shows the same file with the "matches the Arkiv record" seal.
 
 **The whole pipeline:**
 ```bash
