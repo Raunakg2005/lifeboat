@@ -29,13 +29,13 @@ The same signed frame transaction from an exposed EOA with **0 ETH and 100 mUSDC
 | Canonical mempool (ethrex `eth_sendRawTransaction`) | ❌ `Frame transaction validation-prefix simulation failed: StorageReadNonSender` |
 | Alt mempool, paymaster **unstaked** (gateway `eth_sendFrameTransaction`) | ❌ `unstaked payer accessed payer slot 0x…03` |
 | Stake 0.012 ETH in `NaiveStakingRegistry` | ✅ `0x01b18ed6092834c43a2dd0ec6644b1d32d72df5d6f85d19d61a00ba83eb6e330`, registry reports `[0.012 ETH, delay 1, withdrawTime 0]` |
-| Alt mempool, paymaster **staked** | ✅ **admitted**, included in block **404,050**, status 1: [`0x26462c90…4669f3`](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
+| Alt mempool, paymaster **staked** | ✅ **admitted**, included in block **2,174**, status 1: [`0x26462c90…4669f3`](https://explorer.altmempool.wtf/tx/0x26462c908a8e4002f73430dabf9844bb51fde79bf6d839210f58f57d394669f3?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) |
 
 After: the exposed EOA has 0 mUSDC (and still 0 ETH); the PQ account has 99 mUSDC; the paymaster has 1 mUSDC back.
 
 Gas: 267,053 in total. The frames used 100, **22,683** (paymaster VERIFY), 25,533 and 15,533. Max cost was 0.00045 ETH, under the 0.01 ETH cap.
 
-Raw evidence: [`evidence/ef/rescue.json`](../evidence/ef/rescue.json), [`rescue-dryrun.json`](../evidence/ef/rescue-dryrun.json), [`rescue-setup.json`](../evidence/ef/rescue-setup.json), screenshot [`explorer-rescue-sponsored.jpg`](../evidence/ef/explorer-rescue-sponsored.jpg).
+Raw evidence: [`evidence/ef/rescue.json`](../evidence/ef/rescue.json), [`rescue-dryrun.json`](../evidence/ef/before-reset/rescue-dryrun.json) (before the devnet reset), [`rescue-setup.json`](../evidence/ef/rescue-setup.json), screenshot [`explorer-rescue-sponsored.jpg`](../evidence/ef/before-reset/explorer-rescue-sponsored.jpg) (the same transaction hash, from the first run before the devnet reset).
 
 ## The sponsor can't be drained (dry-runs on the live devnet)
 

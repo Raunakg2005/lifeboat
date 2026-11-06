@@ -91,7 +91,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   1. VERIFY reads the 2,336-byte signature with `SIGDATACOPY`.
   2. It checks the leaf against the floor, climbs the 400 steps and checks the Merkle path.
   3. It calls `APPROVE`. The SENDER frame raises the leaf floor and makes the call.
-- **Proof:** first transaction in **block 403,931**. VERIFY uses **52,369 gas**, and the check itself 44,870 every time (68k before we unrolled the loops).
+- **Proof:** first transaction in **block 2,159**. VERIFY uses **52,367 gas**, and the check itself 44,870 every time (68k before we unrolled the loops).
 - **Say:** "A hash-based signature checked natively in the transaction's VERIFY frame: 52k gas, the same for every signature."
 
 ### Escape 2: the rescue paymaster (chain 1337)
@@ -105,7 +105,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
 - **Proof, the same signed transaction three ways:**
   - Public mempool ❌ `StorageReadNonSender`.
   - Alt mempool, unstaked ❌ `unstaked payer accessed payer slot`.
-  - Alt mempool, staked ✅ **included in block 404,050**.
+  - Alt mempool, staked ✅ **included in block 2,174**.
   - Five attack variants are refused (underpaying, paying someone else, an undoable repayment, sweeping first, an unregistered sender).
 - **Code:** [`RescuePaymaster.yul`](../contracts/yul/src/RescuePaymaster.yul), 517 bytes, 22,683 gas. Details: [rescue-paymaster.md](rescue-paymaster.md).
 - **Say:** "The public mempool refuses it, the unstaked alt mempool refuses it, the staked one includes it. That's why this needs the alt mempool."
@@ -115,9 +115,9 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
 - **How:**
   1. A naive wallet re-signs the same payment as 12 fee bumps with the **same leaf**.
   2. From those public signatures alone, the attacker takes the lowest step seen on each staircase.
-  3. It tries counters for its own transaction until every digit is at or above those steps and the sum is still 560: **8,716 tries, under 0.1 s**.
+  3. It tries counters for its own transaction until every digit is at or above those steps and the sum is still 560: **43,365 tries, 0.2 s**.
   4. It climbs to a valid signature and submits it.
-- **Proof:** VERIFY accepted it; **included in block 405,633**; the attacker received 0.01416 ETH. The leaf ledger then shows leaf 0 signing 16 different messages.
+- **Proof:** VERIFY accepted it; **included in block 2,191**; the attacker received 0.015 ETH. The leaf ledger then records 13 sightings of leaf 0, each a different message, and flags it as signed twice.
 - **Forgery cost by reuse count:**
 
   | Reuses of one leaf | 2 | 5 | 12 |
@@ -151,7 +151,7 @@ So an account can use **any signature scheme**, with no ECDSA, no bundler and no
   2. It **saves the counter to flash before** computing anything, and refuses a counter that doesn't match its own digest.
   3. The laptop checks the signature before sending it.
   4. Keygen mixes the device's random generator with browser entropy, so neither side alone picks the key.
-- **Proof:** a device-signed frame transaction was **included in block 406,887**. Keygen takes 35 s on both cores. The crypto core matches the TypeScript signer byte for byte.
+- **Proof:** a device-signed frame transaction was **included in block 406,887** (on the devnet before its 6 Nov reset; the clear-signed re-run is next). Keygen takes 35 s on both cores. The crypto core matches the TypeScript signer byte for byte.
 - **Say:** "A crash or a reset can waste a leaf, but the device can't sign twice with one."
 
 ## 4. How it fits together
@@ -190,15 +190,15 @@ flowchart LR
 | **0 → 11** | Base's nested 8-of-11 council |
 | **2 of 4** | top-level council Safes that look safe by nonce and aren't |
 | **5** | ENSv2 control paths the Helm check covers |
-| **52,369 gas** | the PQ account's whole VERIFY frame (44,870 for the check) |
+| **52,367 gas** | the PQ account's whole VERIFY frame (44,870 for the check) |
 | **2,336 bytes** | the signature (witness) |
 | **256** | one-time leaves per key |
 | **560 / 400** | the fixed digit sum / the hash steps the verifier always does |
 | **❌ ❌ ✅** | public, unstaked, staked: the rescue admission |
 | **22,683 gas** | the paymaster's VERIFY |
-| **12 reuses → 0.1 s** | the forgery |
+| **12 reuses → 0.2 s** | the forgery |
 | **35 s** | keygen on the ESP32 |
-| **Blocks 403,931 / 404,050 / 405,633 / 406,887** | first PQ tx / rescue / forgery / hardware-signed tx (chain 1337) |
+| **Blocks 2,159 / 2,174 / 2,191** | first PQ tx / rescue / forgery (chain 1337, re-run after the 6 Nov devnet reset); the hardware-signed tx was block 406,887 before the reset |
 | **17 + 23 + 3** | tests: TypeScript signer, Foundry contracts, Safe signature recovery |
 
 ## 7. Questions judges will likely ask

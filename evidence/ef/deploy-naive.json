@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-11-05T18:24:17.500Z",
+  "savedAt": "2026-11-06T10:07:40.542Z",
   "chainId": 1337,
   "account": "0xd297B4D1577bf338342C59f7DB3eA022d95702b3",
   "factory": "0x4e59b44847b379578588920ca78fbf26c0b4956c",
@@ -7,8 +7,8 @@
   "root": "0xeaa1b5b40a69f6ae078ab1504e40f8dba1ac712d9e23edff00ee150ced5df7d1",
   "pubSeed": "0x028c8aa2e2e19e25dc572a310a6301b08301632932c49f358a65e45bf07a8405",
   "runtimeBytes": 2294,
-  "deployTx": "0x9728be6b6c554756b2220fcab7f9ea8ad6d8030f319c1e36731c970622ff8f52",
-  "deployBlock": "405519",
+  "deployTx": "0x3f50ae681aec1849753b307643f90af48e0d85052fc3edf284f006a8a0b9d1a4",
+  "deployBlock": "2186",
   "deployGasUsed": "4090534",
-  "fundTx": "0x7febd46cf7953e0386b4f4e6a93b5a4c5648164b0551d8933af7dede1895d008"
+  "fundTx": "0x6e0d4426b59e7e6ac9262a7810c7ff0aa418276872e067cc17ed6388f4eef27a"
 }

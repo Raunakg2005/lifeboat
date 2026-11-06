@@ -9,7 +9,7 @@ A future quantum computer can take over any wallet whose public key is on-chain,
 1. **Discovers hidden exposure.** It recovers public keys from multisig signatures, which a nonce check never sees. Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested 8-of-11 council from 0 to 11.
 2. **Maps who can steer an ENSv2 name** across all five control paths, with the role list proven complete, and hands names over to a post-quantum wallet in a way the registry itself verifies.
 3. **Gets people out:** a WOTS+C post-quantum account on EIP-8141 frame transactions, plus a staked rescue paymaster that pays gas for wallets holding tokens but no ETH, which only the ERC-8421 alt mempool allows.
-4. **Shows why one-time keys must be one time:** we forged a reused key's signature from 12 public fee bumps in 0.1 s and drained the wallet on the live devnet.
+4. **Shows why one-time keys must be one time:** we forged a reused key's signature from 12 public fee bumps in 0.2 s and drained the wallet on the live devnet.
 5. **Publishes everything as public evidence:** an Arkiv registry and leaf ledger that anyone can write sightings to, with full bundles on Swarm.
 
 It also includes an ESP32 signer that keeps the counter on the device and can't sign twice. No quantum computer can do this today: these are readiness findings from public data.
@@ -26,7 +26,7 @@ It also includes an ESP32 signer that keeps the counter on the device and can't 
 ## Partner prizes
 
 **Ethereum Foundation: Best use of the Frame Transaction Alternative Mempool**
-- A post-quantum account in Yul verifies WOTS+C inside the VERIFY frame: 52,369 gas, constant cost, 2,336-byte ARBITRARY witness, and an on-chain leaf floor against reuse.
+- A post-quantum account in Yul verifies WOTS+C inside the VERIFY frame: 52,367 gas, constant cost, 2,336-byte ARBITRARY witness, and an on-chain leaf floor against reuse.
 - The honest reason it needs the alt mempool is a staked rescue paymaster. It reads its registry and a proxied token balance during validation to sponsor token-only wallets, and is repaid in USDC in the same transaction.
 - The same signed transaction was rejected by the public mempool (StorageReadNonSender) and by the unstaked alt mempool, and included once the paymaster was staked. Five attack dry-runs are refused.
 - We also show the fee-bump danger for one-time keys: a signature forged from 12 reused bumps, accepted by VERIFY and included.
@@ -50,7 +50,7 @@ It also includes an ESP32 signer that keeps the counter on the device and can't 
 ## Before submitting (Sat 7 Nov, by 09:00 IST)
 - [ ] **Refresh Arkiv:** exposure and name entries expire after 24 h (the first batch was written Thu ~22:16). Run `pnpm --filter @lifeboat/scripts swarm-publish` on Sat morning: it re-checks both names and writes fresh entities with `swarmRef`. The Harbour counts come back with it.
 - [ ] Check the Bee batch TTL is above 24 h (`curl http://127.0.0.1:1633/stamps`)
-- [x] Hardware: ESP32 flashed, key generated on the device, test signature valid, frame tx 0x69c1eaec… included (block 406,887). Add a photo to `docs/hardware.md`
+- [x] Hardware: ESP32 flashed, key generated on the device, test signature valid, frame tx 0x69c1eaec… included (block 406,887, before the devnet reset; re-run with clear signing pending). Add a photo to `docs/hardware.md`
 - [ ] Record the video with **your own voice** (docs/demo-script.md: silent cut + teleprompter + `final`), 2-4 min, 720p+, not sped up, no TTS, no music-instead-of-talking, not on a phone. Add the link here and in the README
 - [ ] Rebuild and redeploy the app (`pnpm --filter @lifeboat/app build`, copy into `deploy/lifeboat`, `vercel deploy deploy\lifeboat --prod`)
 - [ ] Make the GitHub repo **public** (rule: it must stay public)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import first from "../../evidence/ef/frame-demo-leaf1.json";
+import first from "../../evidence/ef/frame-demo-leaf2.json";
 import rescue from "../../evidence/ef/rescue.json";
 import guards from "../../evidence/ef/paymaster-guards.json";
 import forgery from "../../evidence/ef/forgery.json";
@@ -78,7 +78,7 @@ export default function EscapeView() {
       <section className="section">
         <LuggageTag tone="good" verdict="On chain" id="First post-quantum transaction" meta={`chain 1337 · block ${parseInt(first.receipt.blockNumber, 16).toLocaleString()}`}>
           <p className="desc">
-            Signed with a one-time WOTS+C key (leaf {first.leaf}; leaf 0 was revealed to a dry-run, so it's never used again), sent through the ERC-8421 alt-mempool gateway, and included with status success.
+            Signed with a one-time WOTS+C key (leaf {first.leaf}; leaves 0 and 1 were spent before the devnet reset, so they're never used again), sent through the ERC-8421 alt-mempool gateway, and included with status success.
             Witness: {first.witnessBytes.toLocaleString()} bytes.
           </p>
           <a className="mono" href={explorerTx(first.txHash)} target="_blank" rel="noreferrer" style={{ wordBreak: "break-all" }}>

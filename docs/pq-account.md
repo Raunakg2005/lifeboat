@@ -6,7 +6,7 @@ A smart account whose only key is a **hash-based one-time signature scheme (WOTS
 
 - Code: [`contracts/yul/LifeboatAccount.yul.tmpl`](../contracts/yul/LifeboatAccount.yul.tmpl) + the shared core [`wots_core.yul`](../contracts/yul/wots_core.yul) → generated [`yul/gen/LifeboatAccount.yul`](../contracts/yul/gen/LifeboatAccount.yul)
 - Signer: [`packages/pq`](../packages/pq) (TypeScript)
-- First live transaction: [`0xd999725a…6a0f8ef0`](https://explorer.altmempool.wtf/tx/0xd999725ac312ca2cccfcebfbae84e66560c6587f052af6aa919622fc6a0f8ef0?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) (chain 1337, block 403,931, through the alt-mempool gateway)
+- First live transaction: [`0x115659a9…07345784`](https://explorer.altmempool.wtf/tx/0x115659a935d1fe86a81a445f05d2c20ced792bec617ba43ff0fab4ce07345784?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc) (chain 1337, block 2,159, through the alt-mempool gateway)
 
 ## Design
 
@@ -41,10 +41,10 @@ What Lifeboat does about it:
 ### The forgery, live on chain 1337 ([`scripts/src/forgery-demo.ts`](../scripts/src/forgery-demo.ts), [`evidence/ef/forgery.json`](../evidence/ef/forgery.json))
 A **naive** LifeboatAccount (`0xd297B4D1577bf338342C59f7DB3eA022d95702b3`, its own key) wants to pay a friend 0.001 ETH. It re-signs the payment 12 times as fee bumps (tips 1–12 gwei), **reusing leaf 0 every time**. Each bump is a valid, broadcastable frame transaction. An attacker who sees only those 12 public signatures, plus the public key:
 1. takes, per chain, the lowest position any of them revealed;
-2. grinds a counter for **its own** transaction ("send 0.01416 ETH to the attacker") until every digest digit is at or above those positions and the digits still sum to 560 (**8,716 tries, under 0.1 s**);
+2. grinds a counter for **its own** transaction ("send 0.015 ETH to the attacker") until every digest digit is at or above those positions and the digits still sum to 560 (**8,716 tries, under 0.1 s**);
 3. hashes forward to a valid signature, then submits it through the alt mempool.
 
-The account's VERIFY frame accepts it (52,396 gas): it *is* a valid signature. It was **included in block 405,633** ([`0x8dc6c9fb…6d890`](https://explorer.altmempool.wtf/tx/0x8dc6c9fbbadd0e4345557d938f4333a35c726ebbb753493c5edc1726fee6d890?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc)), and the attacker received 0.01416 ETH. The leaf floor couldn't help: none of the honest bumps had landed. Every sighting of leaf 0 was then published to the Arkiv leaf ledger, which now shows it signing 16 different messages: "signed twice".
+The account's VERIFY frame accepts it (52,400 gas): it *is* a valid signature. It was **included in block 2,191** ([`0xa70bda46…988929cb`](https://explorer.altmempool.wtf/tx/0xa70bda46414caaadb53430ae8e26ed27fc2f4f8a2c2a0e3be44b2f33988929cb?node=https%3A%2F%2Faltmempoolgateway.forshtat.com%2Frpc)), and the attacker received 0.01416 ETH. The leaf floor couldn't help: none of the honest bumps had landed. Every sighting of leaf 0 was then published to the Arkiv leaf ledger, which now shows it signing 16 different messages: "signed twice".
 
 **Forgery cost at our parameters (S = 560), estimated by sampling** (`estimateTriesLog2` in [`packages/pq/src/forge.ts`](../packages/pq/src/forge.ts)):
 
@@ -64,7 +64,7 @@ Two dry-run lessons from the devnet:
 |---|---|---|
 | WOTS+C core (digest, sum check, 400 chain hashes, leaf hash, 8 Merkle levels) | **44,870**, constant for every valid signature | Foundry, [`test/Wots.t.sol`](../contracts/test/Wots.t.sol) |
 | Same core with plain loops (before unrolling) | 68,256 | Foundry |
-| Whole VERIFY frame on the devnet (SIGPARAM, SIGDATACOPY, 3 SLOADs, core, APPROVE) | **52,369** used of 60,000 declared | `ethrex_simulateFrameTransaction`, [`evidence/ef/frame-demo-leaf1.json`](../evidence/ef/frame-demo-leaf1.json) |
+| Whole VERIFY frame on the devnet (SIGPARAM, SIGDATACOPY, 3 SLOADs, core, APPROVE) | **52,367** used of 60,000 declared | `ethrex_simulateFrameTransaction`, [`evidence/ef/frame-demo-leaf2.json`](../evidence/ef/frame-demo-leaf2.json) |
 | Whole transaction (incl. 2,336-byte calldata floor and the transfer) | 168,954 | receipt |
 | Deploy (CREATE2, 2,294 bytes) | 4,090,558 | receipt (state gas is 1,530/byte on this devnet) |
 
