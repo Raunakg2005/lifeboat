@@ -179,3 +179,47 @@ export function newestPer<T extends { createdAt: bigint }>(rows: readonly T[], i
   }
   return [...best.values()];
 }
+
+// ---------- the wallet: EIP-6963 first, window.ethereum as a fallback ----------
+// With two wallet extensions installed (MetaMask + Phantom/Rabby/OKX/Coinbase…) window.ethereum is often one wallet
+// wrapped in another's Proxy, and reading its `.on` can throw ("'get' on proxy: property 'on' is a read-only…").
+// EIP-6963 hands us each wallet's own provider object instead: MetaMask's if it's there, else the first that answers.
+type WalletProvider = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown>; on?: (ev: string, f: (x: never) => void) => void; removeListener?: (ev: string, f: (x: never) => void) => void };
+const announced: { info?: { uuid?: string; rdns?: string; name?: string }; provider?: WalletProvider }[] = [];
+if (typeof window !== "undefined") {
+  window.addEventListener("eip6963:announceProvider", (ev: Event) => {
+    const d = (ev as CustomEvent).detail;
+    if (d?.provider && !announced.some((a) => a.info?.uuid && a.info.uuid === d.info?.uuid)) announced.push(d);
+  });
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+}
+export function walletProvider<T = WalletProvider>(): T | undefined {
+  const pick = announced.find((a) => a.info?.rdns === "io.metamask") ?? announced[0];
+  try {
+    return (pick?.provider ?? (window as unknown as { ethereum?: unknown }).ethereum) as T | undefined;
+  } catch {
+    return undefined;
+  }
+}
+/** Subscribes to wallet events without ever throwing; returns the cleanup. */
+export function onWalletEvents(handlers: Record<string, (x: never) => void>): () => void {
+  const p = walletProvider();
+  const done: [string, (x: never) => void][] = [];
+  for (const [ev, f] of Object.entries(handlers)) {
+    try {
+      p?.on?.(ev, f);
+      done.push([ev, f]);
+    } catch {
+      // a wallet whose events can't be read: switching accounts then needs a click on connect
+    }
+  }
+  return () => {
+    for (const [ev, f] of done) {
+      try {
+        p?.removeListener?.(ev, f);
+      } catch {
+        // ignore
+      }
+    }
+  };
+}

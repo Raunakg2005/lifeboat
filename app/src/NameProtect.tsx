@@ -31,7 +31,7 @@ import {
   type HelmReport,
   type WalletCall,
 } from "@lifeboat/core";
-import { SEPOLIA_PQ_WALLETS, mainnetClient, sepoliaAddr, sepoliaClient, sepoliaLogs, sepoliaTx, short } from "./lib";
+import { SEPOLIA_PQ_WALLETS, mainnetClient, onWalletEvents, sepoliaAddr, sepoliaClient, sepoliaLogs, sepoliaTx, short, walletProvider } from "./lib";
 import { LuggageTag, Pill, Radar, Steps } from "./ui";
 import { DeviceError, SerialDevice, openErrorText, serialSupported, type DeviceInfo } from "./serialDevice";
 
@@ -47,7 +47,7 @@ const ASK_TEXT = "The ESP32 shows the change: press BOOT for each page, then BOO
 const PROOF_LABEL = "pq.checked proof";
 
 type Eip1193 = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown>; on?: (ev: string, f: (x: never) => void) => void; removeListener?: (ev: string, f: (x: never) => void) => void };
-const eth = () => (window as unknown as { ethereum?: Eip1193 }).ethereum;
+const eth = () => walletProvider<Eip1193>(); // EIP-6963 first: see lib.ts
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const same = (a?: string | null, b?: string | null) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
 const popcount = (x: bigint) => x.toString(2).split("").filter((b) => b === "1").length;
@@ -250,15 +250,10 @@ export default function NameProtect() {
   const leafBlocked = !!ws?.nextUsed;
 
   useEffect(() => {
-    const e = eth();
-    const onAccounts = (a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null);
-    const onChain = (c: string) => setChainId(Number(c));
-    e?.on?.("accountsChanged", onAccounts);
-    e?.on?.("chainChanged", onChain);
-    return () => {
-      e?.removeListener?.("accountsChanged", onAccounts);
-      e?.removeListener?.("chainChanged", onChain);
-    };
+    return onWalletEvents({
+      accountsChanged: ((a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null)) as (x: never) => void,
+      chainChanged: ((c: string) => setChainId(Number(c))) as (x: never) => void,
+    });
   }, []);
   // release the port when the page goes away, so the next connect can open it
   useEffect(

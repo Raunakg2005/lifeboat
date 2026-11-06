@@ -21,7 +21,7 @@ import {
 } from "@lifeboat/core";
 import { fromHex, generateKeyPair, sign, toHex, type KeyPair } from "@lifeboat/pq";
 import sepoliaDeployments from "../../deployments/sepolia.json";
-import { REPO, sepoliaAddr, sepoliaClient, sepoliaTx, short } from "./lib";
+import { REPO, onWalletEvents, sepoliaAddr, sepoliaClient, sepoliaTx, short, walletProvider } from "./lib";
 import { Pill, Radar, Rubber } from "./ui";
 import NameProtect from "./NameProtect";
 
@@ -32,7 +32,7 @@ const DEFAULT_DELAY = 7 * 24 * 3600;
 const KEY_STORE = "lifeboat.pq-guard-key.v1";
 
 type Eip1193 = { request: (a: { method: string; params?: unknown[] }) => Promise<any> };
-const eth = () => (window as unknown as { ethereum?: Eip1193 }).ethereum;
+const eth = () => walletProvider<Eip1193>(); // EIP-6963 first: see lib.ts
 
 type StoredKey = { skSeed: Hex; pubSeed: Hex; root: Hex; nextLeaf: number; createdAt: string };
 type Guard = { root: Hex; pubSeed: Hex; usedLeaves: bigint; recoveryDelay: bigint; recoveryNonce: bigint; recoveryReadyAt: bigint; recovered: boolean };
@@ -110,17 +110,11 @@ export default function ProtectView() {
   const note = (text: string, hash?: Hex) => setLog((l) => [{ text, hash }, ...l].slice(0, 12));
 
   useEffect(() => {
-    type Listen = (ev: string, f: (x: never) => void) => void;
-    const e = eth() as (Eip1193 & { on?: Listen; removeListener?: Listen }) | undefined;
-    const onAccounts = (a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null);
-    const onChain = (c: string) => setChainId(Number(c));
-    e?.on?.("accountsChanged", onAccounts);
-    e?.on?.("chainChanged", onChain);
-    // remove them when the tab closes, so every visit to Protect doesn't add another pair
-    return () => {
-      e?.removeListener?.("accountsChanged", onAccounts);
-      e?.removeListener?.("chainChanged", onChain);
-    };
+    // removed when the tab closes, so every visit to Protect doesn't add another pair; never throws (lib.ts)
+    return onWalletEvents({
+      accountsChanged: ((a: string[]) => setAccount(a[0] ? getAddress(a[0]) : null)) as (x: never) => void,
+      chainChanged: ((c: string) => setChainId(Number(c))) as (x: never) => void,
+    });
   }, []);
 
   const guarded = async (label: string, f: () => Promise<void>) => {

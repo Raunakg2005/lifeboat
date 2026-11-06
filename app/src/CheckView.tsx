@@ -4,7 +4,7 @@ import { normalize } from "viem/ens";
 import { desc, eq } from "@arkiv-network/sdk/query";
 import { addr, u64 } from "@arkiv-network/sdk/schema";
 import { Aboard, COUNCILS, Exposure as ExposureSchema, NameCheck, PUBLISHER, checkExposure, helmCheck, registeredNames, scanSafe, type ChainExposure, type HelmReport } from "@lifeboat/core";
-import { OUR_TEST_ACCOUNTS, SEPOLIA_PQ_WALLETS, arkiv, arkivErrorText, chainName, expiresIn, mainnetClient, newestPer, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl, exposureEvidence, type EvidenceRecord, type Flags } from "./lib";
+import { OUR_TEST_ACCOUNTS, SEPOLIA_PQ_WALLETS, walletProvider, arkiv, arkivErrorText, chainName, expiresIn, mainnetClient, newestPer, safeClient, safeLogs, sepoliaAddr, sepoliaClient, sepoliaLogs, short, swarmUrl, exposureEvidence, type EvidenceRecord, type Flags } from "./lib";
 import EvidenceDrawer, { ArkivLink, EvidenceButton, FlagStamp, TestTag } from "./EvidenceDrawer";
 import { SafeProof, SafeTag, type SafeRow } from "./SafeTag";
 import survey from "../../evidence/ens/survey.json";
@@ -27,7 +27,7 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
   const [mode, setMode] = useState<"address" | "name" | "safe">("name");
   const [input, setInput] = useState("");
   const [picking, setPicking] = useState<"" | "name" | "wallet">("");
-  const hasWallet = typeof window !== "undefined" && !!(window as unknown as { ethereum?: unknown }).ethereum;
+  const hasWallet = typeof window !== "undefined" && !!walletProvider();
   const [query, setQuery] = useState<Query | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -86,7 +86,7 @@ export default function CheckView({ onGo }: { onGo: (t: Tab) => void }) {
     setPicking("wallet");
     setError("");
     try {
-      const eth = (window as unknown as { ethereum: { request: (a: { method: string }) => Promise<string[]> } }).ethereum;
+      const eth = walletProvider<{ request: (a: { method: string }) => Promise<string[]> }>()!;
       const [a] = await eth.request({ method: "eth_requestAccounts" });
       if (a) {
         setInput(a);
