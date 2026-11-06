@@ -1,61 +1,108 @@
-# Submission drafts (ETHGlobal form)
+# ETHGlobal Mumbai: the submission form, ready to paste
 
-**Project name:** Lifeboat
+Every field below is final and checked against `evidence/`. Copy each block into the matching form field.
 
-**Short description (one line):** Shows who could take over which wallets, multisigs and ENS names on Q-Day (including keys exposed only through signatures) and moves them to post-quantum accounts.
+---
 
-**Description:**
-A future quantum computer can take over any wallet whose public key is on-chain, and every signature puts it there, not just sending a transaction. Lifeboat:
-1. **Discovers hidden exposure.** It recovers public keys from multisig signatures, which a nonce check never sees. Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested 8-of-11 council from 0 to 11.
-2. **Maps who can steer an ENSv2 name** across all five control paths, with the role list proven complete, and hands names over to a post-quantum wallet in a way the registry itself verifies.
-3. **Gets people out:** a WOTS+C post-quantum account on EIP-8141 frame transactions, plus a staked rescue paymaster that pays gas for wallets holding tokens but no ETH, which only the ERC-8421 alt mempool allows.
-4. **Shows why one-time keys must be one time:** we forged a reused key's signature from 12 public fee bumps in 0.2 s and drained the wallet on the live devnet.
-5. **Publishes everything as public evidence:** an Arkiv registry and leaf ledger that anyone can write sightings to, with full bundles on Swarm.
+## Project name
+```
+Lifeboat
+```
 
-It also includes an ESP32 signer that keeps the counter on the device and can't sign twice. No quantum computer can do this today: these are readiness findings from public data.
+## Short description (≤ 100 characters)
+```
+Finds wallets, Safes and ENS names exposed to Q-Day, and moves them to post-quantum keys.
+```
 
-**How it's made:**
-- **Contracts:** pure Yul, with `verbatim` for the EIP-8141 opcodes (APPROVE, SIGPARAM, SIGDATACOPY, TXPARAM, FRAMEPARAM, FRAMEDATALOAD). The WOTS+C core is templated so the account and a Foundry harness compile the same code. The chain walk is unrolled by a generator (68k → 45k gas) and the digit sum uses SWAR.
-- **TypeScript signer** (`@noble/hashes`) with shared test vectors.
-- **Frame transactions** via `@forshtat/hegota-support`, submitted through the skandha sidecars, dry-run with `ethrex_simulateFrameTransaction`.
-- **Helm check:** viem against ENSv2 (Sourcify ABIs, role bits from the verified sources, Tenderly for full-range logs).
-- **Deep scan:** decodes Safe `execTransaction` signatures (Safe 1.3 and 1.4 logs, nested Safes).
-- **Arkiv:** `@arkiv-network/sdk` 1.0.1 (named schemas, readonly + permissionless-extension entities, batch writes, keyless reads). **Swarm:** our own Bee 2.8.3 light node in Docker.
-- **App:** Vite + React with a strict CSP, on Vercel. **Firmware:** portable C++ verified on the host in an Alpine container.
+## Description
+```
+Every time you sign anything on Ethereum, your public key goes on-chain, and a future quantum computer could turn that public key into your private key. No quantum computer can do this today; Lifeboat is about getting ready.
 
-## Partner prizes
+Lifeboat shows who could take over what, then gets them out:
 
-**Ethereum Foundation: Best use of the Frame Transaction Alternative Mempool**
-- A post-quantum account in Yul verifies WOTS+C inside the VERIFY frame: 52,367 gas, constant cost, 2,336-byte ARBITRARY witness, and an on-chain leaf floor against reuse.
-- The honest reason it needs the alt mempool is a staked rescue paymaster. It reads its registry and a proxied token balance during validation to sponsor token-only wallets, and is repaid in USDC in the same transaction.
-- The same signed transaction was rejected by the public mempool (StorageReadNonSender) and by the unstaked alt mempool, and included once the paymaster was staked. Five attack dry-runs are refused.
-- We also show the fee-bump danger for one-time keys: a signature forged from 12 reused bumps, accepted by VERIFY and included.
-- Explorer links and raw evidence are in the README and `evidence/ef/`.
+1. Find what's exposed. It recovers signer keys from a multisig's own signatures, which a "has this address ever sent a transaction?" check never sees. Optimism's Security Council goes from 4 to 13 of 13 public keys, and Base's nested council from 0 to 11. Any Safe can be checked live in the browser.
 
-**ENS: Best Use of ENSv2**
-- The Helm check maps every key that can steer any ENSv2 name across five paths (owner, EAC delegates, operators, resolver roles including UPGRADE, parent registries). It rebuilds holders from EACRolesChanged logs and proves the list complete against roleCount.
-- The handover is verified by the registry: the naive transfer is refused with TransferUnsafeWithMultipleAssignees; Lifeboat deploys a new PermissionedResolver via VerifiableFactory, points the name at it, revokes the delegate and removes the operator; then the transfer is accepted.
-- A WOTS+C wallet then signs its own pq.checked record. A draft ENSIP for pq.* records is included.
-- With a hardware key: lifeboathw.eth was handed to a post-quantum wallet whose key lives only on an ESP32 (its CREATE2 address follows from the device's public key). Every record change is shown on the device and signed only after a button press. The first one, pq.checked, landed in block 12,076,271. The app's Protect → ENS name tab runs the whole flow.
-- The live demo works with any name.
+2. Names too. The Helm check maps every key that can steer an ENSv2 name across five control paths and proves the list is complete. Across 1,011 real Sepolia names (one per owner), 902 can be steered on Q-Day, 863 of them through their resolver.
 
-**Arkiv: Build on Arkiv (+ Swarm bonus)**
-- A public Q-Day registry: 24-hour exposure attestations, readonly "aboard" records of verified moves to PQ accounts, ENS verdicts, and a leaf ledger.
-- Anyone can write a leaf sighting, so two digests for one leaf raise "signed twice". It caught our naive-wallet demo.
-- A publisher re-verifies every claim on-chain before batch-writing. Reads need no key.
-- Swarm holds the full evidence bundles, uploaded from our own Bee light node and linked from Arkiv entities via swarmRef. All 8 open on the public testnet gateway.
-- Writer wallet and a runnable query are in the README.
+3. Get out, three ways:
+   - a post-quantum account (WOTS+C, hash-based) checked inside an EIP-8141 frame transaction, plus a staked rescue paymaster so a wallet with tokens but no ETH can still escape;
+   - Quantum Guard: a post-quantum co-signer for a Safe you already have, with owner recovery that the post-quantum key can veto;
+   - a registry-verified ENS handover to a post-quantum wallet.
 
-**Links:** live demo https://lifeboat-mu.vercel.app · repo (public at submission) https://github.com/Raunakg2005/lifeboat · video: _add_
+4. Sign safely. Our ESP32 signer generates its own key, never signs a bare hash (it rebuilds the request and shows it in words), saves its counter before every signature, and is PIN-locked. Our test name lifeboathw.eth is now owned by a wallet whose key exists only on that device.
 
-## Before submitting (Sat 7 Nov, by 09:00 IST)
-- [ ] **Refresh Arkiv:** exposure and name entries expire after 24 h (the first batch was written Thu ~22:16). Run `pnpm --filter @lifeboat/scripts swarm-publish` on Sat morning: it re-checks both names and writes fresh entities with `swarmRef`. The Harbour counts come back with it.
-- [ ] Check the Bee batch TTL is above 24 h (`curl http://127.0.0.1:1633/stamps`)
-- [x] Hardware: ESP32 flashed, key generated on the device, test signature valid, clear signing live: the device shows each request in words, and its frame tx 0x6836931d… was included (block 2,687). Add a photo to `docs/hardware.md`
-- [ ] Record the video with **your own voice** (docs/demo-script.md: silent cut + teleprompter + `final`), 2-4 min, 720p+, not sped up, no TTS, no music-instead-of-talking, not on a phone. Add the link here and in the README
-- [ ] Rebuild and redeploy the app (`pnpm --filter @lifeboat/app build`, copy into `deploy/lifeboat`, `vercel deploy deploy\lifeboat --prod`)
-- [ ] Make the GitHub repo **public** (rule: it must stay public)
-- [ ] Check docs/ai-usage.md, especially "What the team did", and keep it accurate
-- [ ] From-scratch rule: "prior project-specific code, designs, or assets are not allowed". All code is new, but the visual style follows our pre-event prototype's look. It's disclosed in ai-usage.md; confirm with the organisers (Discord) if in doubt
-- [ ] Finalist judging is 4 min demo + 3 min Q&A: rehearse with docs/explainer.md (judge questions)
-- [ ] Fill the form: Finalist + Partner; EF / ENS / Arkiv (+ Swarm bonus box)
+5. Public and checkable. Every finding is re-checked and published to Arkiv; the full evidence sits on Swarm, and the app re-hashes it in your browser to prove it matches.
+
+The tools and data are free; protocols pay for monitoring and help migrating.
+```
+
+## How it's made
+```
+Contracts. The post-quantum account and the rescue paymaster are pure Yul, using verbatim for the EIP-8141 opcodes (APPROVE, SIGPARAM, SIGDATACOPY, TXPARAM, FRAMEPARAM, FRAMEDATALOAD). The WOTS+C core is templated so the account and a Foundry harness compile the same code; a generator unrolls the hash-chain walk (68k → 45k gas) and the digit sum uses SWAR. VERIFY costs 52,367 gas for a 2,336-byte witness. Quantum Guard (Solidity, via-IR for one file) is a Safe 1.4.1 transaction guard plus ERC-1271 handler with a leaf bitmap, key rotation and a timelocked recovery the PQ key can veto; a CREATE2 factory installs it in one MultiSendCallOnly transaction. 36 Foundry tests run against vectors from the TypeScript signer.
+
+Frame transactions are built with @forshtat/hegota-support, dry-run with ethrex_simulateFrameTransaction and sent through the ERC-8421 alt mempool. The rescue shows the same signed transaction rejected by the public mempool (StorageReadNonSender) and by the unstaked alt mempool, then included once the paymaster is staked; five attack variants are refused.
+
+ENSv2: the Helm check (viem, Sourcify ABIs) rebuilds role holders from EACRolesChanged logs and proves completeness against roleCount, across the owner, EAC delegates, ERC-1155 operators, PermissionedResolver roles (incl. UPGRADE) and parent registries. The handover deploys a fresh PermissionedResolver through VerifiableFactory, re-points the name, revokes the other holders and transfers it; ENSv2 itself refuses the naive transfer (TransferUnsafeWithMultipleAssignees). A hardware-key variant gives each ESP32 its own LifeboatPQWallet via CREATE2 (salt = the device's key root), so the wallet is found from the device alone.
+
+Hardware: ESP32 firmware in portable C++ (Keccak, WOTS+C, an RLP/ABI decoder for clear signing, a PIN-encrypted seed, testnet-only rules). 28 host checks compile the same code in an Alpine container and compare it byte for byte with the TypeScript signer. The browser talks to it over Web Serial.
+
+Arkiv (@arkiv-network/sdk 1.0.1): six schemas, readonly + permissionless-extension audit records, an open one-time-key ledger that flags "signed twice", records updated in place (patch + extend in one executeBatch), count queries, keyset paging and keyless reads. Swarm: our own Bee 2.8.3 light node in Docker uploads the evidence; records carry swarmRef + evidenceHash, and the app re-hashes the file in the browser.
+
+App: Vite + React + viem on Vercel with a strict CSP, EIP-6963 wallet discovery and per-tab error boundaries. An end-to-end Playwright test drives the Protect tab with a scripted wallet on Sepolia.
+```
+
+## Links
+| Field | Value |
+|---|---|
+| GitHub | https://github.com/Raunakg2005/lifeboat (**make it public first**) |
+| Live demo | https://lifeboat-mu.vercel.app |
+| Video | _upload `video/out/lifeboat-submission.mp4` (3:50), paste the link here and in the README_ |
+
+## Tech stack (pick the closest options in each dropdown)
+| Category | Pick |
+|---|---|
+| Ethereum developer tools | Foundry, viem |
+| Blockchain networks | Ethereum Sepolia, Ethereum mainnet (read-only scans), the EIP-8141 alt-mempool devnet (chain 1337; type it under "other") |
+| Programming languages | TypeScript, Solidity, Yul (or "other"), C++, Python |
+| Web frameworks | React, Vite |
+| Databases | Arkiv (type it if it isn't listed); storage: Swarm |
+| Design tools | none |
+| Other | ENSv2, Safe, ESP32 (Arduino), Web Serial, Docker, Playwright, Qiskit, WOTS+C |
+
+## Prizes
+- **Finalist + partner prizes**, with these three partner picks:
+  1. **Ethereum Foundation: Best use of the Frame Transaction Alternative Mempool**
+  2. **ENS: Best Use of ENSv2**
+  3. **Arkiv: Build on Arkiv (from scratch)**, and **tick the Arkiv + Swarm bonus**. It's part of the Arkiv pick, not a fourth one.
+
+### If the form asks "how does your project use <partner>?"
+
+**Ethereum Foundation (frame tx alt mempool)**
+```
+A post-quantum account in Yul verifies a WOTS+C hash-based signature inside the EIP-8141 VERIFY frame: 52,367 gas, constant cost, 2,336-byte ARBITRARY witness, with an on-chain leaf floor against reuse. The reason it needs the alternative mempool is a staked rescue paymaster: it reads its registry and a proxied token balance during validation, so a wallet holding tokens but no ETH can still escape, repaying the gas in USDC in the same transaction. The same signed transaction is rejected by the public mempool (StorageReadNonSender) and by the unstaked alt mempool, and included once the paymaster is staked; five attack variants are refused. We also forge a signature from 12 reused fee bumps (0.2 s) to show why one-time keys need a counter, and our ESP32 clear-signs frame transactions (block 2,687).
+```
+
+**ENS (best use of ENSv2)**
+```
+Lifeboat checks and changes who controls a name through ENSv2's own architecture. The Helm check maps all five control paths (owner, EAC delegates, operators, PermissionedResolver roles incl. UPGRADE, parent registries), rebuilds holders from EACRolesChanged and proves completeness against roleCount; 902 of 1,011 real Sepolia names (one per owner) can be steered on Q-Day, 863 through their resolver. The handover is verified by the registry: the naive transfer is refused (TransferUnsafeWithMultipleAssignees); a fresh PermissionedResolver via VerifiableFactory, revoked holders and removed operators make it accepted. With a hardware key: our test name lifeboathw.eth now belongs to a post-quantum wallet whose key lives only on an ESP32, and every record change is shown on the device and signed after a button press. The live app (Protect → ENS name) runs this for any name. Draft ENSIP for pq.* records included.
+```
+
+**Arkiv (+ Swarm)**
+```
+Arkiv is Lifeboat's public Q-Day registry: exposure readings that expire after 24 h and are updated in place, readonly "aboard" records of verified moves to post-quantum accounts, ENS verdicts, Monitor watches and alerts, and an open one-time-key ledger where anyone can report a sighting; two digests for one leaf raise "signed twice". The app reads only records our publisher signed (ownedBy), shows readonly stamps from creation flags, true totals from the count API, keyset paging and explorer links. Swarm holds the full evidence (Helm reports, rescue, forgery, council scan) from our own Bee node; each record carries swarmRef + evidenceHash, and the app re-hashes the file in the browser to show it matches. Docs: arkiv/schema.md, why-arkiv.md, how-you-use-arkiv.md, reach.md, friction.md, swarm.md.
+```
+
+## AI usage (if asked)
+```
+See docs/ai-usage.md in the repo: which tools we used, where, and what the team did.
+```
+
+---
+
+## Before you press submit
+- [ ] The repo is **public**.
+- [ ] The video is uploaded and the link is in the form and the README.
+- [ ] Live site checked (done 6 Nov, 19:55 IST: new build, Protect works, evidence MATCHES).
+- [ ] Morning refresh run (`pnpm --filter @lifeboat/scripts refresh`), and `arkiv/swarm.md` references updated afterwards.
+- [ ] `docs/ai-usage.md` → "What the team did" reviewed by the team.
+- [ ] Optional: the IBM job `dbmtusm74qds73dsvrf0` collected and added to `docs/quantum-demo.md`.
