@@ -14,7 +14,12 @@
     "register lifeboatpq.eth (28 days)": "0xd6eedecc982fc3d296d450e3553caff8b66fab6609ceae06b9ea008d56840234",
     "grant SET_RESOLVER to an extra delegate": "0xb121c0b4af553a7554ac40475f0ec824385a465a919e1b417cf8efff0c2f9c8f",
     "approve an operator for all names": "0xc4fc4ed27ff19867d421b0c96c309a8f8439d552933ead6113783071a4d8d58e",
-    "register lifeboatdemo.eth (28 days)": "0x056e7c89e96540352b396b2cd82f47cd4285b3612307606be3cc7ed62c92b85e"
+    "register lifeboatdemo.eth (28 days)": "0x056e7c89e96540352b396b2cd82f47cd4285b3612307606be3cc7ed62c92b85e",
+    "register lifeboathw.eth (28 days)": "0x92754d650bd39b03338b4a6f82d8605adb8421c12695f2718b2478a81c769898",
+    "deploy old resolver (dev wallet holds ALL_ROLES) (lifeboathw)": "0x0cfbf9aded0331df4f05bc1e834910577fbc07b6d8e00494561aa1191b2c4917",
+    "mint 613701 mock USDC (6 dp) for the fee (lifeboathw)": "0x9015ed6b7764d87ebe08013c01f729ca763e43a165c1dfdfcfc87c247a3e426b",
+    "approve the registrar (lifeboathw)": "0xe641276d1cf11774b28a08f533ff26cb86c6ac2cf83e3913db4db5e77a2401ad",
+    "commit (lifeboathw)": "0x8fc104780d8b22855e87d5d36e82cb0749f785bd60608229c3ae895c8c1feb4a"
   },
   "verifier": "0x98cd804ae58ea5fc9fa4fb403f6d0d88acdd0ac8",
   "pqWallet": "0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f",
@@ -23,10 +28,12 @@
   "oldResolver": "0xEBa5278f7272d3BD0655af17DD45D78A7Fed4260",
   "name": "lifeboatpq.eth",
   "oldResolvers": {
-    "lifeboatdemo": "0x294bd7c69BaA11ed8a51e195bE66cb354FC4Ec35"
+    "lifeboatdemo": "0x294bd7c69BaA11ed8a51e195bE66cb354FC4Ec35",
+    "lifeboathw": "0x12f6cED00E62F4D022f2B6E7c53c500197BEaf76"
   },
   "demoNames": [
-    "lifeboatdemo.eth"
+    "lifeboatdemo.eth",
+    "lifeboathw.eth"
   ],
   "quantumGuard": {
     "txs": {

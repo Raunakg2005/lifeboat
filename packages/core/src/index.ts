@@ -5,3 +5,4 @@ export * from "./exposure.js";
 export * from "./safe-scan.js";
 export * from "./guard.js";
 export * from "./device.js";
+export * from "./ens-protect.js";

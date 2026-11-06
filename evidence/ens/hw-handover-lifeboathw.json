@@ -1,0 +1,66 @@
+{
+  "name": "lifeboathw.eth",
+  "steps": [
+    {
+      "what": "0. deploy the device's PQ wallet (CREATE2 from its public key)",
+      "hash": "0x3e608adda2b21dd0e4017a13f2e1d7d39442dd1561e076e15ba1a0654d7bff77",
+      "status": "success",
+      "block": "12076200",
+      "gasUsed": "6520554"
+    },
+    {
+      "what": "2. Deploy a fresh resolver that only the post-quantum wallet controls (pq.* records set at creation)",
+      "hash": "0x4b372174820319feb1e88fa3124d33c57347097b7698861a06bb2a11af5c8b4a",
+      "status": "success",
+      "block": "12076201",
+      "gasUsed": "2416800"
+    },
+    {
+      "what": "3. Point the name at it (the old resolver's role holders stop mattering)",
+      "hash": "0xe836c357d07dceffb7884ea5786dfa9356350bcdb78dd091b6f2dc0890c00166",
+      "status": "success",
+      "block": "12076202",
+      "gasUsed": "41596"
+    },
+    {
+      "what": "4. Remove operator 0xBE65…e630 (it could transfer all your names)",
+      "hash": "0x96bee140e9d1638a27dd84cb8b7047136c21181c3d4edbeecf5471b3bfe2071b",
+      "status": "success",
+      "block": "12076203",
+      "gasUsed": "24268"
+    },
+    {
+      "what": "5. Transfer the name to the post-quantum wallet (ENSv2 accepts it once nobody else holds a role)",
+      "hash": "0x7a4a4f41192d42bb39ea650b8258ee3f51a2001319dcc19f5dbf86cd7039eb60",
+      "status": "success",
+      "block": "12076204",
+      "gasUsed": "172582"
+    }
+  ],
+  "startedAt": "2026-11-06T11:14:06.424Z",
+  "device": {
+    "root": "0xf2949ed28d7a32ccf7e623b3bb777cd338e0d002494dbeb11e48688fd898434f",
+    "pubSeed": "0x403d68bf8b2e52a635c7b22a7547cee63ca9ee008850fb163912c51a80ba9948",
+    "wallet": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C"
+  },
+  "before": {
+    "verdict": "hijackable",
+    "hijackablePaths": [
+      1,
+      3,
+      4
+    ],
+    "owner": "0xBAc277e47dd7B95c04BB3517b76c1dd9151A054a",
+    "resolver": "0x12f6cED00E62F4D022f2B6E7c53c500197BEaf76",
+    "block": "12076200"
+  },
+  "naiveTransfer": "accepted (unexpected)",
+  "plan": [
+    "Deploy a fresh resolver that only the post-quantum wallet controls (pq.* records set at creation)",
+    "Point the name at it (the old resolver's role holders stop mattering)",
+    "Remove operator 0xBE65…e630 (it could transfer all your names)",
+    "Transfer the name to the post-quantum wallet (ENSv2 accepts it once nobody else holds a role)"
+  ],
+  "newResolver": "0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
+  "relayerRolesOnNewResolver": "0"
+}

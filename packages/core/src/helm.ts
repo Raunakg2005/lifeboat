@@ -11,6 +11,7 @@
 // complete: each role is one nybble, so the sum of every holder's bitmap must equal roleCount(resource).
 import { getAddress, parseAbiItem, type Address, type PublicClient } from "viem";
 import { ENS, ENS_V2_FROM_BLOCK, REGISTRY_ROLES, RESOLVER_ROLES, dnsEncode, helperAbi, registryAbi, resolverAbi, roleNames } from "./ens.js";
+import { pqWalletAbi, pqWalletAddress } from "./ens-protect.js";
 
 const EAC_ROLES_CHANGED = parseAbiItem("event EACRolesChanged(uint256 indexed resource, address indexed account, uint256 oldRoleBitmap, uint256 newRoleBitmap)");
 const APPROVAL_FOR_ALL = parseAbiItem("event ApprovalForAll(address indexed account, address indexed operator, bool approved)");
@@ -88,6 +89,15 @@ export async function classify(client: PublicClient, others: PublicClient[], a: 
   const code = await client.getCode({ address: a });
   if (code && code !== "0x") {
     if (known.pqWallets.some((w) => w.toLowerCase() === a.toLowerCase())) return { address: a, exposure: "pq-wallet", detail: "LifeboatPQWallet (WOTS+C, hash-based)" };
+    // a hardware-key wallet proves itself: its CREATE2 address follows from its own (root, pubSeed), so no list is needed
+    try {
+      const [root, pubSeed] = await Promise.all([
+        client.readContract({ address: a, abi: pqWalletAbi, functionName: "root" }),
+        client.readContract({ address: a, abi: pqWalletAbi, functionName: "pubSeed" }),
+      ]);
+      if (pqWalletAddress(root, pubSeed).toLowerCase() === a.toLowerCase())
+        return { address: a, exposure: "pq-wallet", detail: "LifeboatPQWallet (WOTS+C), verified: its address follows from its own key" };
+    } catch {}
     try {
       const threshold = await client.readContract({ address: a, abi: [parseAbiItem("function getThreshold() view returns (uint256)")], functionName: "getThreshold" });
       return { address: a, exposure: "contract", detail: `Safe, threshold ${threshold} (signers need a deep scan)` };

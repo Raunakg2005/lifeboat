@@ -23,6 +23,7 @@ import { fromHex, generateKeyPair, sign, toHex, type KeyPair } from "@lifeboat/p
 import sepoliaDeployments from "../../deployments/sepolia.json";
 import { REPO, sepoliaAddr, sepoliaClient, sepoliaTx, short } from "./lib";
 import { Pill, Radar, Rubber } from "./ui";
+import NameProtect from "./NameProtect";
 
 const CHAIN = 11155111;
 const FACTORY = (sepoliaDeployments as { quantumGuardV2?: { factory?: Address } }).quantumGuardV2?.factory;
@@ -88,6 +89,7 @@ async function readSafe(address: Address, atLeast = 0n): Promise<SafeInfo> {
 }
 
 export default function ProtectView() {
+  const [what, setWhat] = useState<"safe" | "ens">("safe");
   const [account, setAccount] = useState<Address | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [input, setInput] = useState("");
@@ -303,6 +305,23 @@ export default function ProtectView() {
   const usedCount = q ? q.usedLeaves.toString(2).split("").filter((b) => b === "1").length : 0;
   return (
     <>
+      <div className="protect-switch">
+        <span className="label">Protect a</span>
+        <div className="seg" role="group" aria-label="What to protect">
+          <button aria-pressed={what === "safe"} onClick={() => setWhat("safe")}>
+            Safe
+          </button>
+          <button aria-pressed={what === "ens"} onClick={() => setWhat("ens")}>
+            ENS name
+          </button>
+        </div>
+        <span className="note">{what === "safe" ? "a post-quantum co-signer for a Safe" : "a name held by a post-quantum wallet, signed on your hardware key"}</span>
+      </div>
+      {/* both stay mounted, so switching keeps each flow's state (and the device's serial port) */}
+      <div hidden={what !== "ens"}>
+        <NameProtect />
+      </div>
+      <div hidden={what !== "safe"}>
       <section className="section" style={{ marginTop: 26 }}>
         <div className="label">Quantum Guard · Sepolia testnet · nothing here touches mainnet</div>
         <h2>
@@ -541,6 +560,7 @@ export default function ProtectView() {
           </div>
         </div>
       </section>
+      </div>
     </>
   );
 }

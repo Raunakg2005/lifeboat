@@ -29,7 +29,8 @@
     "e2e-protect": "tsx --env-file=../.env src/e2e-protect.ts",
     "gen-device-vectors": "tsx src/gen-device-vectors.ts",
     "hw-clear-test": "tsx src/hw-clear-test.ts",
-    "hw-screen": "tsx src/hw-screen.ts"
+    "hw-screen": "tsx src/hw-screen.ts",
+    "ens-hw-handover": "tsx --env-file=../.env src/ens-hw-handover.ts"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
