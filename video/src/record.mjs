@@ -12,6 +12,8 @@ import { chromium } from "playwright-core";
 const argScript = process.argv.indexOf("--script");
 const SCRIPT = argScript > 0 ? process.argv[argScript + 1] : "rehearsal";
 const SUBMISSION = SCRIPT === "submission";
+// --voice: pace the submission to YOUR recorded lines (cache/submission/timeline-audio.json from voice_align.py)
+const VOICE = SUBMISSION && process.argv.includes("--voice");
 const MODULES = { rehearsal: "./narration.mjs", submission: "./submission.mjs", ens: "./ens-story.mjs" };
 const { SEGMENTS } = await import(MODULES[SCRIPT] ?? "./narration.mjs");
 
@@ -22,13 +24,16 @@ const argUrl = process.argv.indexOf("--url");
 const URL0 = (argUrl > 0 ? process.argv[argUrl + 1] : "http://localhost:5173").replace(/\/+$/, "");
 const W = 1280;
 const H = 720;
-const LEAD = 0.5; // seconds of picture before the first line of a beat
-const GAP_LINE = 0.3;
-const GAP_SEG = 0.8;
+const LEAD = VOICE ? 0.3 : 0.5; // seconds of picture before the first line of a beat
+const GAP_LINE = VOICE ? 0.15 : 0.3;
+const GAP_SEG = VOICE ? 0.4 : 0.8;
+const FIRST = VOICE ? 1.0 : 2.5; // the first cue: time to settle (or to start talking, when you read along)
 
 // how long a person takes to say a line, unhurried
 const speakSeconds = (t) => Math.max(1.6, t.split(" ").filter(Boolean).length / 2.4 + 0.35);
-const audio = SUBMISSION
+const audio = VOICE
+  ? JSON.parse(readFileSync(join(CACHE, "timeline-audio.json"), "utf8"))
+  : SUBMISSION
   ? { voice: "your own", segments: SEGMENTS.map((sg) => ({ id: sg.id, lines: sg.lines.map((text) => ({ text, file: null, seconds: Number(speakSeconds(text).toFixed(2)) })) })) }
   : JSON.parse(readFileSync(join(CACHE, "timeline-audio.json"), "utf8"));
 if (audio.segments.length !== SEGMENTS.length) throw new Error("timeline-audio.json is stale: run the tts step again");
@@ -184,7 +189,7 @@ for (const [i, seg] of SEGMENTS.entries()) {
   if (!SUBMISSION) await page.evaluate((b) => window.__beat(b), `${String(i + 1).padStart(2, "0")} / ${SEGMENTS.length} · ${seg.label} · ${seg.title}`);
 
   // captions on their own clock; audio is placed at the same planned offsets
-  let off = SUBMISSION && i === 0 ? 2.5 : LEAD; // the first cue leaves 2.5 s to start talking
+  let off = SUBMISSION && i === 0 ? FIRST : LEAD; // the first cue leaves 2.5 s to start talking
   const timers = [];
   for (const l of lines) {
     const at = off;
@@ -193,7 +198,7 @@ for (const [i, seg] of SEGMENTS.entries()) {
     off += l.seconds + GAP_LINE;
   }
   const at = async (frac, fn) => {
-    await sleep(start + (SUBMISSION && i === 0 ? 2.5 : LEAD) + frac * speech - now());
+    await sleep(start + (SUBMISSION && i === 0 ? FIRST : LEAD) + frac * speech - now());
     await fn();
   };
   try {
@@ -202,7 +207,7 @@ for (const [i, seg] of SEGMENTS.entries()) {
     console.log(`   (action warning: ${String(e.message).split("\n")[0].slice(0, 120)})`);
   }
   await Promise.all(timers);
-  await sleep(start + (SUBMISSION && i === 0 ? 2.5 : LEAD) + speech + GAP_SEG - now());
+  await sleep(start + (SUBMISSION && i === 0 ? FIRST : LEAD) + speech + GAP_SEG - now());
 }
 if (!SUBMISSION) await page.evaluate(() => window.__line(""));
 await sleep(1.5);
@@ -215,6 +220,6 @@ const duration = end - t0;
 writeFileSync(join(CACHE, "frames.json"), JSON.stringify(frames.map((f) => ({ file: f.file, t: Number((f.ts - t0).toFixed(4)) }))));
 writeFileSync(
   join(CACHE, "timeline.json"),
-  JSON.stringify({ duration, width: W, height: H, voice: audio.voice, lines: placed, silent: SUBMISSION, chapters: SEGMENTS.map((s, i) => ({ title: s.title, t: Math.max(0, placed.find((x) => x.seg === s.id).t - (SUBMISSION && i === 0 ? 2.5 : LEAD)) })) }, null, 2),
+  JSON.stringify({ duration, width: W, height: H, voice: audio.voice, lines: placed, silent: SUBMISSION && !VOICE, chapters: SEGMENTS.map((s, i) => ({ title: s.title, t: Math.max(0, placed.find((x) => x.seg === s.id).t - (SUBMISSION && i === 0 ? FIRST : LEAD)) })) }, null, 2),
 );
 console.log(`recorded ${duration.toFixed(1)} s, ${frames.length} frames`);

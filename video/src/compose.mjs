@@ -12,7 +12,9 @@ const argScript = process.argv.indexOf("--script");
 const SCRIPT = argScript > 0 ? process.argv[argScript + 1] : "rehearsal";
 const SUBMISSION = SCRIPT === "submission";
 const cache = SCRIPT === "rehearsal" ? join(ROOT, "cache") : join(ROOT, "cache", SCRIPT);
-const name = { rehearsal: "lifeboat-walkthrough", submission: "lifeboat-submission-silent", ens: "lifeboat-ens-explained" }[SCRIPT] ?? `lifeboat-${SCRIPT}`;
+const recorded = JSON.parse(readFileSync(join(cache, "timeline.json"), "utf8"));
+const VOICED = SUBMISSION && !recorded.silent; // paced to your recorded voice (record --voice)
+const name = VOICED ? "lifeboat-submission" : ({ rehearsal: "lifeboat-walkthrough", submission: "lifeboat-submission-silent", ens: "lifeboat-ens-explained" }[SCRIPT] ?? `lifeboat-${SCRIPT}`);
 const candidates = [process.env.VIDEO_PYTHON, join(process.env.LOCALAPPDATA ?? "", "Temp", "fdo", "venv", "Scripts", "python.exe"), "python"].filter(Boolean);
 const py = candidates.find((c) => c === "python" || existsSync(c));
 execFileSync(py, ["-I", join(ROOT, "src", "compose.py"), cache, join(ROOT, "out"), name], { stdio: "inherit" });
@@ -22,7 +24,7 @@ const clip = join(ROOT, "clips", "esp32-ens.mp4");
 if (SUBMISSION && existsSync(clip)) {
   const appOnly = join(ROOT, "out", `${name}-app-only.mp4`);
   renameSync(join(ROOT, "out", `${name}.mp4`), appOnly);
-  execFileSync(py, ["-I", join(ROOT, "src", "hardware_insert.py"), appOnly, clip, join(ROOT, "out", `${name}.mp4`), join(cache, "timeline.json")], { stdio: "inherit" });
+  execFileSync(py, ["-I", join(ROOT, "src", "hardware_insert.py"), appOnly, clip, join(ROOT, "out", `${name}.mp4`), join(cache, "timeline.json"), "hardware", ...(VOICED ? ["--subs"] : [])], { stdio: "inherit" });
 }
 if (SUBMISSION) execFileSync(process.execPath, [join(ROOT, "src", "script-doc.mjs")], { stdio: "inherit" });
 
