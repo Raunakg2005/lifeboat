@@ -43,9 +43,36 @@ The tests use a minimal Safe with Safe 1.4.1's order of checks in `execTransacti
 - **ERC-1271:** refused with the owners' signatures alone, and valid after the PQ approval. Asked directly instead of through the Safe, it's refused.
 - **Rotation:** the new key works, and the old one stops co-signing.
 
+## v2: lost-key recovery, a factory, a one-transaction install
+- **Lost-key recovery.**
+  - The owners alone start a recovery with a Safe transaction to the guard. The guard lets exactly `startRecovery()` and `finishRecovery()` through without the PQ signature.
+  - It completes after a timelock (7 days by default).
+  - Until then, the PQ key can **veto** it (`cancelRecovery`, relayed by anyone).
+  - A quantum attacker with forged owner keys could start one too. That's why the [Monitor](monitor.md) alerts on `RecoveryStarted`.
+  - Only a real Safe transaction can call these: a call that reaches the guard through the Safe's fallback carries the caller appended, and is refused.
+- **Factory** (`QuantumGuardFactory`): deploys a guard for any Safe at a CREATE2 address the app can predict.
+- **One-transaction install:** the Safe delegatecalls Safe's `MultiSendCallOnly` to call `setGuard` and `setFallbackHandler` together.
+- **The app** (Protect tab): install on any Sepolia Safe, co-sign payments with a browser WOTS+C key (testnet only), and start, finish or veto a recovery. Safes with several owners collect confirmations through Safe's transaction service.
+
+### Live on a fresh Safe 1.4.1 (Sepolia, timelock 2 minutes for the run)
+Safe [`0x14B3…9526`](https://sepolia.etherscan.io/address/0x14B3beE066Ba36e01ea04f43EA9b5E19b8219526) · guard [`0xd7a6…D502`](https://sepolia.etherscan.io/address/0xd7a6403A4BBc19db6dc022ee8200c43c264DD502) · factory [`0x2f4f…0fb7`](https://sepolia.etherscan.io/address/0x2f4f0a857438ddd5f473ae93176d0d66a03b0fb7)
+
+| Step | Tx |
+|---|---|
+| Factory deploys the Safe's guard | [block 12,074,827](https://sepolia.etherscan.io/tx/0x5b8cdf1eddf68e2d470b2f62b34b170f21834ce4a19c55046e7f6587bce82a63) |
+| **Install: setGuard + setFallbackHandler in one Safe transaction** | [block 12,074,828](https://sepolia.etherscan.io/tx/0xd471e184c40e38b784f80e1d71476dcb14a3cb25a6b33864a07e6b98a682221d) |
+| A co-signed payment | [block 12,074,849](https://sepolia.etherscan.io/tx/0x00d0cc514e3b762889fe18caa009ff320030f706b862fbb1f13c5ea1b5c15b36) |
+| The owners start a recovery (what a quantum attacker could do) | [block 12,074,850](https://sepolia.etherscan.io/tx/0xf35e5073088314d2efa2d22a61298429508a978e3ebb00921ccc2d1202adde12) |
+| **The PQ key vetoes it** | [block 12,074,851](https://sepolia.etherscan.io/tx/0x1aeee025c6e911be6759976a1cdb7648a0dfc13c09091db487309b928a6ea37b) |
+| The owners start another (the key is "lost"); finishing early is refused with `RecoveryNotReady` | [block 12,074,853](https://sepolia.etherscan.io/tx/0x5e69d7bbb640e5c4a7328c7efb9c0aaf7d1c4bdc1a538f363e84615841340123) |
+| **Recovery completes after the timelock** | [block 12,074,867](https://sepolia.etherscan.io/tx/0x858f35e1d0a9e4f4c7fd97738219467e247a1e2eeea376a076bdbf16aa1141f3) |
+| The owners act alone afterwards | [block 12,074,873](https://sepolia.etherscan.io/tx/0x694281b79fc97a5214a6fc013fbb70755c83e5c30df250fe5161e8da45b24857) |
+
+Raw: [`evidence/guard/lifecycle.json`](../evidence/guard/lifecycle.json). Some steps were re-run after a load-balanced RPC answered from a stale node. The scripts now take the nonce and recovery data from receipts, and set gas explicitly.
+
 ## Limits we're honest about
 - **Modules bypass transaction guards in Safe 1.4.1** (`execTransactionFromModule`). A guarded Safe should have no modules, or use Safe 1.5's module guard.
-- **Lose the PQ key and the Safe is locked:** the guard checks its own removal too. Keep the key on the hardware signer, and rotate before the 256 leaves run out.
+- **Lost PQ key:** v1 had no way back. v2 adds the timelocked recovery, which the PQ key can veto. Someone must watch for `RecoveryStarted` (the Monitor does).
 - **Cost:** a co-signed transaction costs about 50k gas for the check plus the 2,336-byte witness in calldata. That's fine for treasury operations, but not something to run per trade.
 - **Credit:** the co-signer guard pattern comes from Safe Research. What's new here is a hash-based co-signer with on-chain one-time-key accounting, plus covering the ERC-1271 path.
 

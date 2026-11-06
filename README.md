@@ -6,14 +6,15 @@ Built from scratch at ETHGlobal Mumbai (5–7 Nov 2026). No quantum computer can
 
 **Live demo: https://lifeboat-mu.vercel.app** · the landing page explains it in a minute; then scan any address, or any ENSv2 name on Sepolia.
 
-New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in plain words, plus judge Q&A) and the [business model](docs/business-model.md).
+New here? Start with [Lifeboat, explained](docs/explainer.md) (every part in plain words, plus judge Q&A), the [business model](docs/business-model.md) and the [roadmap](docs/roadmap.md) (what's production-ready on testnet, what waits for an audit).
 
 | | What | Where it runs |
 |---|---|---|
 | **Discover** | Hidden exposure: keys revealed by multisig signatures, which a nonce check never sees | Ethereum mainnet (live, in the browser) |
 | **Scan** | Exposure of any address on 6 chains; a **deep scan of any Safe** (every signer recovered from its own signatures); the **Helm check** of any ENSv2 name across 5 control paths, proven complete | Ethereum mainnet, Sepolia ENSv2 |
 | **Escape** | A post-quantum (WOTS+C) account on EIP-8141; a staked **rescue paymaster** for wallets with no ETH; the **forgery** a reused one-time key allows | EIP-8141 alt-mempool devnet (chain 1337) |
-| **Protect in place** | **Quantum Guard**: a post-quantum co-signer for an existing Safe, covering transactions and ERC-1271 signatures | A real Safe 1.4.1 on Sepolia |
+| **Protect in place** | **Quantum Guard**: a post-quantum co-signer for an existing Safe (transactions + ERC-1271), lost-key recovery the PQ key can veto, a factory, a one-transaction install. The app's **Protect** tab installs and co-signs on any Sepolia Safe | Safe 1.4.1 on Sepolia |
+| **Monitor** | Watch list and alerts on Arkiv: Safes (signature exposure), Quantum Guards (recovery started or completed), names (verdict changes) | Arkiv + Sepolia, Ethereum read-only |
 | **Harbour** | A public Q-Day registry and one-time-key ledger | Arkiv (Rabdi), evidence on Swarm |
 | **Sign safely** | An ESP32 signer that can't sign twice with one key | Firmware + Web Serial |
 
@@ -65,7 +66,7 @@ ESP32 signer, **live**: it generated its own key and signed a frame transaction 
 |---|---|---|
 | `packages/pq` | WOTS+C: keys, signing, verification, Merkle tree, forgery analysis | 17 (vitest) |
 | `packages/core` | Helm check, Safe deep scan, exposure check, Arkiv schemas (shared by scripts and app) | 3 (vitest: Safe signature recovery) |
-| `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, **Quantum Guard**, mock USDC | 32 (Foundry, TypeScript vectors) |
+| `contracts` | Yul PQ account + WOTS+C core (templated), Yul rescue paymaster, Sepolia PQ wallet, **Quantum Guard + factory**, mock USDC | 36 (Foundry, TypeScript vectors) |
 | `scripts` | deploy, sign, dry-run, submit, rescue, guards, forgery, ENS setup/handover, Helm check, Arkiv publish/query, Swarm, council scan | live runs, evidence in `evidence/` |
 | `app` | the web app (Vite + React + viem + Arkiv SDK) | typechecked, verified in the browser |
 | `firmware/esp32` | the signer | host test vs TypeScript vectors |
@@ -81,6 +82,8 @@ pnpm --filter @lifeboat/app dev                       # the web app
 pnpm --filter @lifeboat/scripts helm lifeboatpq.eth   # any ENSv2 name on Sepolia
 pnpm --filter @lifeboat/scripts ens-survey           # real names, one per owner (aggregates only)
 pnpm --filter @lifeboat/scripts quantum-guard        # Quantum Guard on a real Safe (needs .env)
+pnpm --filter @lifeboat/scripts guard-lifecycle      # v2: install, co-sign, veto, timelocked recovery (Sepolia)
+pnpm --filter @lifeboat/scripts monitor              # one Monitor pass (alerts to Arkiv + optional webhook)
 pnpm --filter @lifeboat/scripts council-scan          # hidden exposure, mainnet
 pnpm --filter @lifeboat/scripts rescue                # three-way admission (needs .env)
 node tools/firmware-check.mjs                         # firmware crypto vs TypeScript (needs Docker)
