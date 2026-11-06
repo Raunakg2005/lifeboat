@@ -74,6 +74,25 @@ pq.account  0x2e58b0f2336dfe76b8bbab1bfd927e354cbc997f
 pq.checked  2026-11-05T16:24:03.097Z signed by the PQ key
 ```
 
+## With a hardware key: `lifeboathw.eth` (6 Nov 2026)
+The same handover, but to a post-quantum wallet whose key exists **only on the ESP32**. Every later change to the name is shown on the device's screen and signed only after its button is pressed.
+
+- **The wallet comes from the device:** the LifeboatPQWallet is deployed with CREATE2, salt = the device's key root. Its address follows from the device's public key alone, `0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C`, so the app finds it from the device and saves nothing. The Helm check recognises it from the chain alone: it reads `root()` and `pubSeed()`, recomputes the address and compares.
+- **Before** (block 12,076,200): **hijackable through paths 1, 3, 4**. The owner was an exposed key, the operator `0xBE65…e630` had a public key, and the old resolver was controlled by an exposed key. This name had no extra delegate, so ENSv2 would have accepted a naive transfer, and the old resolver's exposed keys would still have controlled every record.
+
+| Step | Transaction |
+|---|---|
+| Deploy the device's PQ wallet (CREATE2 from its public key; whoever sends it gets no control) | [`0x3e608add…`](https://sepolia.etherscan.io/tx/0x3e608adda2b21dd0e4017a13f2e1d7d39442dd1561e076e15ba1a0654d7bff77), block 12,076,200 |
+| A fresh resolver where only the PQ wallet holds roles, `pq.*` records set at creation (the sender kept 0 roles) | [`0x4b372174…`](https://sepolia.etherscan.io/tx/0x4b372174820319feb1e88fa3124d33c57347097b7698861a06bb2a11af5c8b4a), block 12,076,201 |
+| Point the name at it: the old resolver's role holders stop mattering | [`0xe836c357…`](https://sepolia.etherscan.io/tx/0xe836c357d07dceffb7884ea5786dfa9356350bcdb78dd091b6f2dc0890c00166), block 12,076,202 |
+| Remove the operator | [`0x96bee140…`](https://sepolia.etherscan.io/tx/0x96bee140e9d1638a27dd84cb8b7047136c21181c3d4edbeecf5471b3bfe2071b), block 12,076,203 |
+| Transfer the name to the device's PQ wallet | [`0x7a4a4f41…`](https://sepolia.etherscan.io/tx/0x7a4a4f41192d42bb39ea650b8258ee3f51a2001319dcc19f5dbf86cd7039eb60), block 12,076,204 |
+| **The first change, signed on the ESP32:** the device showed `PQ WALLET · setText · name lifeboathw.eth · key pq.checked = …`, rebuilt the same hash as the contract, and signed after the BOOT press (leaf 4); our wallet only relayed it | [`0x6754badd…`](https://sepolia.etherscan.io/tx/0x6754badde76919fade2aa86b862e68fce98584cc30c15649b72a1101e71c88ac), block 12,076,271 |
+
+- **After** (block 12,076,272): **protected**. Owner and resolver crew: the device's post-quantum wallet. The role lists for the resolver and the registry are both proven complete.
+- **In the app:** Protect tab → **ENS name**. Connect the ESP32 (Web Serial) and the owner's wallet, run the Helm check, run the handover step by step, then change records. Each change is shown on the device and signed there.
+- Script: [`ens-hw-handover.ts`](../scripts/src/ens-hw-handover.ts) · shared logic: [`packages/core/src/ens-protect.ts`](../packages/core/src/ens-protect.ts) · evidence: [`evidence/ens/hw-handover-lifeboathw.json`](../evidence/ens/hw-handover-lifeboathw.json)
+
 ## Contracts (Sepolia, ABIs from Sourcify in [`packages/core/abi/ens`](../packages/core/abi/ens))
 Universal Resolver `0xeEeE…EeEe` · ETHRegistry `0xd4eb…a8b4` · ETHRegistrar `0xf633…a3d3` · PermissionedResolver impl `0x115e…2b2c` · VerifiableFactory `0xda70…2991` · UniversalHelper `0xd453…fe`. Role bits come from the verified `RegistryRolesLib` / `PermissionedResolverLib` sources.
 

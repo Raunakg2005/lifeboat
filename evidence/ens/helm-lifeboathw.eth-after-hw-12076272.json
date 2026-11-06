@@ -1,0 +1,150 @@
+{
+  "name": "lifeboathw.eth",
+  "checkedAt": "2026-11-06T11:28:44.083Z",
+  "block": "12076272",
+  "parentRegistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+  "tokenId": "71752413438113983188441506513811937011046300734159863650118747559030517923840",
+  "resource": "71752413438113983188441506513811937011046300734159863650118747559030517923840",
+  "owner": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C",
+  "resolver": "0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
+  "entries": [
+    {
+      "path": 1,
+      "title": "owner",
+      "holder": {
+        "address": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C",
+        "exposure": "pq-wallet",
+        "detail": "LifeboatPQWallet (WOTS+C, hash-based)"
+      },
+      "power": [
+        "owns the name token"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4"
+    },
+    {
+      "path": 4,
+      "title": "resolver admin",
+      "holder": {
+        "address": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C",
+        "exposure": "pq-wallet",
+        "detail": "LifeboatPQWallet (WOTS+C, hash-based)"
+      },
+      "power": [
+        "SET_ADDRESS",
+        "SET_ADDRESS_ADMIN",
+        "SET_TEXT",
+        "SET_TEXT_ADMIN",
+        "SET_CONTENTHASH",
+        "SET_CONTENTHASH_ADMIN",
+        "SET_ABI",
+        "SET_ABI_ADMIN",
+        "SET_INTERFACE",
+        "SET_INTERFACE_ADMIN",
+        "SET_NAME",
+        "SET_NAME_ADMIN",
+        "SET_DATA",
+        "SET_DATA_ADMIN",
+        "LINK",
+        "LINK_ADMIN",
+        "CAN_NAME",
+        "CAN_NAME_ADMIN",
+        "UPGRADE",
+        "UPGRADE_ADMIN"
+      ],
+      "where": "resolver 0x5E1180Ce310062545Db837a8C4F8E7192c18D253, resource root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+        "exposure": "exposed",
+        "detail": "EOA, 4252 / 0 txs (Sepolia / mainnet): public key on-chain"
+      },
+      "power": [
+        "REGISTRAR_ADMIN",
+        "REGISTER_RESERVED_ADMIN",
+        "SET_PARENT",
+        "SET_PARENT_ADMIN",
+        "RENEW_ADMIN",
+        "SET_URI",
+        "SET_URI_ADMIN",
+        "CAN_NAME",
+        "CAN_NAME_ADMIN"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x2a35B94DF22cc7354570be2284655E2CDC0e64A2",
+        "exposure": "contract",
+        "detail": "contract (6532 bytes)"
+      },
+      "power": [
+        "REGISTER_RESERVED"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0xf2ece44980778966b8a0FccB3A9E339440f6e045",
+        "exposure": "contract",
+        "detail": "contract (6979 bytes)"
+      },
+      "power": [
+        "RENEW"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0x6029a063d69b09D23c52a754a90E4FE43aDac3A8",
+        "exposure": "contract",
+        "detail": "contract (7774 bytes)"
+      },
+      "power": [
+        "REGISTER_RESERVED"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    },
+    {
+      "path": 5,
+      "title": "parent registry admin",
+      "holder": {
+        "address": "0xf633e7FC17e2bbE0D0965D18ec1821dcB754a3d3",
+        "exposure": "contract",
+        "detail": "contract (8037 bytes)"
+      },
+      "power": [
+        "REGISTRAR",
+        "RENEW"
+      ],
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4, root"
+    }
+  ],
+  "completeness": [
+    {
+      "where": "resolver 0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
+      "resource": "0",
+      "rebuilt": "7719472615821079694904732333912527190217998977709370935963838933860875309329",
+      "onChain": "7719472615821079694904732333912527190217998977709370935963838933860875309329",
+      "complete": true
+    },
+    {
+      "where": "registry 0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+      "resource": "71752413438113983188441506513811937011046300734159863650118747559030517923840",
+      "rebuilt": "97409655027181761882228017414928043058140282880",
+      "onChain": "97409655027181761882228017414928043058140282880",
+      "complete": true
+    }
+  ],
+  "hijackablePaths": [],
+  "systemicExposed": 1,
+  "verdict": "protected"
+}

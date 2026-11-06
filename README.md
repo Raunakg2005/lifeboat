@@ -46,6 +46,7 @@ _The devnet was reset on 6 Nov at 11:59 IST. We re-ran every demo on the fresh c
   2. Lifeboat deploys a new resolver, points the name at it, revokes the delegate and removes the operator.
   3. The transfer is accepted.
   4. The PQ wallet writes its own `pq.checked` with a hash-based signature.
+- **With a hardware key:** our test name `lifeboathw.eth` now belongs to a post-quantum wallet whose key exists only on the ESP32. The wallet's address follows from the device's public key, so nothing is saved, and the Helm check recognises it from the chain alone. The first record change was shown on the device's screen (`setText · name lifeboathw.eth · key pq.checked`) and signed after the button press. In the app: **Protect → ENS name**.
 - **Draft ENSIP** for `pq.*` text records: [pq-records.md](docs/pq-records.md). Every tx hash: [helm-check.md](docs/helm-check.md).
 
 ## Arkiv: Build on Arkiv (+ Swarm)

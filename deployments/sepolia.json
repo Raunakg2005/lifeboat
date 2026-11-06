@@ -75,5 +75,12 @@
     "vetoed": true,
     "restartReadyAt": "1793947284",
     "recovered": true
+  },
+  "hardwareName": {
+    "name": "lifeboathw.eth",
+    "wallet": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C",
+    "root": "0xf2949ed28d7a32ccf7e623b3bb777cd338e0d002494dbeb11e48688fd898434f",
+    "resolver": "0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
+    "evidence": "evidence/ens/hw-handover-lifeboathw.json"
   }
 }

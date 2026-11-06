@@ -36,6 +36,7 @@ It also includes an ESP32 signer that keeps the counter on the device and can't 
 - The Helm check maps every key that can steer any ENSv2 name across five paths (owner, EAC delegates, operators, resolver roles including UPGRADE, parent registries). It rebuilds holders from EACRolesChanged logs and proves the list complete against roleCount.
 - The handover is verified by the registry: the naive transfer is refused with TransferUnsafeWithMultipleAssignees; Lifeboat deploys a new PermissionedResolver via VerifiableFactory, points the name at it, revokes the delegate and removes the operator; then the transfer is accepted.
 - A WOTS+C wallet then signs its own pq.checked record. A draft ENSIP for pq.* records is included.
+- With a hardware key: lifeboathw.eth was handed to a post-quantum wallet whose key lives only on an ESP32 (its CREATE2 address follows from the device's public key). Every record change is shown on the device and signed only after a button press. The first one, pq.checked, landed in block 12,076,271. The app's Protect → ENS name tab runs the whole flow.
 - The live demo works with any name.
 
 **Arkiv: Build on Arkiv (+ Swarm bonus)**

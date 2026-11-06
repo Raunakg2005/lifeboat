@@ -35,6 +35,13 @@
       "status": "success",
       "block": "12076204",
       "gasUsed": "172582"
+    },
+    {
+      "what": "7. the PQ wallet sets pq.checked (signed on the ESP32, leaf 4; the dev wallet only relays)",
+      "hash": "0x6754badde76919fade2aa86b862e68fce98584cc30c15649b72a1101e71c88ac",
+      "status": "success",
+      "block": "12076271",
+      "gasUsed": "482511"
     }
   ],
   "startedAt": "2026-11-06T11:14:06.424Z",
@@ -62,5 +69,23 @@
     "Transfer the name to the post-quantum wallet (ENSv2 accepts it once nobody else holds a role)"
   ],
   "newResolver": "0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
-  "relayerRolesOnNewResolver": "0"
+  "relayerRolesOnNewResolver": "0",
+  "resumedAt": "2026-11-06T11:28:11.485Z",
+  "deviceSigned": {
+    "leaf": 4,
+    "sigHash": "0x48d2718625c56c34b6f7468972a3b918456ebad0dfa23d9f46a8770ccfd4cc33",
+    "deviceHash": "0x48d2718625c56c34b6f7468972a3b918456ebad0dfa23d9f46a8770ccfd4cc33",
+    "record": {
+      "key": "pq.checked",
+      "value": "2026-11-06T11:28:11.645Z signed on the hardware key"
+    }
+  },
+  "after": {
+    "verdict": "protected",
+    "hijackablePaths": [],
+    "owner": "0xc2B0329000BDaC7E0C9F29D8986F3B86eF987e7C",
+    "resolver": "0x5E1180Ce310062545Db837a8C4F8E7192c18D253",
+    "block": "12076272"
+  },
+  "finishedAt": "2026-11-06T11:28:44.084Z"
 }
